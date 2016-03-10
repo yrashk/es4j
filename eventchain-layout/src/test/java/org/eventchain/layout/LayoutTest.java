@@ -26,7 +26,13 @@ import static org.testng.Assert.*;
 
 public class LayoutTest {
 
-    private static class VisibilityTestBean {
+    private static class BaseVisibilityTest {
+        @Getter @Setter
+        private String inherited;
+
+    }
+
+    private static class VisibilityTest extends BaseVisibilityTest {
         @Getter @SuppressWarnings("unused")
         private String privateOnlyGetter;
         @Getter @Setter
@@ -41,8 +47,10 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void propertyVisibility() {
-        Layout<VisibilityTestBean> layout = new Layout<>(VisibilityTestBean.class);
-        List<Property<VisibilityTestBean>> properties = layout.getProperties();
+        Layout<VisibilityTest> layout = new Layout<>(VisibilityTest.class);
+        List<Property<VisibilityTest>> properties = layout.getProperties();
+        // Inherited
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("inherited")));
         // LayoutIgnore
         assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("ignored")));
         // Properties without a getter should be ignored
@@ -54,7 +62,7 @@ public class LayoutTest {
     }
 
     @Accessors(fluent = true)
-    private static class VisibilityTestBeanChained {
+    private static class VisibilityTestChained {
         @Getter @SuppressWarnings("unused")
         private String privateOnlyGetter;
         @Getter @Setter
@@ -66,8 +74,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void fluentPropertyVisibility() {
-        Layout<VisibilityTestBeanChained> layout = new Layout<>(VisibilityTestBeanChained.class);
-        List<Property<VisibilityTestBeanChained>> properties = layout.getProperties();
+        Layout<VisibilityTestChained> layout = new Layout<>(VisibilityTestChained.class);
+        List<Property<VisibilityTestChained>> properties = layout.getProperties();
         // Properties without a getter should be ignored
         assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("privateOnlyGetter")));
         // Properties without both a getter and a setter should be ignored
@@ -78,7 +86,7 @@ public class LayoutTest {
 
 
 
-    private static class NamingTestBean {
+    private static class NamingTest {
         @Getter @Setter
         private boolean third;
         @Getter @Setter
@@ -90,8 +98,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void lexicographicalSorting() {
-        Layout<NamingTestBean> layout = new Layout<>(NamingTestBean.class);
-        List<Property<NamingTestBean>> properties = layout.getProperties();
+        Layout<NamingTest> layout = new Layout<>(NamingTest.class);
+        List<Property<NamingTest>> properties = layout.getProperties();
         assertTrue(properties.get(0).getName().contentEquals("first"));
         assertTrue(properties.get(1).getName().contentEquals("second"));
         assertTrue(properties.get(2).getName().contentEquals("third"));
@@ -100,44 +108,44 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void accessingProperties() {
-        Layout<NamingTestBean> layout = new Layout<>(NamingTestBean.class);
-        List<Property<NamingTestBean>> properties = layout.getProperties();
+        Layout<NamingTest> layout = new Layout<>(NamingTest.class);
+        List<Property<NamingTest>> properties = layout.getProperties();
 
-        NamingTestBean namingTestBean = new NamingTestBean();
+        NamingTest namingTest = new NamingTest();
 
         // Setting and retrieving values works as expected:
 
-        properties.get(0).set(namingTestBean, 1);
-        assertEquals(1, namingTestBean.getFirst());
-        assertEquals((Integer)namingTestBean.getFirst(), properties.get(0).get(namingTestBean));
+        properties.get(0).set(namingTest, 1);
+        assertEquals(1, namingTest.getFirst());
+        assertEquals((Integer)namingTest.getFirst(), properties.get(0).get(namingTest));
 
-        properties.get(1).set(namingTestBean, "value");
-        assertEquals("value", namingTestBean.getSecond());
-        assertEquals(namingTestBean.getSecond(), properties.get(1).get(namingTestBean));
+        properties.get(1).set(namingTest, "value");
+        assertEquals("value", namingTest.getSecond());
+        assertEquals(namingTest.getSecond(), properties.get(1).get(namingTest));
 
-        properties.get(2).set(namingTestBean, true);
-        assertEquals(true, namingTestBean.isThird());
-        assertEquals((Boolean)namingTestBean.isThird(), properties.get(2).get(namingTestBean));
+        properties.get(2).set(namingTest, true);
+        assertEquals(true, namingTest.isThird());
+        assertEquals((Boolean)namingTest.isThird(), properties.get(2).get(namingTest));
 
     }
 
 
-    private static class DigestTestBean1 {
+    private static class DigestTest1 {
         @Getter @Setter
         private String x;
     }
 
-    private static class DigestTestBean1Name {
+    private static class DigestTest1Name {
         @Getter @Setter
         private String x;
     }
 
-    private static class DigestTestBean1PropName {
+    private static class DigestTest1PropName {
         @Getter @Setter
         private String y;
     }
 
-    private static class DigestTestBean1Type {
+    private static class DigestTest1Type {
         @Getter @Setter
         private int x;
     }
@@ -145,8 +153,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentClassName() {
-        Layout<DigestTestBean1> layout1 = new Layout<>(DigestTestBean1.class);
-        Layout<DigestTestBean1Name> layout1Name = new Layout<>(DigestTestBean1Name.class);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class);
+        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
@@ -155,8 +163,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashSameContent() {
-        Layout<DigestTestBean1> layout1 = new Layout<>(DigestTestBean1.class, false);
-        Layout<DigestTestBean1Name> layout1Name = new Layout<>(DigestTestBean1Name.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
+        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class, false);
 
         assertEquals(layout1, layout1Name);
         assertEquals(layout1.getHash(), layout1Name.getHash());
@@ -165,8 +173,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentPropName() {
-        Layout<DigestTestBean1> layout1 = new Layout<>(DigestTestBean1.class, false);
-        Layout<DigestTestBean1PropName> layout1Name = new Layout<>(DigestTestBean1PropName.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
+        Layout<DigestTest1PropName> layout1Name = new Layout<>(DigestTest1PropName.class, false);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
@@ -175,19 +183,19 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentType() {
-        Layout<DigestTestBean1> layout1 = new Layout<>(DigestTestBean1.class, false);
-        Layout<DigestTestBean1Type> layout1Name = new Layout<>(DigestTestBean1Type.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
+        Layout<DigestTest1Type> layout1Name = new Layout<>(DigestTest1Type.class, false);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
     }
 
-    private static class DigestTestBean1Unboxed {
+    private static class DigestTest1Unboxed {
         @Getter @Setter
         private int x;
     }
 
-    private static class DigestTestBean1Boxed {
+    private static class DigestTest1Boxed {
         @Getter @Setter
         private Integer x;
     }
@@ -195,8 +203,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashBoxed() {
-        Layout<DigestTestBean1Unboxed> layout1 = new Layout<>(DigestTestBean1Unboxed.class, false);
-        Layout<DigestTestBean1Boxed> layout1Name = new Layout<>(DigestTestBean1Boxed.class, false);
+        Layout<DigestTest1Unboxed> layout1 = new Layout<>(DigestTest1Unboxed.class, false);
+        Layout<DigestTest1Boxed> layout1Name = new Layout<>(DigestTest1Boxed.class, false);
 
         assertEquals(layout1, layout1Name);
         assertEquals(layout1.getHash(), layout1Name.getHash());

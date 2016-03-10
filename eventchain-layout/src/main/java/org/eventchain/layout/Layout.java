@@ -53,6 +53,8 @@ import java.util.stream.Collectors;
  *     <ul>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</ul>
  * </li>
  *
+ * Inherited properties from superclasses will also be included.
+ *
  * @param <T> Bean's class
  */
 public class Layout<T> {
