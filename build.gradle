@@ -1,0 +1,43 @@
+version = "0.1.0-SNAPSHOT"
+
+allprojects {
+  apply plugin: 'idea'
+
+}
+
+subprojects {
+  apply plugin: 'java'
+  apply plugin: 'osgi'
+
+  repositories {
+    jcenter()
+  }
+
+  dependencies {
+    // Unit testing
+    testCompile 'org.testng:testng:6.9.10'
+
+    // Remove boilerplate
+    compile 'org.projectlombok:lombok:1.16.8'
+  }
+
+  test.useTestNG()
+}
+
+
+idea {
+  project {
+    languageLevel = '1.8'
+    vcs = 'Git'
+    ipr.withXml { xmlFile ->
+      // enable 'Annotation Processors'
+      xmlFile.asNode().component.find {
+        it.@name == 'CompilerConfiguration'
+      }['annotationProcessing'][0].replaceNode {
+        annotationProcessing {
+          profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
+        }
+      }
+    }
+  }
+}

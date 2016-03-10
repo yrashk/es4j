@@ -1,0 +1,9 @@
+version = rootProject.version
+
+dependencies {
+    // Utilities
+    compile 'org.apache.commons:commons-lang3:3.4'
+
+    // Type introspection
+    compile 'com.fasterxml:classmate:1.3.1'
+}

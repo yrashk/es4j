@@ -1,0 +1,3 @@
+include 'eventchain-layout'
+
+rootProject.name = 'eventchain'
