@@ -1,5 +1,3 @@
-version = rootProject.version
-
 dependencies {
     // Utilities
     compile 'org.apache.commons:commons-lang3:3.4'
