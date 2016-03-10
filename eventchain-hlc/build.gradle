@@ -1,0 +1,8 @@
+dependencies {
+    // NTP client & timestamps
+    compile 'commons-net:commons-net:3.4'
+
+    // Useful utilities
+    compile 'com.google.guava:guava:19.0'
+
+}
