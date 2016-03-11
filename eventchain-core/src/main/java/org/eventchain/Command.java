@@ -19,7 +19,7 @@ import org.eventchain.layout.LayoutIgnore;
 import java.util.stream.Stream;
 
 /**
- *  Command is a request for changes in the domain. Unlike an event,
+ * Command is a request for changes in the domain. Unlike an event,
  * it is not a statement of fact as it might be rejected.
  *
  * For example, ConfirmOrder command may or may not result in an
