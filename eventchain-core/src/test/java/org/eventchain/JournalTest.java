@@ -14,9 +14,8 @@
  */
 package org.eventchain;
 
-import lombok.EqualsAndHashCode;
-import lombok.SneakyThrows;
-import lombok.Value;
+import lombok.*;
+import org.eventchain.hlc.HybridTimestamp;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.index.IndexEngine;
 import org.eventchain.index.MemoryIndexEngine;
@@ -40,14 +39,15 @@ public abstract class JournalTest<T extends Journal> {
     private final T journal;
     private final RepositoryImpl repository;
     private final IndexEngine indexEngine;
+    private final NTPServerTimeProvider timeProvider;
 
     @SneakyThrows
     public JournalTest(T journal) {
         this.journal = journal;
         repository = new RepositoryImpl();
-        repository.setPackage(getClass().getPackage());
+        repository.setPackage(JournalTest.class.getPackage());
         repository.setJournal(this.journal);
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
+        timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setLockProvider(new MemoryLockProvider());
         indexEngine = new MemoryIndexEngine();
@@ -58,12 +58,12 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @BeforeClass
-    public void setUpClass() throws Exception {
+    public void setUpEnv() throws Exception {
         repository.startAsync().awaitRunning();
     }
 
     @AfterClass
-    public void tearDownClass() throws Exception {
+    public void tearDownEnv() throws Exception {
         repository.stopAsync().awaitTerminated();
     }
 
@@ -72,11 +72,19 @@ public abstract class JournalTest<T extends Journal> {
         journal.clear();
     }
 
-    static class TestEvent extends Event {}
+    public static class TestEvent extends Event {}
 
-    @Value @EqualsAndHashCode(callSuper = false)
-    static class TestCommand extends Command<Void> {
+    @EqualsAndHashCode(callSuper = false)
+    public static class TestCommand extends Command<Void> {
+        @Getter @Setter
         private boolean events;
+
+        public TestCommand() {
+        }
+
+        public TestCommand(boolean events) {
+            this.events = events;
+        }
 
         @Override
         public Stream<Event> events(Repository repository) {
@@ -90,16 +98,21 @@ public abstract class JournalTest<T extends Journal> {
 
     @Test
     public void journalCounting() {
-        assertEquals(1, journal.journal(new TestCommand(true)));
-        assertEquals(0, journal.journal(new TestCommand(false)));
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+        assertEquals(journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp)), 1);
+        timestamp.update();
+        assertEquals(journal.journal((Command<?>) new TestCommand(false).timestamp(timestamp)), 0);
     }
 
     @Test
     public void journalListener() {
         AtomicInteger onEvent = new AtomicInteger(0);
         AtomicBoolean onCommit = new AtomicBoolean(false);
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
 
-        assertEquals(1, journal.journal(new TestCommand(true), new Journal.Listener() {
+        assertEquals(1, journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 onEvent.incrementAndGet();
@@ -111,37 +124,41 @@ public abstract class JournalTest<T extends Journal> {
             }
         }));
 
-        assertEquals(1, onEvent.get());
+        assertEquals(onEvent.get(), 1);
         assertTrue(onCommit.get());
     }
 
     @Test
     public void journalRetrieving() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
         List<Event> events = new ArrayList<>();
         TestCommand command = new TestCommand(true);
-        journal.journal(command, new Journal.Listener() {
+        journal.journal((Command<?>) command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
             }
         });
-        assertEquals(1, events.size());
+        assertEquals(events.size(), 1);
 
         Optional<Entity> entity = journal.get(command.uuid());
         assertTrue(entity.isPresent());
-        assertEquals(command, entity.get());
+        assertEquals(command.uuid(), entity.get().uuid());
 
         Event event = events.get(0);
         Optional<Entity> eventEntity = journal.get(event.uuid());
         assertTrue(eventEntity.isPresent());
-        assertEquals(event, eventEntity.get());
+        assertEquals(event.uuid(), eventEntity.get().uuid());
     }
 
     @Test
     public void journalIterating() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
         List<Event> events = new ArrayList<>();
         TestCommand command = new TestCommand(true);
-        journal.journal(command, new Journal.Listener() {
+        journal.journal((Command<?>) command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
@@ -153,7 +170,7 @@ public abstract class JournalTest<T extends Journal> {
         assertEquals(commandIterator.next().uuid(), command.uuid());
         assertFalse(commandIterator.hasNext());
 
-        assertEquals(1, events.size());
+        assertEquals(events.size(), 1);
         Event event = events.get(0);
 
         Iterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);

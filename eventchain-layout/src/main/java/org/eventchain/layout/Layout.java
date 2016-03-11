@@ -69,6 +69,12 @@ public class Layout<T> {
     @Getter
     private final byte[] hash;
 
+    private final Class<T> klass;
+
+    public Class<T> getLayoutClass() {
+        return klass;
+    }
+
     /**
      * Creates POJO's class layout
      *
@@ -83,6 +89,7 @@ public class Layout<T> {
     // build layouts in slightly different ways to facilitate creation of various
     // scenarios
     Layout(Class<T> klass, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException {
+        this.klass = klass;
         MethodHandles.Lookup lookup = MethodHandles.lookup();
 
         TypeResolver typeResolver = new TypeResolver();

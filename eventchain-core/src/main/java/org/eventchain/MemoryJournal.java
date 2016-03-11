@@ -46,6 +46,9 @@ public class MemoryJournal extends AbstractService implements Journal {
 
     @Override
     protected void doStart() {
+        if (repository == null) {
+            notifyFailed(new IllegalStateException("repository == null"));
+        }
         notifyStarted();
     }
 

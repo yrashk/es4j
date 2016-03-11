@@ -1,0 +1,12 @@
+dependencies {
+    compile project(':eventchain-core')
+    compile project(':eventchain-layout')
+
+
+    // H2 database
+    compile 'com.h2database:h2:1.4.191'
+
+    // Useful utilities
+    compile 'com.google.guava:guava:19.0'
+
+}

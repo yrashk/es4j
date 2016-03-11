@@ -51,6 +51,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
     private IndexEngine indexEngine;
     private ServiceManager services;
     private LockProvider lockProvider;
+    private Package pkg;
 
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
@@ -66,6 +67,14 @@ public class RepositoryImpl extends AbstractService implements Repository {
         if (lockProvider == null) {
             notifyFailed(new IllegalStateException("lockProvider == null"));
         }
+
+        Reflections reflections = pkg == null ? new Reflections() : new Reflections(pkg.getName());
+        Predicate<Class<? extends Entity>> classPredicate = klass ->
+                Modifier.isPublic(klass.getModifiers()) &&
+                        Modifier.isStatic(klass.getModifiers()) &&
+                        !Modifier.isAbstract(klass.getModifiers());
+        commands = reflections.getSubTypesOf(Command.class).stream().filter(classPredicate).collect(Collectors.toSet());
+        events = reflections.getSubTypesOf(Event.class).stream().filter(classPredicate).collect(Collectors.toSet());
 
         for (Class<? extends Entity> klass : commands) {
             if (configureIndices(klass)) return;
@@ -143,13 +152,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
         if (isRunning()) {
             throw new IllegalStateException();
         }
-        Reflections reflections = new Reflections(pkg.getName());
-        Predicate<Class<? extends Entity>> classPredicate = klass ->
-                Modifier.isPublic(klass.getModifiers()) &&
-                Modifier.isStatic(klass.getModifiers()) &&
-                !Modifier.isAbstract(klass.getModifiers());
-        commands = reflections.getSubTypesOf(Command.class).stream().filter(classPredicate).collect(Collectors.toSet());
-        events = reflections.getSubTypesOf(Event.class).stream().filter(classPredicate).collect(Collectors.toSet());
+        this.pkg = pkg;
     }
 
     @Override

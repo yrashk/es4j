@@ -25,6 +25,7 @@ import org.eventchain.annotations.Index;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.index.MemoryIndexEngine;
 import org.eventchain.index.SimpleAttribute;
+import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
@@ -51,9 +52,10 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @BeforeClass
     public void setUpEnv() throws Exception {
+        repository.setPackage(RepositoryTest.class.getPackage());
         journal = new MemoryJournal();
+        journal.setRepository(repository);
         repository.setJournal(journal);
-        repository.setPackage(getClass().getPackage());
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
@@ -63,6 +65,11 @@ public abstract class RepositoryTest<T extends Repository> {
         indexEngine.setRepository(repository);
         indexEngine.setJournal(journal);
         repository.startAsync().awaitRunning();
+    }
+
+    @AfterClass
+    public void tearDownEnv() throws Exception {
+        repository.stopAsync().awaitTerminated();
     }
 
     @BeforeMethod
@@ -115,6 +122,7 @@ public abstract class RepositoryTest<T extends Repository> {
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
+        assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get().string(), "test");
     }
 
     public static class LockCommand extends Command<Void> {

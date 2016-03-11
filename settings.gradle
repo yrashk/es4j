@@ -1,5 +1,6 @@
 include 'eventchain-layout'
 include 'eventchain-hlc'
 include 'eventchain-core'
+include 'eventchain-h2'
 
 rootProject.name = 'eventchain'
