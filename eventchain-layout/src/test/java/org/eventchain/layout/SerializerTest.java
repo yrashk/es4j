@@ -77,6 +77,9 @@ public class SerializerTest {
         @Getter @Setter
         private Character oChar;
 
+        @Getter @Setter
+        private String str;
+
 
     }
 
@@ -230,5 +233,19 @@ public class SerializerTest {
 
         assertEquals(Character.MIN_VALUE, deserialized.getPChar());
         assertEquals((Character)Character.MAX_VALUE, deserialized.getOChar());
+    }
+
+    @Test
+    public void stringSerialization() {
+        TestBean test = new TestBean();
+        test.setStr("test");
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals("test", deserialized.getStr());
     }
 }

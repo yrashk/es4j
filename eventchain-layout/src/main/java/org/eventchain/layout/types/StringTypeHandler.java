@@ -26,12 +26,12 @@ public class StringTypeHandler implements TypeHandler<String> {
 
     @Override
     public int size(String value) {
-        return value == null ? 0 : value.length();
+        return value == null ? SIZE_TAG_LENGTH : SIZE_TAG_LENGTH + value.getBytes().length;
     }
 
     @Override
     public void serialize(String value, ByteBuffer buffer) {
-        buffer.putInt(size(value));
+        buffer.putInt(value == null ? 0 : value.getBytes().length);
         if (value != null) {
             buffer.put(value.getBytes());
         }
