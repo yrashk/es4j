@@ -56,6 +56,13 @@ public interface Repository extends Service {
     void setIndexEngine(IndexEngine indexEngine) throws IllegalStateException;
 
     /**
+     * Get index engine as previously configured. Useful for querying.
+     *
+     * @return null if index engine was not configured yet.
+     */
+    IndexEngine getIndexEngine();
+
+    /**
      * Sets physical time provider
      *
      * @param timeProvider

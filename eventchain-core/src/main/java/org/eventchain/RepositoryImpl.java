@@ -47,6 +47,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
 
     private ServiceManager consumersServiceManager;
     private PhysicalTimeProvider timeProvider;
+    @Getter
     private IndexEngine indexEngine;
     private ServiceManager services;
     private LockProvider lockProvider;
