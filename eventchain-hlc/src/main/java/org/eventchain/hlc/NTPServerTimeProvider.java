@@ -19,6 +19,7 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeStamp;
+import org.osgi.service.component.annotations.Component;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * to using it as a PhysicalTimeProvider.
  *
  */
+@Component
 public class NTPServerTimeProvider extends AbstractScheduledService implements PhysicalTimeProvider {
 
 

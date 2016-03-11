@@ -1,0 +1,17 @@
+dependencies {
+    compile project(':eventchain-layout')
+    compile project(':eventchain-hlc')
+
+    // Useful utilities
+    compile 'com.google.guava:guava:19.0'
+
+    // Reflections API
+    compile 'org.reflections:reflections:0.9.10'
+
+    // Fast message processing
+    compile 'com.lmax:disruptor:3.3.4'
+
+    // Indexing
+    compile 'com.googlecode.cqengine:cqengine:2.1.1'
+
+}
