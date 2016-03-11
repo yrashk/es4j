@@ -117,6 +117,7 @@ public class UserFailedLoggingIn extends Event {
 What if we want to find unsuccessful login attempts? Let's add an index to `UserFailedLoggingIn`:
 
 ```java
+@Index
 public static SimpleAttribute<UserFailedLoggingIn, String> LOGIN =
   new SimpleAttribute<UserFailedLoggingIn, String>() {
     @Override
