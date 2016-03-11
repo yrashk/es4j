@@ -48,7 +48,6 @@ public abstract class JournalTest<T extends Journal> {
         repository.setPackage(getClass().getPackage());
         repository.setJournal(this.journal);
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
-        timeProvider.startAsync().awaitRunning();
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setLockProvider(new MemoryLockProvider());
         indexEngine = new MemoryIndexEngine();

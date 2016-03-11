@@ -84,7 +84,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
             consumersServiceManager.startAsync().awaitHealthy();
         }
 
-        services = new ServiceManager(Arrays.asList(journal, indexEngine));
+        services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
         services.startAsync().awaitHealthy();
 
         notifyStarted();

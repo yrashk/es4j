@@ -1,11 +1,13 @@
 package org.eventchain;
 
+import com.google.common.util.concurrent.Service;
+
 import java.util.function.Supplier;
 
 /**
  * Provides a mechanism for locks (see {@link Lock})
  */
-public interface LockProvider {
+public interface LockProvider extends Service {
 
     /**
      * Instantiates a new lock and locks it.

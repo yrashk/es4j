@@ -14,6 +14,7 @@
  */
 package org.eventchain.hlc;
 
+import com.google.common.util.concurrent.AbstractService;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -21,7 +22,7 @@ import static org.testng.Assert.assertEquals;
 
 public class HybridTimestampTest {
 
-    class TestPhysicalTimeProvider implements PhysicalTimeProvider {
+    class TestPhysicalTimeProvider extends AbstractService implements PhysicalTimeProvider {
 
         private long physicalTime = 0;
 
@@ -32,6 +33,16 @@ public class HybridTimestampTest {
 
         public void setPhysicalTime(long physicalTime) {
             this.physicalTime = physicalTime;
+        }
+
+        @Override
+        protected void doStart() {
+            notifyStarted();
+        }
+
+        @Override
+        protected void doStop() {
+            notifyStopped();
         }
     };
     private TestPhysicalTimeProvider physicalTimeProvider;

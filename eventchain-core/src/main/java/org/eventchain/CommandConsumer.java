@@ -92,7 +92,7 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
         }
     }
 
-    private static class TrackingLockProvider implements LockProvider {
+    private static class TrackingLockProvider extends AbstractService implements LockProvider {
 
         private final Set<Lock> locks = new HashSet<>();
         private final LockProvider lockProvider;
@@ -112,6 +112,16 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
             Lock l = lockProvider.lock(lock);
             locks.add(l);
             return new TrackingLock(l);
+        }
+
+        @Override
+        protected void doStart() {
+            notifyStarted();
+        }
+
+        @Override
+        protected void doStop() {
+            notifyStopped();
         }
 
         class TrackingLock implements Lock {
@@ -153,6 +163,7 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
         timestamp.update();
         event.command.timestamp(timestamp);
         event.lockProvider = new TrackingLockProvider(this.lockProvider);
+        event.lockProvider.startAsync().awaitRunning();
         journal.journal(event.command, new JournalListener(indexEngine, journal, event.command), event.lockProvider);
     }
 

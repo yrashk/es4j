@@ -14,11 +14,13 @@
  */
 package org.eventchain.hlc;
 
+import com.google.common.util.concurrent.Service;
+
 /**
  * PhysicalTimeProvider interface allows connecting different implementations
  * of NTP 64-bit timestamps
  */
-public interface PhysicalTimeProvider {
+public interface PhysicalTimeProvider extends Service {
 
     /**
      * @return Current timestamp as an NTP 64-bit value.

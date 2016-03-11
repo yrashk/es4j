@@ -26,6 +26,15 @@ import java.util.concurrent.CompletableFuture;
  * facilitate Eventchain operations.
  */
 public interface Repository extends Service {
+
+    /**
+     * Creates a default Repository
+     * @return
+     */
+    static Repository create() {
+        return new RepositoryImpl();
+    }
+
     /**
      * Sets journal to be used in this repository
      *
@@ -56,7 +65,7 @@ public interface Repository extends Service {
     /**
      * Sets lock provider
      *
-     * @param lockPovider
+     * @param lockProvider
      */
     void setLockProvider(LockProvider lockProvider) throws IllegalStateException;
 

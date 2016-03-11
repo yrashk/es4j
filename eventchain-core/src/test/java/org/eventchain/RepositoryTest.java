@@ -55,7 +55,6 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.setJournal(journal);
         repository.setPackage(getClass().getPackage());
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
-        timeProvider.startAsync().awaitRunning();
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
