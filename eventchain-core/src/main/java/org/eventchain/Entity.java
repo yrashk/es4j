@@ -21,7 +21,6 @@ import org.eventchain.hlc.HybridTimestamp;
 import org.eventchain.layout.LayoutIgnore;
 
 import java.util.UUID;
-import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingDeque;
 
