@@ -9,12 +9,23 @@ buildscript {
 
 plugins {
     id "com.github.hierynomus.license" version "0.12.1"
+    id 'me.champeau.gradle.jmh' version '0.3.0'
 }
 
+apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
+
+jmh {
+    include=''
+}
 version = "0.1.0-SNAPSHOT"
 
 allprojects {
   apply plugin: 'idea'
+
+  repositories {
+    jcenter()
+  }
+
 }
 
 subprojects {
@@ -34,10 +45,6 @@ subprojects {
     manifest {
         instruction 'Require-Capability', 'osgi.extender'
     }
-  }
-
-  repositories {
-    jcenter()
   }
 
   dependencies {
@@ -88,4 +95,13 @@ idea {
       }
     }
   }
+}
+
+dependencies {
+    compile project(':eventchain-core')
+    compile 'org.openjdk.jmh:jmh-generator-annprocess:1.11.3'
+
+    // Remove boilerplate
+    jmh 'org.projectlombok:lombok:1.16.8'
+
 }
