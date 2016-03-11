@@ -14,5 +14,8 @@
  */
 package org.eventchain;
 
+/**
+ * Event is a statement of a fact that has occurred once written to a journal.
+ */
 public class Event extends Entity {
 }
