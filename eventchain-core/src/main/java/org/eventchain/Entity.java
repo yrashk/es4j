@@ -21,16 +21,35 @@ import org.eventchain.hlc.HybridTimestamp;
 import org.eventchain.layout.LayoutIgnore;
 
 import java.util.UUID;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.LinkedBlockingDeque;
 
 public class Entity {
+
+    private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(1_000_000);
+
+    static {
+        ForkJoinPool.commonPool().execute(() -> {
+            while (true) {
+                try {
+                    uuids.put(UUID.randomUUID());
+                } catch (InterruptedException e) {
+                }
+            }
+        });
+    }
 
     @Setter @Accessors(fluent = true)
     private UUID uuid;
 
     @LayoutIgnore
     public UUID uuid() {
-        if (uuid == null) {
-            uuid = UUID.randomUUID();
+        while (uuid == null) {
+            try {
+                uuid = uuids.take();
+            } catch (InterruptedException e) {
+            }
         }
         return uuid;
     }
