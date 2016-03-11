@@ -2,6 +2,7 @@ dependencies {
     compile project(':eventchain-core')
     compile project(':eventchain-layout')
 
+    testCompile project(':eventchain-core').sourceSets.test.output
 
     // H2 database
     compile 'com.h2database:h2:1.4.191'
