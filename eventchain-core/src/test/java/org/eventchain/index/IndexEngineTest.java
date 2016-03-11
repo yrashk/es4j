@@ -15,13 +15,10 @@
 package org.eventchain.index;
 
 import com.googlecode.cqengine.IndexedCollection;
+import lombok.*;
 import org.eventchain.index.SimpleAttribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.Value;
 import lombok.experimental.Accessors;
 import org.eventchain.*;
 import org.eventchain.hlc.NTPServerTimeProvider;
@@ -79,7 +76,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
 
-    @Value
+    @Value @EqualsAndHashCode(callSuper=false)
     static class TestEvent extends Event {
         private String string;
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
