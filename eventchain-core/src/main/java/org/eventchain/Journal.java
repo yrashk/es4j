@@ -40,7 +40,7 @@ public interface Journal extends Service {
      * Journal <code>command</code> in repository <code>repository</code>,
      * with a default (no-op) listener ({@link #DEFAULT_LISTENER})
      *
-     * See more details at {@link #journal(Repository, Command, Listener)}
+     * See more details at {@link #journal(Command, Listener)}
      *
      * @param command
      * @return number of events processed
@@ -60,7 +60,20 @@ public interface Journal extends Service {
      * @param listener
      * @return number of events processed
      */
-    long journal(Command<?> command, Listener listener);
+    default long journal(Command<?> command, Listener listener) {
+        return journal(command, listener, new MemoryLockProvider());
+    }
+
+    /**
+     * Journal <code>command</code> in repository <code>repository</code>,
+     * with a custom listener and a lock provider.
+     *
+     * @param command
+     * @param listener
+     * @param lockProvider
+     * @return number of events processed
+     */
+    long journal(Command<?> command, Listener listener, LockProvider lockProvider);
 
     /**
      * Retrieves a command or event by UUID

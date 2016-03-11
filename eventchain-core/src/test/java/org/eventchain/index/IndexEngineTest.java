@@ -15,10 +15,9 @@
 package org.eventchain.index;
 
 import com.googlecode.cqengine.IndexedCollection;
-import lombok.*;
-import org.eventchain.index.SimpleAttribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.eventchain.*;
 import org.eventchain.hlc.NTPServerTimeProvider;
@@ -53,6 +52,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         repository.setJournal(journal);
         repository.setPackage(getClass().getPackage());
         repository.setIndexEngine(indexEngine);
+        repository.setLockProvider(new MemoryLockProvider());
         timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);
 

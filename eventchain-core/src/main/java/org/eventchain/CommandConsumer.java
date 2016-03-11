@@ -32,7 +32,9 @@ import org.eventchain.layout.Layout;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 
@@ -45,11 +47,13 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
     private final Repository repository;
     private final Journal journal;
     private final IndexEngine indexEngine;
+    private final LockProvider lockProvider;
     private final Layout<T> layout;
     private final Deserializer<T> deserializer;
 
     private static class CommandEvent<T extends Command<?>, C> {
         T command;
+        TrackingLockProvider lockProvider;
         CompletableFuture<C> completed;
 
         @SneakyThrows
@@ -88,14 +92,58 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
         }
     }
 
+    private static class TrackingLockProvider implements LockProvider {
+
+        private final Set<Lock> locks = new HashSet<>();
+        private final LockProvider lockProvider;
+
+        private TrackingLockProvider(LockProvider lockProvider) {
+            this.lockProvider = lockProvider;
+        }
+
+        private void release() {
+            for (Lock lock : locks) {
+                lock.unlock();
+            }
+        }
+
+        @Override
+        public Lock lock(Object lock) {
+            Lock l = lockProvider.lock(lock);
+            locks.add(l);
+            return new TrackingLock(l);
+        }
+
+        class TrackingLock implements Lock {
+
+            private final Lock lock;
+
+            public TrackingLock(Lock lock) {
+                this.lock = lock;
+            }
+
+            @Override
+            public void unlock() {
+                lock.unlock();
+                locks.remove(lock);
+            }
+
+            @Override
+            public boolean isLocked() {
+                return lock.isLocked();
+            }
+        }
+    }
+
     @SneakyThrows
     public CommandConsumer(Class<T> commandClass, PhysicalTimeProvider timeProvider,
-                           Repository repository, Journal journal, IndexEngine indexEngine) {
+                           Repository repository, Journal journal, IndexEngine indexEngine, LockProvider lockProvider) {
         this.commandClass = commandClass;
         this.timeProvider = timeProvider;
         this.repository = repository;
         this.journal = journal;
         this.indexEngine = indexEngine;
+        this.lockProvider = lockProvider;
         this.timestamp = new HybridTimestamp(timeProvider);
         layout = new Layout<>(commandClass);
         deserializer = new Deserializer<>(layout);
@@ -104,11 +152,15 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
     private void journal(CommandEvent<T, C> event, long sequence, boolean endOfBatch) throws Exception {
         timestamp.update();
         event.command.timestamp(timestamp);
-        journal.journal(event.command, new JournalListener(indexEngine, journal, event.command));
+        event.lockProvider = new TrackingLockProvider(this.lockProvider);
+        journal.journal(event.command, new JournalListener(indexEngine, journal, event.command), event.lockProvider);
     }
 
     private void complete(CommandEvent<T, C> event, long sequence, boolean endOfBatch) throws Exception {
-        event.completed.complete(event.command.onCompletion());
+        if (!event.completed.isCompletedExceptionally()) {
+            event.completed.complete(event.command.onCompletion());
+            event.lockProvider.release();
+        }
     }
 
     private void translate(CommandEvent<T, C> event, long sequence, T command, CompletableFuture<C> completed) {
@@ -167,6 +219,7 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
 
         @Override
         public void handleEventException(Throwable ex, long sequence, CommandEvent<T,C> event) {
+            event.lockProvider.release();
             event.completed.completeExceptionally(ex);
         }
 

@@ -47,6 +47,20 @@ public interface Repository extends Service {
     void setIndexEngine(IndexEngine indexEngine) throws IllegalStateException;
 
     /**
+     * Sets physical time provider
+     *
+     * @param timeProvider
+     */
+    void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) throws IllegalStateException;
+
+    /**
+     * Sets lock provider
+     *
+     * @param lockPovider
+     */
+    void setLockProvider(LockProvider lockProvider) throws IllegalStateException;
+
+    /**
      * Sets package hierarchy for command and event discovery.
      *
      * Should be done before invoking {@link #startAsync()}
@@ -56,12 +70,6 @@ public interface Repository extends Service {
      */
     void setPackage(Package pkg) throws IllegalStateException;
 
-    /**
-     * Sets physical time provider
-     *
-     * @param timeProvider
-     */
-    void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider);
 
     /**
      * Returns a set of commands discovered or configured

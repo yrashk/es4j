@@ -49,6 +49,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
     private PhysicalTimeProvider timeProvider;
     private IndexEngine indexEngine;
     private ServiceManager services;
+    private LockProvider lockProvider;
 
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
@@ -60,6 +61,9 @@ public class RepositoryImpl extends AbstractService implements Repository {
         }
         if (indexEngine == null) {
             notifyFailed(new IllegalStateException("indexEngine == null"));
+        }
+        if (lockProvider == null) {
+            notifyFailed(new IllegalStateException("lockProvider == null"));
         }
 
         for (Class<? extends Entity> klass : commands) {
@@ -148,10 +152,20 @@ public class RepositoryImpl extends AbstractService implements Repository {
     }
 
     @Override
-    public void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) {
+    public void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
         this.timeProvider = timeProvider;
     }
 
+    @Override
+    public void setLockProvider(LockProvider lockProvider) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
+        this.lockProvider = lockProvider;
+    }
     @Override @SuppressWarnings("unchecked")
     public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
         return this.getCommandConsumer((Class<T>) command.getClass()).publish(command);
@@ -166,7 +180,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
         }
         CommandConsumer<T, C> consumer = (CommandConsumer<T, C>) consumers.get(commandClass);
         if (consumer == null) {
-            consumer = new CommandConsumer<>(commandClass, timeProvider, this, journal, indexEngine);
+            consumer = new CommandConsumer<>(commandClass, timeProvider, this, journal, indexEngine, lockProvider);
             consumers.put(commandClass, consumer);
         }
         return consumer;

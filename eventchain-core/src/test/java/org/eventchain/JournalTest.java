@@ -20,7 +20,10 @@ import lombok.Value;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.index.IndexEngine;
 import org.eventchain.index.MemoryIndexEngine;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -41,16 +44,17 @@ public abstract class JournalTest<T extends Journal> {
     @SneakyThrows
     public JournalTest(T journal) {
         this.journal = journal;
-        this.repository = new RepositoryImpl();
-        this.repository.setPackage(getClass().getPackage());
-        this.repository.setJournal(this.journal);
+        repository = new RepositoryImpl();
+        repository.setPackage(getClass().getPackage());
+        repository.setJournal(this.journal);
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
         timeProvider.startAsync().awaitRunning();
-        this.repository.setPhysicalTimeProvider(timeProvider);
+        repository.setPhysicalTimeProvider(timeProvider);
+        repository.setLockProvider(new MemoryLockProvider());
         indexEngine = new MemoryIndexEngine();
         indexEngine.setJournal(journal);
         indexEngine.setRepository(repository);
-        this.repository.setIndexEngine(indexEngine);
+        repository.setIndexEngine(indexEngine);
         this.journal.setRepository(repository);
     }
 

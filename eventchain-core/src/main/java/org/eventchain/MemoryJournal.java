@@ -22,7 +22,6 @@ import org.osgi.service.component.annotations.Reference;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * Memory-based {@link Journal} implementation. Not meant to be used in production.
@@ -60,10 +59,10 @@ public class MemoryJournal extends AbstractService implements Journal {
     // documentation
 
     @Override
-    public synchronized long journal(Command<?> command, Journal.Listener listener) {
+    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) {
         EventConsumer eventConsumer = new EventConsumer(command, listener);
         commands.put(command.uuid(), command);
-        Stream<Event> events = command.events(repository);
+        Stream<Event> events = command.events(repository, lockProvider);
         long count = events.peek(eventConsumer).count();
         listener.onCommit();
         return count;

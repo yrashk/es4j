@@ -14,7 +14,9 @@
  */
 package org.eventchain.index;
 
-import org.eventchain.*;
+import org.eventchain.Command;
+import org.eventchain.EntityHandle;
+import org.eventchain.Journal;
 
 import java.util.Iterator;
 import java.util.Set;

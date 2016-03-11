@@ -16,7 +16,6 @@ package org.eventchain;
 
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -32,18 +31,19 @@ import org.testng.annotations.Test;
 
 import java.util.stream.Stream;
 
+import static com.googlecode.cqengine.query.QueryFactory.contains;
+import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.SC;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
-
-import static com.googlecode.cqengine.query.QueryFactory.*;
 
 public abstract class RepositoryTest<T extends Repository> {
 
     private final T repository;
     private Journal journal;
     private MemoryIndexEngine indexEngine;
+    private MemoryLockProvider lockProvider;
 
     public RepositoryTest(T repository) {
         this.repository = repository;
@@ -59,6 +59,8 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
+        lockProvider = new MemoryLockProvider();
+        repository.setLockProvider(lockProvider);
         indexEngine.setRepository(repository);
         indexEngine.setJournal(journal);
         repository.startAsync().awaitRunning();
@@ -114,6 +116,38 @@ public abstract class RepositoryTest<T extends Repository> {
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
+    }
+
+    public static class LockCommand extends Command<Void> {
+        @Override
+        public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+            lockProvider.lock("LOCK");
+            return Stream.empty();
+        }
+    }
+
+    @Test(timeOut = 1000) @SneakyThrows
+    public void lockTracking() {
+        repository.publish(new LockCommand()).get();
+        Lock lock = lockProvider.lock("LOCK");
+        assertTrue(lock.isLocked());
+        lock.unlock();
+    }
+
+    public static class ExceptionalLockCommand extends Command<Void> {
+        @Override
+        public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+            lockProvider.lock("LOCK");
+            throw new IllegalStateException();
+        }
+    }
+
+    @Test(timeOut = 1000) @SneakyThrows
+    public void exceptionalLockTracking() {
+        repository.publish(new ExceptionalLockCommand()).exceptionally(throwable -> null).get();
+        Lock lock = lockProvider.lock("LOCK");
+        assertTrue(lock.isLocked());
+        lock.unlock();
     }
 
 }

@@ -43,6 +43,27 @@ public abstract class Command<R> extends Entity {
     }
 
     /**
+     * Returns a stream of events that should be recorded. By default, an empty stream returned.
+     *
+     * This version of the function receives a {@link LockProvider} if one is needed. {@link CommandConsumer}
+     * will pass a special "tracking" provider that will release the locks in two situations:
+     *
+     * <ul>
+     *     <li>{@link #events(Repository, LockProvider)} threw an exception</li>
+     *     <li>{@link #onCompletion()} did not release any locks</li>
+     * </ul>
+     *
+     * @param repository Configured repository
+     * @param lockProvider Lock provider
+     * @return stream of events
+     * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
+     *         be recorded
+     */
+    public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+        return events(repository);
+    }
+
+    /**
      * Once all events are recorded, this callback will be invoked
      *
      * By default, it does nothing and it is meant to be overridden when necessary. For example,

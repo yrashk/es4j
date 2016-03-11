@@ -18,7 +18,9 @@ import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.persistence.Persistence;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import org.eventchain.*;
+import org.eventchain.Entity;
+import org.eventchain.EntityHandle;
+import org.eventchain.Journal;
 
 import java.sql.Connection;
 import java.util.Collection;

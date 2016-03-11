@@ -18,7 +18,8 @@ import org.testng.annotations.Test;
 
 import java.util.UUID;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class EntityTest {
 
