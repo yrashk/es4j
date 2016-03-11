@@ -27,6 +27,8 @@ import org.eventchain.layout.Serializer;
 import org.h2.mvstore.Cursor;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 import java.nio.ByteBuffer;
@@ -35,25 +37,45 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Component
+@Component(servicefactory = true, properties = "filename=nio:eventchain.db")
 public class MVStoreJournal extends AbstractService implements Journal {
     private Repository repository;
 
-    private final MVStore store;
-    private final MVMap<UUID, byte[]> commandPayloads;
-    private final MVMap<UUID, Long> commandTimestamps;
-    private final MVMap<UUID, byte[]> commandHashes;
-    private final MVMap<byte[], Boolean> hashCommands;
-    private final MVMap<UUID, byte[]> eventPayloads;
-    private final MVMap<UUID, UUID> eventCommands;
-    private final MVMap<UUID, Long> eventTimestamps;
-    private final MVMap<byte[], Boolean> hashEvents;
-    private final MVMap<UUID, byte[]> eventHashes;
-    private final MVMap<byte[], byte[]> commandEvents;
+    private MVStore store;
+    private MVMap<UUID, byte[]> commandPayloads;
+    private MVMap<UUID, Long> commandTimestamps;
+    private MVMap<UUID, byte[]> commandHashes;
+    private MVMap<byte[], Boolean> hashCommands;
+    private MVMap<UUID, byte[]> eventPayloads;
+    private MVMap<UUID, UUID> eventCommands;
+    private MVMap<UUID, Long> eventTimestamps;
+    private MVMap<byte[], Boolean> hashEvents;
+    private MVMap<UUID, byte[]> eventHashes;
+    private MVMap<byte[], byte[]> commandEvents;
 
 
     public MVStoreJournal(MVStore store) {
         this.store = store;
+    }
+
+    public MVStoreJournal() {
+    }
+
+    @Activate
+    public void activate(ComponentContext ctx) {
+        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
+    }
+
+    @Override
+    protected void doStart() {
+        if (repository == null) {
+            notifyFailed(new IllegalStateException("repository == null"));
+        }
+
+        if (store == null) {
+            notifyFailed(new IllegalStateException("store == null"));
+        }
+
 
         MVMap<String, Object> info = store.openMap("info");
         info.putIfAbsent("version", 1);
@@ -69,13 +91,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
         eventHashes = store.openMap("eventHashes");
         hashEvents = store.openMap("hashEvents");
         commandEvents = store.openMap("commandEvents");
-    }
 
-    @Override
-    protected void doStart() {
-        if (repository == null) {
-            notifyFailed(new IllegalStateException("repository == null"));
-        }
 
         repository.getCommands().forEach(new EntityLayoutExtractor());
         repository.getEvents().forEach(new EntityLayoutExtractor());
