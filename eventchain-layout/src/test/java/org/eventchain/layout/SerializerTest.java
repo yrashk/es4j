@@ -21,6 +21,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
+import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
 
@@ -79,6 +80,9 @@ public class SerializerTest {
 
         @Getter @Setter
         private String str;
+
+        @Getter @Setter
+        private UUID uuid;
 
 
     }
@@ -247,5 +251,20 @@ public class SerializerTest {
         deserializer.deserialize(deserialized, buffer);
 
         assertEquals("test", deserialized.getStr());
+    }
+
+    @Test
+    public void uuidSerialization() {
+        TestBean test = new TestBean();
+        UUID uuid = UUID.randomUUID();
+        test.setUuid(uuid);
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals(uuid, deserialized.getUuid());
     }
 }
