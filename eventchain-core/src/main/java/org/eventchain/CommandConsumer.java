@@ -222,6 +222,7 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
 
     @Override
     protected void doStop() {
+        disruptor.shutdown();
         notifyStopped();
     }
 
