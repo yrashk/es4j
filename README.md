@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/eventchain/eventchain.svg?branch=master)](https://travis-ci.org/eventchain/eventchain)
+
 # Eventchain
 
 Eventchain is an **event sourcing** framework for Java. Instead of mutating data in a database, it stores all changes
