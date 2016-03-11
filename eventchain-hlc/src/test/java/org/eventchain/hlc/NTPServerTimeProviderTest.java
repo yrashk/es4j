@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -39,7 +40,7 @@ public class NTPServerTimeProviderTest {
     @DataProvider(name = "delays", parallel = true)
     public static Iterator<Object[]> delays() {
         return IntStream.generate(() -> new Random().nextInt(3000)).
-                limit(100).
+                limit(ForkJoinPool.getCommonPoolParallelism() * 10).
                 boxed().
                 map(i -> new Object[]{i}).
                 collect(Collectors.toList()).
@@ -60,7 +61,7 @@ public class NTPServerTimeProviderTest {
         serviceManager.stopAsync().awaitStopped();
     }
 
-    @Test(successPercentage = 99, threadPoolSize = 8, dataProvider = "delays")
+    @Test(successPercentage = 99, dataProvider = "delays")
     public void secondsPassed(int delay) throws UnknownHostException, InterruptedException {
         TimeStamp ts1 = provider.getTimestamp();
         Thread.sleep(delay);
