@@ -52,4 +52,7 @@ public class Property<T> {
         setter.accept(object, value);
     }
 
+    public String toString() {
+        return name + ": " + type.getBriefDescription();
+    }
 }

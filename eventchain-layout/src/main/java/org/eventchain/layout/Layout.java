@@ -17,6 +17,7 @@ package org.eventchain.layout;
 import com.fasterxml.classmate.*;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
+import com.google.common.io.BaseEncoding;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
@@ -229,5 +230,13 @@ public class Layout<T> {
         public AnnotationInclusion getInclusionForParameter(Class<? extends Annotation> annotationType) {
             return AnnotationInclusion.DONT_INCLUDE;
         }
+    }
+
+    public String toString() {
+        StringBuilder builder = new StringBuilder().append(klass.getName() + " " + BaseEncoding.base16().encode(hash)).append("\n");
+        for (Property<T> property : properties) {
+            builder.append("    ").append(property.toString()).append("\n");
+        }
+        return builder.toString();
     }
 }
