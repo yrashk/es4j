@@ -1,4 +1,5 @@
 [![Build Status](https://travis-ci.org/eventchain/eventchain.svg?branch=master)](https://travis-ci.org/eventchain/eventchain)
+[![Bintray](https://img.shields.io/bintray/v/eventchain/org.eventchain/eventchain-core.svg)]()
 
 # Eventchain
 
@@ -29,6 +30,28 @@ library that has been used in real projects, so a lot was learned and incorporat
 * Locking synchronization primitive
 
 # Getting Started
+
+You can get packages from Bintray:
+
+(Gradle)
+
+```groovy
+repositories {
+    maven {
+        url  "http://dl.bintray.com/eventchain/org.eventchain"
+    }
+}
+
+dependencies {
+  compile 'org.eventchain:eventchain-core:0.1.0'
+  compile 'org.eventchain:eventchain-h2:0.1.0' // for H2 storage
+}
+```
+
+That said, Eventchain is evolving quickly and in some cases, having Eventchain from the master branch as a git submodule can be a better fit.
+
+``
+## Repository
 
 First of all, the repository has to be configured. Currently, the procedure is
 a little bit lengthy, but it can also be simplified when used in an OSGi container.
