@@ -22,83 +22,83 @@ jmh {
 version = "0.2.0-SNAPSHOT"
 
 allprojects {
-  apply plugin: 'idea'
+    apply plugin: 'idea'
 
-  repositories {
-    jcenter()
-  }
+    repositories {
+        jcenter()
+    }
 
 }
 
 subprojects {
-  version = rootProject.version
+    version = rootProject.version
 
-  apply plugin: 'java'
-  apply plugin: 'osgi'
-  apply plugin: 'license'
-  apply plugin: 'java-library-distribution'
-  apply plugin: 'biz.aQute.bnd.builder'
-  apply plugin: 'com.jfrog.bintray'
-  apply plugin: 'maven'
-  apply plugin: 'maven-publish'
+    apply plugin: 'java'
+    apply plugin: 'osgi'
+    apply plugin: 'license'
+    apply plugin: 'java-library-distribution'
+    apply plugin: 'biz.aQute.bnd.builder'
+    apply plugin: 'com.jfrog.bintray'
+    apply plugin: 'maven'
+    apply plugin: 'maven-publish'
 
-  license {
-    header rootProject.file('LICENSE')
-  }
-
-  jar {
-    manifest {
-        instruction 'Require-Capability', 'osgi.extender'
+    license {
+        header rootProject.file('LICENSE')
     }
-  }
 
-  publishing {
-    publications {
-          MyPublication(MavenPublication) {
-            from components.java
-            groupId 'org.eventchain'
-            artifactId project.name
-            version project.version
-          }
-      }
-  }
+    jar {
+        manifest {
+            instruction 'Require-Capability', 'osgi.extender'
+        }
+    }
 
-  bintray {
-      user = System.getenv('BINTRAY_USER')
-      key = System.getenv('BINTRAY_KEY')
-      publications = ['MyPublication']
-      pkg {
-          repo = 'org.eventchain'
-          name = project.name
-          userOrg = 'eventchain'
-          licenses = ['Apache-2.0']
-          vcsUrl = 'https://github.com/eventchain/eventchain'
-          version {
-              name = project.version
-          }
-      }
-  }
+    publishing {
+        publications {
+            MyPublication(MavenPublication) {
+                from components.java
+                groupId 'org.eventchain'
+                artifactId project.name
+                version project.version
+            }
+        }
+    }
 
-  dependencies {
-    // The production code uses the SLF4J logging API at compile time
-    compile 'org.slf4j:slf4j-api:1.7.18'
-    compile 'org.slf4j:slf4j-simple:1.7.18'
+    bintray {
+        user = System.getenv('BINTRAY_USER')
+        key = System.getenv('BINTRAY_KEY')
+        publications = ['MyPublication']
+        pkg {
+            repo = 'org.eventchain'
+            name = project.name
+            userOrg = 'eventchain'
+            licenses = ['Apache-2.0']
+            vcsUrl = 'https://github.com/eventchain/eventchain'
+            version {
+                name = project.version
+            }
+        }
+    }
 
-    // Unit testing
-    testCompile 'org.testng:testng:6.9.10'
+    dependencies {
+        // The production code uses the SLF4J logging API at compile time
+        compile 'org.slf4j:slf4j-api:1.7.18'
+        compile 'org.slf4j:slf4j-simple:1.7.18'
 
-    // Remove boilerplate
-    compile 'org.projectlombok:lombok:1.16.8'
+        // Unit testing
+        testCompile 'org.testng:testng:6.9.10'
 
-    // OSGi
-    compile 'org.osgi:org.osgi.core:6.0.0'
-    compile 'org.osgi:org.osgi.service.cm:1.5.0'
-    compile 'org.osgi:org.osgi.service.component:1.3.0'
-    compile 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
+        // Remove boilerplate
+        compile 'org.projectlombok:lombok:1.16.8'
 
-  }
+        // OSGi
+        compile 'org.osgi:org.osgi.core:6.0.0'
+        compile 'org.osgi:org.osgi.service.cm:1.5.0'
+        compile 'org.osgi:org.osgi.service.component:1.3.0'
+        compile 'biz.aQute.bnd:biz.aQute.bndlib:3.1.0'
 
-  test.useTestNG()
+    }
+
+    test.useTestNG()
 }
 
 task assembleDist(type: Copy) {
@@ -114,20 +114,20 @@ task assembleDist(type: Copy) {
 
 
 idea {
-  project {
-    languageLevel = '1.8'
-    vcs = 'Git'
-    ipr.withXml { xmlFile ->
-      // enable 'Annotation Processors'
-      xmlFile.asNode().component.find {
-        it.@name == 'CompilerConfiguration'
-      }['annotationProcessing'][0].replaceNode {
-        annotationProcessing {
-          profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
+    project {
+        languageLevel = '1.8'
+        vcs = 'Git'
+        ipr.withXml { xmlFile ->
+            // enable 'Annotation Processors'
+            xmlFile.asNode().component.find {
+                it.@name == 'CompilerConfiguration'
+            }['annotationProcessing'][0].replaceNode {
+                annotationProcessing {
+                    profile(default: true, name: 'Default', useClasspath: 'true', enabled: true)
+                }
+            }
         }
-      }
     }
-  }
 }
 
 dependencies {
