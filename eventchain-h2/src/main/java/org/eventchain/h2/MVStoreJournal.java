@@ -37,7 +37,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Component(servicefactory = true, properties = "filename=nio:eventchain.db")
+@Component(servicefactory = true, properties = "org.eventchain.hlc.MVStoreJournal.filename")
 public class MVStoreJournal extends AbstractService implements Journal {
     private Repository repository;
 
@@ -63,7 +63,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
 
     @Activate
     public void activate(ComponentContext ctx) {
-        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
+        this.store = MVStore.open((String) ctx.getProperties().get("org.eventchain.hlc.MVStoreJournal.filename"));
     }
 
     @Override
