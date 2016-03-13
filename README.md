@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/eventchain/eventchain.svg?branch=master)](https://travis-ci.org/eventchain/eventchain)
-[![Bintray](https://img.shields.io/bintray/v/eventchain/org.eventchain/eventchain-core.svg)]()
+[![Bintray](https://img.shields.io/bintray/v/eventchain/org.eventchain/eventchain-core.svg)](https://bintray.com/eventchain/org.eventchain)
 
 # Eventchain
 
