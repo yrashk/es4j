@@ -18,6 +18,9 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
@@ -41,6 +44,7 @@ import java.util.function.Function;
 public class MVStoreJournal extends AbstractService implements Journal {
     private Repository repository;
 
+    @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
     private MVStore store;
     private MVMap<UUID, byte[]> commandPayloads;
     private MVMap<UUID, Long> commandTimestamps;
@@ -76,7 +80,15 @@ public class MVStoreJournal extends AbstractService implements Journal {
             notifyFailed(new IllegalStateException("store == null"));
         }
 
+        initializeStore();
 
+        repository.getCommands().forEach(new EntityLayoutExtractor());
+        repository.getEvents().forEach(new EntityLayoutExtractor());
+
+        notifyStarted();
+    }
+
+    void initializeStore() {
         MVMap<String, Object> info = store.openMap("info");
         info.putIfAbsent("version", 1);
         store.commit();
@@ -91,12 +103,6 @@ public class MVStoreJournal extends AbstractService implements Journal {
         eventHashes = store.openMap("eventHashes");
         hashEvents = store.openMap("hashEvents");
         commandEvents = store.openMap("commandEvents");
-
-
-        repository.getCommands().forEach(new EntityLayoutExtractor());
-        repository.getEvents().forEach(new EntityLayoutExtractor());
-
-        notifyStarted();
     }
 
     @Override

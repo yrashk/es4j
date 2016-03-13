@@ -36,14 +36,18 @@ import static org.testng.Assert.*;
 
 public abstract class JournalTest<T extends Journal> {
 
-    private final T journal;
-    private final RepositoryImpl repository;
-    private final IndexEngine indexEngine;
-    private final NTPServerTimeProvider timeProvider;
+    protected final T journal;
+    private RepositoryImpl repository;
+    private IndexEngine indexEngine;
+    protected NTPServerTimeProvider timeProvider;
 
     @SneakyThrows
     public JournalTest(T journal) {
         this.journal = journal;
+    }
+
+    @BeforeClass
+    public void setUpEnv() throws Exception {
         repository = new RepositoryImpl();
         repository.setPackage(JournalTest.class.getPackage());
         repository.setJournal(this.journal);
@@ -55,10 +59,6 @@ public abstract class JournalTest<T extends Journal> {
         indexEngine.setRepository(repository);
         repository.setIndexEngine(indexEngine);
         this.journal.setRepository(repository);
-    }
-
-    @BeforeClass
-    public void setUpEnv() throws Exception {
         repository.startAsync().awaitRunning();
     }
 

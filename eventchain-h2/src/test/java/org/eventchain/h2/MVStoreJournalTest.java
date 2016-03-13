@@ -24,4 +24,5 @@ public class MVStoreJournalTest extends JournalTest<MVStoreJournal> {
     public MVStoreJournalTest() {
         super(new MVStoreJournal(MVStore.open(null)));
     }
+
 }
