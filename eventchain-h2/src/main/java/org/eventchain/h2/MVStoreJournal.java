@@ -122,7 +122,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
     }
 
     @Override @SuppressWarnings("unchecked")
-    public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) {
+    public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
         long version = store.getCurrentVersion();
 
         try {

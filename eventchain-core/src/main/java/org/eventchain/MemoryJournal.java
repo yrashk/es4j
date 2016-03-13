@@ -16,6 +16,7 @@ package org.eventchain;
 
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
+import lombok.SneakyThrows;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -62,10 +63,11 @@ public class MemoryJournal extends AbstractService implements Journal {
     // documentation
 
     @Override
-    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) {
+    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
         EventConsumer eventConsumer = new EventConsumer(command, listener);
         commands.put(command.uuid(), command);
-        Stream<Event> events = command.events(repository, lockProvider);
+        Stream<Event> events = null;
+        events = command.events(repository, lockProvider);
         long count = events.peek(eventConsumer).count();
         listener.onCommit();
         return count;

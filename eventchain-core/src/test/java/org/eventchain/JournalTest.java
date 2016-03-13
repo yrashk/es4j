@@ -87,7 +87,7 @@ public abstract class JournalTest<T extends Journal> {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<Event> events(Repository repository) throws Exception {
             if (events) {
                 return Stream.of(new TestEvent());
             } else {
@@ -97,6 +97,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @Test
+    @SneakyThrows
     public void journalCounting() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
@@ -106,6 +107,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @Test
+    @SneakyThrows
     public void journalListener() {
         AtomicInteger onEvent = new AtomicInteger(0);
         AtomicBoolean onCommit = new AtomicBoolean(false);
@@ -129,6 +131,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @Test
+    @SneakyThrows
     public void journalRetrieving() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
@@ -153,6 +156,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @Test
+    @SneakyThrows
     public void journalIterating() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();

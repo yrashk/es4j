@@ -45,7 +45,7 @@ public interface Journal extends Service {
      * @param command
      * @return number of events processed
      */
-    default long journal(Command<?> command) {
+    default long journal(Command<?> command) throws Exception {
         return journal(command, DEFAULT_LISTENER);
     }
 
@@ -60,7 +60,7 @@ public interface Journal extends Service {
      * @param listener
      * @return number of events processed
      */
-    default long journal(Command<?> command, Listener listener) {
+    default long journal(Command<?> command, Listener listener) throws Exception {
         return journal(command, listener, new MemoryLockProvider());
     }
 
@@ -73,7 +73,7 @@ public interface Journal extends Service {
      * @param lockProvider
      * @return number of events processed
      */
-    long journal(Command<?> command, Listener listener, LockProvider lockProvider);
+    long journal(Command<?> command, Listener listener, LockProvider lockProvider) throws Exception;
 
     /**
      * Retrieves a command or event by UUID

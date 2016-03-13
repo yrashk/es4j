@@ -32,8 +32,8 @@ public class Serializer<T> {
      * Serializes value of a type <code>T</code> to a newly allocated
      * {@link ByteBuffer}.
      *
-     * If you already have a ByteBuffer of a size of at least {@link #size(T)},
-     * you can use {@link #serialize(T, ByteBuffer)}.
+     * If you already have a ByteBuffer of a size of at least {@link #size(Object)},
+     * you can use {@link #serialize(Object, ByteBuffer)}.
      * @param value
      * @return New {@link ByteBuffer} instance
      */
@@ -46,7 +46,7 @@ public class Serializer<T> {
     /**
      * Serializes value of a type <code>T</code> to an existing {@link ByteBuffer}.
      *
-     * Note that {@link ByteBuffer} should have at least {@link #size(T)} bytes available.
+     * Note that {@link ByteBuffer} should have at least {@link #size(Object)} bytes available.
      *
      * @param value value to serialize
      * @param buffer existing {@link ByteBuffer}

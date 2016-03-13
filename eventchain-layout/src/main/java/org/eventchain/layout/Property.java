@@ -23,7 +23,7 @@ import java.util.function.Function;
 /**
  * Property represents POJO's property name, type and getter/setter.
  *
- * Normally not created manually but retrieved from {@link Layout<T>}
+ * Normally not created manually but retrieved from {@link Layout}
  * @param <T>
  */
 @Value

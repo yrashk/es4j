@@ -43,16 +43,16 @@ import java.util.stream.Collectors;
  *
  * Class name, property names and property types are used to deterministically calculate POJO's hash (used for versioning).
  *
- * <h5>Property qualification</h5>
+ * <h1>Property qualification</h1>
  *
  * Only certain properties will be included into the layout. Here's the definitive list of criteria:
  *
- * <li>
- *     <ul>Has a getter (fluent or JavaBean style)</ul>
- *     <ul>Has a setter (fluent or JavaBean style)</ul>
- *     <ul>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</ul>
- *     <ul>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</ul>
- * </li>
+ * <ul>
+ *     <li>Has a getter (fluent or JavaBean style)</li>
+ *     <li>Has a setter (fluent or JavaBean style)</li>
+ *     <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
+ *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</li>
+ * </ul>
  *
  * Inherited properties from superclasses will also be included.
  *

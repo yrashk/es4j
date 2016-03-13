@@ -38,7 +38,7 @@ public abstract class Command<R> extends Entity {
      *         be recorded
      */
 
-    public Stream<Event> events(Repository repository) {
+    public Stream<Event> events(Repository repository) throws Exception {
         return Stream.empty();
     }
 
@@ -59,7 +59,7 @@ public abstract class Command<R> extends Entity {
      * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
      *         be recorded
      */
-    public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+    public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
         return events(repository);
     }
 

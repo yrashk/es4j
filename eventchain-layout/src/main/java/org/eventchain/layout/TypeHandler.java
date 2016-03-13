@@ -44,7 +44,7 @@ public interface TypeHandler<T> {
 
     /**
      * If type is of a constant size, should return a non-empty
-     * {@link Optional<Integer>} containing value size in bytes
+     * {@link Optional} containing value size in bytes
      * @return Optional constant size
      */
     default Optional<Integer> constantSize() {
@@ -56,7 +56,7 @@ public interface TypeHandler<T> {
      * Serializes value of type <code>T</code> to a {@link ByteBuffer}.
      *
      * {@link ByteBuffer} should be of a correct size. The size can be obtained
-     * from {@link #size(T)}
+     * from {@link #size(Object)}
      * @param value value to serialize
      * @param buffer ByteBuffer
      */
