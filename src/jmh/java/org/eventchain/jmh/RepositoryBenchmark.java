@@ -15,11 +15,6 @@
 package org.eventchain.jmh;
 
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.ToString;
-import lombok.experimental.Accessors;
 import org.eventchain.*;
 import org.eventchain.annotations.Index;
 import org.eventchain.hlc.NTPServerTimeProvider;
@@ -27,6 +22,8 @@ import org.eventchain.index.MemoryIndexEngine;
 import org.eventchain.index.SimpleAttribute;
 import org.openjdk.jmh.annotations.*;
 
+import java.net.UnknownHostException;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
@@ -41,8 +38,7 @@ public class RepositoryBenchmark {
     private MemoryLockProvider lockProvider;
 
     @Setup
-    @SneakyThrows
-    public void setup() {
+    public void setup() throws UnknownHostException {
         repository = Repository.create();
 
         journal = new MemoryJournal();
@@ -72,9 +68,7 @@ public class RepositoryBenchmark {
     }
 
 
-    @Accessors(fluent = true) @ToString
     public static class TestEvent extends Event {
-        @Getter @Setter
         private String string;
 
         @Index({EQ, SC})
@@ -84,9 +78,21 @@ public class RepositoryBenchmark {
                 return object.string();
             }
         };
+
+        public String toString() {
+            return "org.eventchain.jmh.RepositoryBenchmark.TestEvent(string=" + this.string + ")";
+        }
+
+        public String string() {
+            return this.string;
+        }
+
+        public TestEvent string(String string) {
+            this.string = string;
+            return this;
+        }
     }
 
-    @ToString
     public static class TestCommand extends Command<String> {
         @Override
         public Stream<Event> events(Repository repository) {
@@ -101,8 +107,7 @@ public class RepositoryBenchmark {
 
     @Benchmark
     @BenchmarkMode(Mode.All)
-    @SneakyThrows
-    public void basicPublish() {
+    public void basicPublish() throws ExecutionException, InterruptedException {
         repository.publish(new TestCommand()).get();
     }
 
