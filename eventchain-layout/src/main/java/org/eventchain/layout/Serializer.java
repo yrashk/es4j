@@ -20,7 +20,7 @@ import java.nio.ByteBuffer;
  * Layout serializer
  * @param <T>
  */
-public class Serializer<T> {
+public class Serializer<T> implements org.eventchain.layout.core.Serializer<T> {
 
     private final Layout<T> layout;
 

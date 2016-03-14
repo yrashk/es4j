@@ -16,7 +16,6 @@ package org.eventchain;
 
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
-import lombok.SneakyThrows;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 

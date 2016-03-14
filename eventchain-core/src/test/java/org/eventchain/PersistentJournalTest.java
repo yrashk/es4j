@@ -22,9 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public abstract class PersistentJournalTest<T extends Journal> extends JournalTest<T> {
     public PersistentJournalTest(T journal) {

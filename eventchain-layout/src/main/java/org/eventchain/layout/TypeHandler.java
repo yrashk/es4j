@@ -17,15 +17,14 @@ package org.eventchain.layout;
 import com.fasterxml.classmate.ResolvedType;
 import org.eventchain.layout.types.*;
 
-import java.nio.ByteBuffer;
-import java.util.Optional;
 import java.util.UUID;
 
 /**
  * Interface for handling supported type T
  * @param <T>
  */
-public interface TypeHandler<T> {
+public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>,
+                                        org.eventchain.layout.core.Deserializer<T> {
 
     int SIZE_TAG_LENGTH = 4;
 
@@ -35,41 +34,6 @@ public interface TypeHandler<T> {
      * @return fingerprint
      */
     byte[] getFingerprint();
-
-    /**
-     * @param value value to be serialized
-     * @return serialized value size in bytes
-     */
-    int size(T value);
-
-    /**
-     * If type is of a constant size, should return a non-empty
-     * {@link Optional} containing value size in bytes
-     * @return Optional constant size
-     */
-    default Optional<Integer> constantSize() {
-        return Optional.empty();
-    }
-
-
-    /**
-     * Serializes value of type <code>T</code> to a {@link ByteBuffer}.
-     *
-     * {@link ByteBuffer} should be of a correct size. The size can be obtained
-     * from {@link #size(Object)}
-     * @param value value to serialize
-     * @param buffer ByteBuffer
-     */
-    void serialize(T value, ByteBuffer buffer);
-
-    /**
-     * Deserializes value of type <code>T</code> from a {@link ByteBuffer}'s
-     * current position
-     *
-     * @param buffer ByteBuffer
-     * @return value
-     */
-    T deserialize(ByteBuffer buffer);
 
     /**
      * Looks up a type handler for supported types

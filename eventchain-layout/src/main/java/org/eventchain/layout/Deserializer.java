@@ -14,13 +14,15 @@
  */
 package org.eventchain.layout;
 
+import lombok.SneakyThrows;
+
 import java.nio.ByteBuffer;
 
 /**
  * Layout deserializer
  * @param <T>
  */
-public class Deserializer<T> {
+public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<T> {
 
     private final Layout<T> layout;
 
@@ -39,4 +41,11 @@ public class Deserializer<T> {
         }
     }
 
+    @Override
+    @SneakyThrows
+    public T deserialize(ByteBuffer buffer) {
+        T value = layout.getLayoutClass().newInstance();
+        deserialize(value, buffer);
+        return value;
+    }
 }
