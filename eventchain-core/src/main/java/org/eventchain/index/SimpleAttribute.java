@@ -26,6 +26,21 @@ import org.eventchain.EntityHandle;
  */
 public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A> {
 
+    public SimpleAttribute() {
+    }
+
+    public SimpleAttribute(String attributeName) {
+        super(attributeName);
+    }
+
+    public SimpleAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType) {
+        super(objectType, attributeType);
+    }
+
+    public SimpleAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType, String attributeName) {
+        super(objectType, attributeType, attributeName);
+    }
+
     @Override
     public A getValue(EntityHandle<O> object, QueryOptions queryOptions) {
         return getValue(object.get().get(), queryOptions);
