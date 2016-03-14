@@ -3,6 +3,5 @@ module.exports = {
     root: './docs',
     title: 'Eventchain Documentation',
 
-    // Enforce use of GitBook v3
-    gitbook: '3.0.0-pre.5
+    gitbook: '3.0.0-pre.5'
 };
