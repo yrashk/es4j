@@ -12,7 +12,7 @@ war {
 }
 
 dependencies {
-    providedCompile "javax.servlet:servlet-api:2.5"
+    providedCompile 'javax.servlet:javax.servlet-api:3.1.0'
 
     // GraphQL
     compile 'com.graphql-java:graphql-java:2.0.0'

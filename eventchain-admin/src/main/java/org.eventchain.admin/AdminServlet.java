@@ -26,6 +26,7 @@ import org.osgi.framework.FrameworkUtil;
 import org.osgi.framework.Version;
 
 import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +40,10 @@ import static graphql.schema.GraphQLFieldDefinition.newFieldDefinition;
 import static graphql.schema.GraphQLObjectType.newObject;
 import static graphql.schema.GraphQLSchema.newSchema;
 
+@WebServlet(
+        name = "EventchainAdminSerlvet",
+        urlPatterns = "/"
+)
 public class AdminServlet extends HttpServlet {
 
     private static class QueryContext {

@@ -120,7 +120,7 @@ task assembleOsgiDist(type: Copy) {
     from("dist")
     include("*.jar")
     exclude("slf4j*")
-    exclude("servlet-api-2.5.jar")
+    exclude("servlet-api-*.jar")
     into("dist/osgi")
 }
 
