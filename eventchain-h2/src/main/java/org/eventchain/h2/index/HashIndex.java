@@ -49,10 +49,11 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
 
     private final MVStore store;
     private final HashFunction hashFunction;
-    private final MVMap<byte[], byte[]> map;
+    private final int hashSize;
+
+    private final MVMap<byte[], Boolean> map;
     private final MVMap<byte[], byte[]> attrHashMap;
     private final MVMap<byte[], byte[]> objHashMap;
-    private final int hashSize;
 
     private org.eventchain.layout.core.Serializer<A> attributeSerializer;
     private org.eventchain.layout.core.Deserializer<A> attributeDeserializer;
@@ -228,7 +229,7 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
     @Override
     public Integer getCountForKey(A key, QueryOptions queryOptions) {
         byte[] attr = encodeAttribute(key);
-        Cursor<byte[], byte[]> cursor = map.cursor(map.ceilingKey(attr));
+        Cursor<byte[], Boolean> cursor = map.cursor(map.ceilingKey(attr));
         int i = 0;
 
         while (cursor.hasNext() && Bytes.indexOf(cursor.next(), attr) == 0) {
@@ -280,7 +281,7 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
                 @Override
                 public Iterator<O> iterator() {
                     boolean empty = Bytes.indexOf(from, attr) != 0;
-                    Cursor<byte[], byte[]> cursor = map.cursor(from);
+                    Cursor<byte[], Boolean> cursor = map.cursor(from);
                     if (empty) {
                         return Collections.<O>emptyList().iterator();
                     }
@@ -336,7 +337,7 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
 
                 @Override
                 public Iterator<O> iterator() {
-                    Cursor<byte[], byte[]> cursor = map.cursor(from);
+                    Cursor<byte[], Boolean> cursor = map.cursor(from);
                     return new CursorIterator(cursor, new byte[]{});
                 }
 
@@ -395,7 +396,7 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
                     ByteBuffer buffer = ByteBuffer.allocate(objectSerializer.size(object));
                     objectSerializer.serialize(object, buffer);
                     Entry entry = encodeEntry(object, value);
-                    map.put(entry.getKey(), entry.getValueHash());
+                    map.put(entry.getKey(), true);
                     attrHashMap.putIfAbsent(entry.getAttrHash(), entry.getAttr());
                     objHashMap.putIfAbsent(entry.getValueHash(), entry.getValue());
                 }
@@ -427,11 +428,11 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
 
     private class CursorIterator implements Iterator<O> {
 
-        private final Cursor<byte[], byte[]> cursor;
+        private final Cursor<byte[], Boolean> cursor;
         private final byte[] attr;
         private byte[] next;
 
-        public CursorIterator(Cursor<byte[], byte[]> cursor, byte[] attr) {
+        public CursorIterator(Cursor<byte[], Boolean> cursor, byte[] attr) {
             this.cursor = cursor;
             this.attr = attr;
         }
@@ -448,7 +449,11 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
 
         @Override
         public O next() {
-            return objectDeserializer.deserialize(ByteBuffer.wrap(objHashMap.get(cursor.getValue())));
+            ByteBuffer buffer = ByteBuffer.wrap(next);
+            buffer.position(hashSize); // skip attribute hash
+            byte[] hash = new byte[hashSize];
+            buffer.get(hash);
+            return objectDeserializer.deserialize(ByteBuffer.wrap(objHashMap.get(hash)));
         }
     }
 }
