@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.*;
@@ -99,6 +100,15 @@ public abstract class JournalTest<T extends Journal> {
         }
     }
 
+    public static class ExceptionalTestCommand extends Command<Void> {
+        @Override
+        public Stream<Event> events(Repository repository) throws Exception {
+            return Stream.generate((Supplier<Event>) () -> {
+                throw new IllegalStateException();
+            });
+        }
+    }
+
     @Test
     @SneakyThrows
     public void journalCounting() {
@@ -131,6 +141,27 @@ public abstract class JournalTest<T extends Journal> {
 
         assertEquals(onEvent.get(), 1);
         assertTrue(onCommit.get());
+    }
+
+    @Test
+    @SneakyThrows
+    public void journalListenerAbort() {
+        AtomicBoolean onAbort = new AtomicBoolean(false);
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
+        try {
+            assertEquals(1, journal.journal((Command<?>) new ExceptionalTestCommand().timestamp(timestamp), new Journal.Listener() {
+                @Override
+                public void onAbort(Throwable throwable) {
+                    onAbort.set(true);
+                }
+            }));
+        } catch (Exception e) {
+            assertTrue(e instanceof IllegalStateException);
+        }
+
+        assertTrue(onAbort.get());
     }
 
     @Test

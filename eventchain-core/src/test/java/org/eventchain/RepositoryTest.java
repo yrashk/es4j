@@ -30,6 +30,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.googlecode.cqengine.query.QueryFactory.contains;
@@ -37,6 +40,7 @@ import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.SC;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public abstract class RepositoryTest<T extends Repository> {
@@ -53,7 +57,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @BeforeClass
     public void setUpEnv() throws Exception {
         repository.setPackage(RepositoryTest.class.getPackage());
-        journal = new MemoryJournal();
+        journal = createJournal();
         journal.setRepository(repository);
         repository.setJournal(journal);
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
@@ -65,6 +69,10 @@ public abstract class RepositoryTest<T extends Repository> {
         indexEngine.setRepository(repository);
         indexEngine.setJournal(journal);
         repository.startAsync().awaitRunning();
+    }
+
+    protected Journal createJournal() {
+        return new MemoryJournal();
     }
 
     @AfterClass
@@ -123,6 +131,43 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get().string(), "test");
+    }
+
+
+    @ToString
+    public static class StreamExceptionCommand extends Command<Void> {
+
+        private UUID eventUUID = UUID.randomUUID();
+
+        public StreamExceptionCommand() {
+        }
+
+        public StreamExceptionCommand(UUID eventUUID) {
+            this.eventUUID = eventUUID;
+        }
+
+        @Override
+        public Stream<Event> events(Repository repository) {
+            return Stream.concat(Stream.of(
+                    (TestEvent) new TestEvent().string("test").uuid(eventUUID)),
+                    Stream.generate((Supplier<Event>) () -> {
+                        throw new IllegalStateException();
+                    }));
+        }
+    }
+    @Test
+    @SneakyThrows
+    public void streamExceptionIndexing() {
+        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
+        coll.clear();
+        UUID eventUUID = UUID.randomUUID();
+        StreamExceptionCommand command = new StreamExceptionCommand(eventUUID);
+        CompletableFuture<Void> future = repository.publish(command);
+        while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
+        assertTrue(future.isCompletedExceptionally());
+        assertFalse(journal.get(command.uuid()).isPresent());
+        assertFalse(journal.get(eventUUID).isPresent());
+        assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isEmpty());
     }
 
     public static class LockCommand extends Command<Void> {

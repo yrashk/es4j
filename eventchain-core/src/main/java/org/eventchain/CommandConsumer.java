@@ -90,6 +90,11 @@ public class CommandConsumer<T extends Command<C>, C> extends AbstractService {
             IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine.getIndexedCollection((Class<Command<?>>) command.getClass());
             coll.add(new EntityHandle<>(journal, command.uuid()));
         }
+
+        @Override
+        public void onAbort(Throwable throwable) {
+
+        }
     }
 
     private static class TrackingLockProvider extends AbstractService implements LockProvider {

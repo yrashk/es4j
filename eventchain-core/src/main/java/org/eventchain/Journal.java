@@ -143,5 +143,11 @@ public interface Journal extends Service {
          * other readers.
          */
         default void onCommit() {}
+
+        /**
+         * Called when there was an exception during event generation
+         * @param throwable
+         */
+        default void onAbort(Throwable throwable) {}
     }
 }

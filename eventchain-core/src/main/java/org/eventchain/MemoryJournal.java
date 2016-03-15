@@ -16,6 +16,7 @@ package org.eventchain;
 
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
+import lombok.Getter;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -63,11 +64,26 @@ public class MemoryJournal extends AbstractService implements Journal {
 
     @Override
     public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
-        EventConsumer eventConsumer = new EventConsumer(command, listener);
-        commands.put(command.uuid(), command);
+        Map<UUID, Event> events_ = new HashMap<>();
+        Map<UUID, UUID>  eventCommands_ = new HashMap<>();
+        EventConsumer eventConsumer = new EventConsumer(events_, eventCommands_, command, listener);
+
         Stream<Event> events = null;
         events = command.events(repository, lockProvider);
-        long count = events.peek(eventConsumer).count();
+
+        long count;
+
+        try {
+            count = events.peek(eventConsumer).count();
+        } catch (Exception e) {
+            listener.onAbort(e);
+            throw e;
+        }
+
+        this.events.putAll(events_);
+        this.eventCommands.putAll(eventCommands_);
+        commands.put(command.uuid(), command);
+
         listener.onCommit();
         return count;
     }
@@ -128,18 +144,25 @@ public class MemoryJournal extends AbstractService implements Journal {
         return true;
     }
 
-    private class EventConsumer implements Consumer<Event> {
+    private static class EventConsumer implements Consumer<Event> {
 
         private final Command command;
         private final Journal.Listener listener;
 
-        public EventConsumer(Command command, Journal.Listener listener) {
+        @Getter
+        private Map<UUID, Event> events = new HashMap<>();
+        @Getter
+        private Map<UUID, UUID>  eventCommands = new HashMap<>();
+
+        public EventConsumer(Map<UUID, Event> events, Map<UUID, UUID> eventCommands, Command command, Journal.Listener listener) {
+            this.events = events;
+            this.eventCommands = eventCommands;
             this.command = command;
             this.listener = listener;
         }
 
         @Override
-        public void accept(Event event) {
+        public synchronized void accept(Event event) {
             events.put(event.uuid(), event);
             eventCommands.put(event.uuid(), command.uuid());
             listener.onEvent(event);

@@ -18,10 +18,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
 import org.eventchain.layout.Deserializer;
@@ -89,6 +86,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
     }
 
     void initializeStore() {
+        store.setAutoCommitDelay(0);
         MVMap<String, Object> info = store.openMap("info");
         info.putIfAbsent("version", 1);
         store.commit();
@@ -122,9 +120,9 @@ public class MVStoreJournal extends AbstractService implements Journal {
     }
 
     @Override @SuppressWarnings("unchecked")
+    @Synchronized("store")
     public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
         long version = store.getCurrentVersion();
-
         try {
 
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
@@ -135,11 +133,6 @@ public class MVStoreJournal extends AbstractService implements Journal {
             hashBuffer.put(commandLayout.getHash());
             hashBuffer.putLong(command.uuid().getMostSignificantBits());
             hashBuffer.putLong(command.uuid().getLeastSignificantBits());
-
-            commandPayloads.put(command.uuid(), buffer.array());
-            hashCommands.put(hashBuffer.array(), true);
-            commandTimestamps.put(command.uuid(), command.timestamp().timestamp());
-            commandHashes.put(command.uuid(), commandLayout.getHash());
 
             HybridTimestamp ts = command.timestamp().clone();
 
@@ -176,11 +169,18 @@ public class MVStoreJournal extends AbstractService implements Journal {
                 }
             }).count();
 
+            commandPayloads.put(command.uuid(), buffer.array());
+            hashCommands.put(hashBuffer.array(), true);
+            commandTimestamps.put(command.uuid(), command.timestamp().timestamp());
+            commandHashes.put(command.uuid(), commandLayout.getHash());
+
             listener.onCommit();
 
+            store.commit();
             return count;
         } catch (Exception e) {
-            store.rollbackTo(version);
+            store.rollback();
+            listener.onAbort(e);
             throw e;
         }
 
