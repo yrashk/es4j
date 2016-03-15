@@ -115,6 +115,15 @@ task assembleDist(type: Copy) {
     duplicatesStrategy('EXCLUDE')
 }
 
+task assembleOsgiDist(type: Copy) {
+    dependsOn assembleDist
+    from("dist")
+    include("*.jar")
+    exclude("slf4j*")
+    exclude("servlet-api-2.5.jar")
+    into("dist/osgi")
+}
+
 idea {
     project {
         languageLevel = '1.8'
