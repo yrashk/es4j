@@ -14,49 +14,22 @@
  */
 package org.eventchain.index;
 
-import com.googlecode.cqengine.ConcurrentIndexedCollection;
-import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.index.radix.RadixTreeIndex;
 import com.googlecode.cqengine.index.radixinverted.InvertedRadixTreeIndex;
 import com.googlecode.cqengine.index.radixreversed.ReversedRadixTreeIndex;
 import com.googlecode.cqengine.index.suffix.SuffixTreeIndex;
-import org.eventchain.*;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.*;
 
 @Component
-public class MemoryIndexEngine extends AbstractIndexEngine implements IndexEngine {
+public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
 
-    private Repository repository;
-
-    @Reference
-    @Override
-    public void setRepository(Repository repository) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
-        this.repository = repository;
-    }
-
-    private Journal journal;
-
-    @Reference
-    @Override
-    public void setJournal(Journal journal) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
-        this.journal = journal;
-    }
 
     @Override
     protected List<IndexCapabilities> getIndexMatrix() {
@@ -71,41 +44,5 @@ public class MemoryIndexEngine extends AbstractIndexEngine implements IndexEngin
                 new IndexCapabilities("SuffixTree", new IndexFeature[]{EQ, IN, EW, SC}, SuffixTreeIndex::onAttribute)
         );
 
-    }
-
-    protected Map<String, IndexedCollection> indexedCollections = new ConcurrentHashMap<>();
-
-    @Override @SuppressWarnings("unchecked")
-    public <T extends Entity> IndexedCollection<EntityHandle<T>> getIndexedCollection(Class<T> klass) {
-        IndexedCollection existingCollection = indexedCollections.get(klass.getName());
-        if (existingCollection == null) {
-
-            JournalPersistence<T> tJournalPersistence = null;
-
-            if (Event.class.isAssignableFrom(klass))
-                tJournalPersistence = (JournalPersistence<T>) new EventJournalPersistence<>(journal, (Class<Event>) klass);
-            if (Command.class.isAssignableFrom(klass))
-                tJournalPersistence = (JournalPersistence<T>) new CommandJournalPersistence<>(journal, (Class<Command>) klass);
-
-            if (tJournalPersistence == null) {
-                throw new IllegalArgumentException();
-            }
-
-            ConcurrentIndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(tJournalPersistence);
-            indexedCollections.put(klass.getName(), indexedCollection);
-            return indexedCollection;
-        } else {
-            return existingCollection;
-        }
-    }
-
-    @Override
-    protected void doStart() {
-        notifyStarted();
-    }
-
-    @Override
-    protected void doStop() {
-        notifyStopped();
     }
 }

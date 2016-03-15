@@ -24,6 +24,10 @@ import org.eventchain.EntityHandle;
 import org.eventchain.Journal;
 import org.eventchain.Repository;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
 
 public interface IndexEngine extends Service {
@@ -76,5 +80,26 @@ public interface IndexEngine extends Service {
 
     <T extends Entity> IndexedCollection<EntityHandle<T>> getIndexedCollection(Class<T> klass);
 
+    /**
+     * Returns all declared ({@link org.eventchain.annotations.Index} indices for a class
+     * @param klass
+     * @return
+     * @throws IndexNotSupported
+     * @throws IllegalAccessException
+     */
+    default Iterable<Index> getIndices(Class<?> klass) throws IndexNotSupported, IllegalAccessException {
+        List<Index> indices = new ArrayList<>();
+        for (Field field : klass.getDeclaredFields()) {
+            if (Modifier.isStatic(field.getModifiers()) &&
+                Modifier.isPublic(field.getModifiers())) {
+                org.eventchain.annotations.Index annotation = field.getAnnotation(org.eventchain.annotations.Index.class);
+                if (annotation != null) {
+                    Attribute attr = (Attribute) field.get(null);
+                    indices.add(this.getIndexOnAttribute(attr, annotation.value()));
+                }
+            }
+        }
+        return indices;
+    }
 
 }

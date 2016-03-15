@@ -101,20 +101,11 @@ public class RepositoryImpl extends AbstractService implements Repository {
     }
 
     private boolean configureIndices(Class<? extends Entity> klass) {
-        for (Field field : klass.getDeclaredFields()) {
-            if (Modifier.isStatic(field.getModifiers()) &&
-                Modifier.isPublic(field.getModifiers())) {
-                Index annotation = field.getAnnotation(Index.class);
-                if (annotation != null) {
-                    try {
-                        Attribute attr = (Attribute) field.get(null);
-                        indexEngine.getIndexOnAttribute(attr, annotation.value());
-                    } catch(IllegalAccessException | IndexEngine.IndexNotSupported e){
-                        notifyFailed(e);
-                        return true;
-                    }
-                }
-            }
+        try {
+            indexEngine.getIndices(klass);
+        } catch (IndexEngine.IndexNotSupported | IllegalAccessException e) {
+            notifyFailed(e);
+            return true;
         }
         return false;
     }
