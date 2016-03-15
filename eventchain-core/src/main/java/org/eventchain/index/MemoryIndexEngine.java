@@ -14,12 +14,15 @@
  */
 package org.eventchain.index;
 
+import com.googlecode.cqengine.attribute.Attribute;
+import com.googlecode.cqengine.index.compound.CompoundIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.index.radix.RadixTreeIndex;
 import com.googlecode.cqengine.index.radixinverted.InvertedRadixTreeIndex;
 import com.googlecode.cqengine.index.radixreversed.ReversedRadixTreeIndex;
 import com.googlecode.cqengine.index.suffix.SuffixTreeIndex;
+import com.googlecode.cqengine.index.unique.UniqueIndex;
 import org.osgi.service.component.annotations.Component;
 
 import java.util.Arrays;
@@ -34,14 +37,14 @@ public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
     @Override
     protected List<IndexCapabilities> getIndexMatrix() {
         return Arrays.asList(
-                new IndexCapabilities("Hash", new IndexFeature[]{EQ, IN, QZ}, HashIndex::onAttribute),
-                new IndexCapabilities("Unique", new IndexFeature[]{UNIQUE, EQ, IN}, HashIndex::onAttribute),
-                new IndexCapabilities("Compound", new IndexFeature[]{COMPOUND, EQ, IN, QZ}, HashIndex::onAttribute),
-                new IndexCapabilities("Navigable", new IndexFeature[]{EQ, IN, QZ, LT, GT, BT}, NavigableIndex::onAttribute),
-                new IndexCapabilities("RadixTree", new IndexFeature[]{EQ, IN, SW}, RadixTreeIndex::onAttribute),
-                new IndexCapabilities("ReversedRadixTree", new IndexFeature[]{EQ, IN, EW}, ReversedRadixTreeIndex::onAttribute),
-                new IndexCapabilities("InvertedRadixTree", new IndexFeature[]{EQ, IN, CI}, InvertedRadixTreeIndex::onAttribute),
-                new IndexCapabilities("SuffixTree", new IndexFeature[]{EQ, IN, EW, SC}, SuffixTreeIndex::onAttribute)
+                new IndexCapabilities<Attribute>("Hash", new IndexFeature[]{EQ, IN, QZ}, HashIndex::onAttribute),
+                new IndexCapabilities<Attribute>("Unique", new IndexFeature[]{UNIQUE, EQ, IN}, UniqueIndex::onAttribute),
+                new IndexCapabilities<Attribute[]>("Compound", new IndexFeature[]{COMPOUND, EQ, IN, QZ}, CompoundIndex::onAttributes),
+                new IndexCapabilities<Attribute>("Navigable", new IndexFeature[]{EQ, IN, QZ, LT, GT, BT}, NavigableIndex::onAttribute),
+                new IndexCapabilities<Attribute>("RadixTree", new IndexFeature[]{EQ, IN, SW}, RadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("ReversedRadixTree", new IndexFeature[]{EQ, IN, EW}, ReversedRadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("InvertedRadixTree", new IndexFeature[]{EQ, IN, CI}, InvertedRadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("SuffixTree", new IndexFeature[]{EQ, IN, EW, SC}, SuffixTreeIndex::onAttribute)
         );
 
     }

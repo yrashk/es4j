@@ -50,6 +50,9 @@ public interface IndexEngine extends Service {
      */
     void setRepository(Repository repository) throws IllegalStateException;
 
+    @SuppressWarnings("unchecked")
+    <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features) throws IndexNotSupported;
+
     enum IndexFeature {
         UNIQUE, COMPOUND,
 
@@ -69,10 +72,10 @@ public interface IndexEngine extends Service {
     }
 
     @Value
-    class IndexCapabilities {
+    class IndexCapabilities<T> {
         private String name;
         private IndexFeature[] features;
-        private Function<Attribute, Index> index;
+        private Function<T, Index> index;
     }
 
     <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature...features) throws IndexNotSupported;

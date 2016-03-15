@@ -30,10 +30,19 @@ public abstract class AbstractIndexEngine extends AbstractService implements Ind
     public <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features) throws IndexNotSupported {
         for (IndexCapabilities capabilities : getIndexMatrix()) {
             if (Arrays.asList(capabilities.getFeatures()).containsAll(Arrays.asList(features))) {
-                return capabilities.getIndex().apply(attribute);
+                return ((IndexCapabilities<Attribute>)capabilities).getIndex().apply(attribute);
             }
         }
         throw new IndexNotSupported();
     }
 
+    @Override @SuppressWarnings("unchecked")
+    public <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features) throws IndexNotSupported {
+        for (IndexCapabilities capabilities : getIndexMatrix()) {
+            if (Arrays.asList(capabilities.getFeatures()).containsAll(Arrays.asList(features))) {
+                return ((IndexCapabilities<Attribute[]>)capabilities).getIndex().apply(attributes);
+            }
+        }
+        throw new IndexNotSupported();
+    }
 }
