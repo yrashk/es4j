@@ -19,6 +19,7 @@ import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.QueryFactory;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
+import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
 
@@ -34,11 +35,23 @@ import static com.googlecode.cqengine.query.QueryFactory.noQueryOptions;
 public interface Repository extends Service {
 
     /**
-     * Creates a default Repository
+     * Creates a default Repository.
+     *
+     * Default setup:
+     *
+     * <ul>
+     *     <li>Default {@link NTPServerTimeProvider} is set with {@link #setPhysicalTimeProvider(PhysicalTimeProvider)}</li>
+     *     <li>Default {@link MemoryLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
+     * </ul>
      * @return
      */
-    static Repository create() {
-        return new RepositoryImpl();
+    static Repository create() throws Exception {
+        RepositoryImpl repository = new RepositoryImpl();
+        PhysicalTimeProvider timeProvider = new NTPServerTimeProvider();
+        repository.setPhysicalTimeProvider(timeProvider);
+        LockProvider lockProvider = new MemoryLockProvider();
+        repository.setLockProvider(lockProvider);
+        return repository;
     }
 
     /**

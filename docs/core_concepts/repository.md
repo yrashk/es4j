@@ -10,9 +10,6 @@ In the future, a more compact API with defaults will be added as well.
 ```java
 Repository repository = Repository.create();
 
-PhysicalTimeProvider timeProvider = new NTPServerTimeProvider();
-repository.setPhysicalTimeProvider(timeProvider);
-
 Journal journal = new MemoryJournal();
 journal.setRepository(journal);
 repository.setJournal(journal);
@@ -21,9 +18,6 @@ IndexEngine indexEngine = new MemoryIndexEngine();
 indexEngine.setRepository(repository);
 indexEngine.setJournal(journal);
 repository.setIndexEngine(indexEngine);
-
-LockProvider lockProvider = new MemoryLockProvider();
-repository.setLockProvider(lockProvider);
 
 // Eventchain should find commands and events in this
 // hierarchy of packages:
