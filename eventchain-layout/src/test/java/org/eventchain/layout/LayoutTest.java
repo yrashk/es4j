@@ -29,7 +29,8 @@ public class LayoutTest {
     private static class BaseVisibilityTest {
         @Getter @Setter
         private String inherited;
-
+        @Getter @Setter
+        private String base;
     }
 
     private static class VisibilityTest extends BaseVisibilityTest {
@@ -42,6 +43,11 @@ public class LayoutTest {
         @Getter(onMethod=@__({@LayoutIgnore})) @Setter
         private String ignored;
 
+        @Override @LayoutIgnore
+        public String getBase() {
+            return super.getBase();
+        }
+
     }
 
     @Test
@@ -51,6 +57,8 @@ public class LayoutTest {
         List<Property<VisibilityTest>> properties = layout.getProperties();
         // Inherited
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("inherited")));
+        // Inherited properties can be ignored
+        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("base")));
         // LayoutIgnore
         assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("ignored")));
         // Properties without a getter should be ignored

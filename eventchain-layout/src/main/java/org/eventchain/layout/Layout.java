@@ -101,7 +101,7 @@ public class Layout<T> {
         MemberResolver getterResolver = new MemberResolver(typeResolver);
         getterResolver.setMethodFilter(element -> {
             Method member = element.getRawMember();
-            if (member.getAnnotation(LayoutIgnore.class) != null) {
+            if (member.getAnnotation(LayoutIgnore.class) != null || shouldMethodBeIgnored(klass, member)) {
                 return false;
             }
 
@@ -126,7 +126,7 @@ public class Layout<T> {
         MemberResolver setterResolver = new MemberResolver(typeResolver);
         setterResolver.setMethodFilter(element -> {
             Method member = element.getRawMember();
-            if (member.getAnnotation(LayoutIgnore.class) != null) {
+            if (member.getAnnotation(LayoutIgnore.class) != null || shouldMethodBeIgnored(klass, member)) {
                 return false;
             }
             // Setter (JavaBean)
@@ -198,6 +198,19 @@ public class Layout<T> {
         }
 
         this.hash = digest.digest();
+    }
+
+    // Used for making sure @LayoutIgnore at the target class in the hierarchy
+    // overrides the inclusion behaviour
+    private boolean shouldMethodBeIgnored(Class<T> klass, Method member) {
+        try {
+            Method declaredMethod = klass.getDeclaredMethod(member.getName(), member.getParameterTypes());
+            if (declaredMethod.getAnnotation(LayoutIgnore.class) != null) {
+                return true;
+            }
+        } catch (NoSuchMethodException e) {
+        }
+        return false;
     }
 
     @Override
