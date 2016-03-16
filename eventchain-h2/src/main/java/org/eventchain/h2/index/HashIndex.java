@@ -51,8 +51,57 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
     private final HashFunction hashFunction;
     private final int hashSize;
 
+    /**
+     * Map record structure:
+     *
+     * <table>
+     *     <tr>
+     *         <th colspan="2">Key</th>
+     *         <th>Value</th>
+     *     </tr>
+     *     <tbody>
+     *         <tr>
+     *           <td>hash(attribute value)</td>
+     *           <td>hash(object value)</td>
+     *           <td>true</td>
+     *         </tr>
+     *     </tbody>
+     * </table>
+     */
     private final MVMap<byte[], Boolean> map;
+    /**
+     * Map record structure:
+     *
+     * <table>
+     *     <tr>
+     *         <th>Key</th>
+     *         <th>Value</th>
+     *     </tr>
+     *     <tbody>
+     *         <tr>
+     *           <td>hash(attribute value)</td>
+     *           <td>attribute value</td>
+     *         </tr>
+     *     </tbody>
+     * </table>
+     */
     private final MVMap<byte[], byte[]> attrHashMap;
+    /**
+     * Map record structure:
+     *
+     * <table>
+     *     <tr>
+     *         <th>Key</th>
+     *         <th>Value</th>
+     *     </tr>
+     *     <tbody>
+     *         <tr>
+     *           <td>hash(object value)</td>
+     *           <td>object value</td>
+     *         </tr>
+     *     </tbody>
+     * </table>
+     */
     private final MVMap<byte[], byte[]> objHashMap;
 
     private org.eventchain.layout.core.Serializer<A> attributeSerializer;
