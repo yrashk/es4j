@@ -58,7 +58,7 @@ public abstract class AbstractAttributeIndex<A, O> extends com.googlecode.cqengi
                 Layout<O> oLayout = new Layout<>(attribute.getObjectType());
                 objectSerializer = new Serializer<>(oLayout);
                 objectDeserializer = new Deserializer<>(oLayout);
-            } catch (IntrospectionException | NoSuchAlgorithmException | IllegalAccessException e) {
+            } catch (IntrospectionException | NoSuchAlgorithmException | IllegalAccessException | Deserializer.NoEmptyConstructorException e) {
                 assert false;
                 e.printStackTrace();
             }

@@ -26,7 +26,14 @@ public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<
 
     private final Layout<T> layout;
 
-    public Deserializer(Layout<T> layout) {
+    public Deserializer(Layout<T> layout) throws NoEmptyConstructorException {
+        if (layout.getLayoutClass().getConstructors().length > 0) {
+            try {
+                layout.getLayoutClass().getConstructor();
+            } catch (NoSuchMethodException e) {
+                throw new NoEmptyConstructorException();
+            }
+        }
         this.layout = layout;
     }
 
@@ -48,4 +55,6 @@ public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<
         deserialize(value, buffer);
         return value;
     }
+
+    public static class NoEmptyConstructorException extends Exception {}
 }

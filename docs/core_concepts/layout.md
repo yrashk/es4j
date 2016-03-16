@@ -79,6 +79,9 @@ Serializer<User> = new Serializer<>(layout);
 Deserializer<User> = new Deserializer<>(layout);
 ```
 
+There's one important requirement for object to be deserializable: it has
+to have an empty constructor. Otherwise, creating a deserializer will fail.
+
 ### `null` values
 
 It is important to note that Eventchain does not support a notion of a `null`
