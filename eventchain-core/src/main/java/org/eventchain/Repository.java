@@ -15,11 +15,17 @@
 package org.eventchain;
 
 import com.google.common.util.concurrent.Service;
+import com.googlecode.cqengine.query.Query;
+import com.googlecode.cqengine.query.QueryFactory;
+import com.googlecode.cqengine.query.option.QueryOptions;
+import com.googlecode.cqengine.resultset.ResultSet;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+
+import static com.googlecode.cqengine.query.QueryFactory.noQueryOptions;
 
 /**
  * Repository is holder of resources necessary to
@@ -113,4 +119,35 @@ public interface Repository extends Service {
      */
     <T extends Command<C>, C>  CompletableFuture<C> publish(T command);
 
+    /**
+     * Shortcut method for accessing index retrieval (see {@link #query(Class, Query, QueryOptions)} with
+     * {@link QueryFactory#noQueryOptions()} specified as {@link QueryOptions}
+     *
+     * @param klass
+     * @param query
+     * @param <E>
+     * @return
+     */
+    default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query) {
+        return query(klass, query, noQueryOptions());
+    }
+
+    /**
+     * Shortcut method for accessing index querying.
+     *
+     * <p>Example:</p>
+     *
+     * {@code
+     * repository.query(UserCreated.class, equal(UserCreated.EMAIL, email), noQueryOptions())
+     * }
+     *
+     * @param klass
+     * @param query
+     * @param queryOptions
+     * @param <E>
+     * @return
+     */
+    default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query, QueryOptions queryOptions) {
+        return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
+    }
 }
