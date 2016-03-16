@@ -60,7 +60,7 @@ import java.util.stream.Collectors;
  */
 public class Layout<T> {
 
-    public static final String DIGEST_ALGORITHM = "SHA-256";
+    public static final String DIGEST_ALGORITHM = "SHA-1";
     /**
      * Qualified POJO properties. See {@link Layout for definition}
      */
