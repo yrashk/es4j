@@ -15,6 +15,6 @@ dependencies {
 }
 ```
 
-That said, Eventchain is currently evolving quickly and in some cases, having Eventchain from the master branch as a git submodule can be a better fit. In fact, this documentation documents version `0.2.0-SNAPSHOT` so if you want
+That said, Eventchain is currently evolving quickly and in some cases, having Eventchain from the master branch as a git submodule can be a better fit. In fact, this documentation describes version `0.2.0-SNAPSHOT` so if you want
 to be able to use it to the full extent, this approach should be used. Snapshot
 versions are not currently published.
