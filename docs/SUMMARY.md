@@ -2,6 +2,7 @@
 
 * Getting Started
   * [Installation](getting_started/install.md)
+  * [Overview](getting_started/overview.md)
 * Core Concepts
   * [Layout](core_concepts/layout.md)
   * [Entity](core_concepts/entity.md)
