@@ -23,6 +23,8 @@ import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
+import lombok.Getter;
+import lombok.Setter;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -39,10 +41,15 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
     public abstract <A, O> UniqueIndex onAttribute(Attribute<O, A> attribute);
 
     public static class Car {
-        public final int carId;
-        public final String name;
-        public final String description;
-        public final List<String> features;
+        @Getter @Setter
+        public int carId;
+        @Getter @Setter
+        public String name;
+        @Getter @Setter
+        public String description;
+        public List<String> features;
+
+        public Car() {}
 
         public Car(int carId, String name, String description, List<String> features) {
             this.carId = carId;

@@ -14,8 +14,6 @@
  */
 package org.eventchain.h2.index;
 
-import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.TypeResolver;
 import com.google.common.collect.Iterators;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
@@ -28,28 +26,20 @@ import com.googlecode.cqengine.query.simple.Equal;
 import com.googlecode.cqengine.query.simple.Has;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Value;
-import org.eventchain.layout.Deserializer;
-import org.eventchain.layout.Layout;
-import org.eventchain.layout.Serializer;
-import org.eventchain.layout.TypeHandler;
-import org.eventchain.layout.types.UnknownTypeHandler;
+import org.eventchain.index.AbstractHashingAttributeIndex;
 import org.h2.mvstore.Cursor;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
 
-import java.beans.IntrospectionException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements KeyStatisticsAttributeIndex<A, O> {
+public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> implements KeyStatisticsAttributeIndex<A, O> {
 
     protected static final int INDEX_RETRIEVAL_COST = 30;
 
     private final MVStore store;
-    private final HashFunction hashFunction;
-    private final int hashSize;
 
     /**
      * Map record structure:
@@ -104,11 +94,6 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
      */
     private final MVMap<byte[], byte[]> objHashMap;
 
-    private org.eventchain.layout.core.Serializer<A> attributeSerializer;
-    private org.eventchain.layout.core.Deserializer<A> attributeDeserializer;
-    private org.eventchain.layout.core.Serializer<O> objectSerializer;
-    private org.eventchain.layout.core.Deserializer<O> objectDeserializer;
-
     /**
      * Protected constructor, called by subclasses.
      *
@@ -118,33 +103,11 @@ public class HashIndex<A, O> extends AbstractAttributeIndex<A, O>  implements Ke
         super(attribute, new HashSet<Class<? extends Query>>() {{
             add(Equal.class);
             add(Has.class);
-        }});
+        }}, hashFunction);
         this.store = store;
-        this.hashFunction = hashFunction;
-        map = store.openMap("index_" + attribute.getAttributeName());
-        attrHashMap = store.openMap("index_attrhash_" + attribute.getAttributeName());
-        objHashMap = store.openMap("index_objhash_" + attribute.getAttributeName());
-
-        ResolvedType attributeType = new TypeResolver().resolve(attribute.getAttributeType());
-        attributeSerializer = TypeHandler.lookup(attributeType);
-        attributeDeserializer = TypeHandler.lookup(attributeType);
-
-        ResolvedType objectType = new TypeResolver().resolve(attribute.getObjectType());
-        TypeHandler<O> objectTypeHandler = TypeHandler.lookup(objectType);
-        if (!(objectTypeHandler instanceof UnknownTypeHandler)) {
-            objectSerializer = objectTypeHandler;
-            objectDeserializer = objectTypeHandler;
-        } else {
-            try {
-                Layout<O> oLayout = new Layout<>(attribute.getObjectType());
-                objectSerializer = new Serializer<>(oLayout);
-                objectDeserializer = new Deserializer<>(oLayout);
-            } catch (IntrospectionException | NoSuchAlgorithmException | IllegalAccessException e) {
-                assert false;
-                e.printStackTrace();
-            }
-        }
-        hashSize = hashFunction.bits() / 8;
+        map = store.openMap("hash_index_" + attribute.getAttributeName());
+        attrHashMap = store.openMap("hash_index_attrhash_" + attribute.getAttributeName());
+        objHashMap = store.openMap("hash_index_objhash_" + attribute.getAttributeName());
     }
 
     public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
