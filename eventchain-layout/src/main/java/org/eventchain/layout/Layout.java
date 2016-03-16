@@ -119,7 +119,7 @@ public class Layout<T> {
                     !(resolvedType == ResolvedPrimitiveType.voidType());
 
             return Modifier.isPublic(member.getModifiers()) && !Modifier.isStatic(member.getModifiers()) &&
-                    !element.isAbstract() && (beanGetter || getter);
+                    (beanGetter || getter);
         });
         ResolvedTypeWithMembers getters = getterResolver.resolve(klassType, new LayoutAnnotationConfiguration(), null);
 
@@ -138,7 +138,7 @@ public class Layout<T> {
                     member.getReturnType().isAssignableFrom(klass);
 
             return Modifier.isPublic(member.getModifiers()) && !Modifier.isStatic(member.getModifiers()) &&
-                    !element.isAbstract() && (beanSetter || setter);
+                    (beanSetter || setter);
         });
         ResolvedTypeWithMembers setters = setterResolver.resolve(klassType, new LayoutAnnotationConfiguration(), null);
 

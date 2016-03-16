@@ -26,6 +26,19 @@ import static org.testng.Assert.*;
 
 public class LayoutTest {
 
+    private interface InterfaceTest {
+        String getTest();
+        void setTest(String test);
+    }
+
+    @Test
+    @SneakyThrows
+    public void testInterface() {
+        Layout<InterfaceTest> layout = new Layout<>(InterfaceTest.class);
+        List<Property<InterfaceTest>> properties = layout.getProperties();
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("test")));
+    }
+
     private static class BaseVisibilityTest {
         @Getter @Setter
         private String inherited;
