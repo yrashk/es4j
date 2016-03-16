@@ -20,7 +20,6 @@ import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.MultiValueAttribute;
 import com.googlecode.cqengine.index.AttributeIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
-import com.googlecode.cqengine.index.unique.UniqueIndex;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -112,7 +111,7 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
     }
 
     @Test(expectedExceptions = com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException.class)
-    public void testDuplicateObjectDetection_MultiValueAttribute() {
+    public void duplicateObjectDetection_MultiValueAttribute() {
         IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
 
         // Add some indexes...
@@ -124,5 +123,20 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
         // Try to add another car which has a cd player, when one car already has a cd player...
         cars.add(new Car(3, "honda civic", "baz", Arrays.asList("cd player", "bluetooth")));
+    }
+
+    @Test
+    public void retrieve() {
+        IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
+
+        // Add some indexes...
+        cars.addIndex(onAttribute(Car.FEATURES));
+
+        // Add some objects to the collection...
+        cars.add(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof")));
+        cars.add(new Car(2, "ford taurus", "bar", Arrays.asList("radio", "cd player")));
+
+        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
+        assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
     }
 }
