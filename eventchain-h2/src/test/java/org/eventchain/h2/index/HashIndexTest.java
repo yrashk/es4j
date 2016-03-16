@@ -17,8 +17,6 @@ package org.eventchain.h2.index;
 import com.googlecode.cqengine.attribute.Attribute;
 import org.h2.mvstore.MVStore;
 
-import static org.testng.Assert.*;
-
 public class HashIndexTest extends org.eventchain.index.HashIndexTest<HashIndex> {
 
     @Override

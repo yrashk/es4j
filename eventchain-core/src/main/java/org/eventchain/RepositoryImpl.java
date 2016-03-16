@@ -16,17 +16,14 @@ package org.eventchain;
 
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ServiceManager;
-import com.googlecode.cqengine.attribute.Attribute;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.eventchain.annotations.Index;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

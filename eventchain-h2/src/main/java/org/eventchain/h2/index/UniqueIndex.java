@@ -17,7 +17,6 @@ package org.eventchain.h2.index;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
-import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;

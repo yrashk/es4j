@@ -39,9 +39,7 @@ import static com.googlecode.cqengine.query.QueryFactory.contains;
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.SC;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public abstract class RepositoryTest<T extends Repository> {
 
