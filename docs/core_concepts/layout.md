@@ -37,7 +37,8 @@ Layout defines following rules for property inclusion:
 Inheritance can also be used to build hierarchies that share fragments of
 their layout. In fact, it is even possible to use interfaces to create layouts.
 
-Note: Since Eventchain requires the use of accessors, using code generation tools like Lombok is advisable.
+Note: Since Eventchain requires the use of accessors, using code generation tools like Lombok is advisable. In fact, most of Eventchain's documentation
+will be using Lombok annotations for brevity.
 
 ## Hash
 
