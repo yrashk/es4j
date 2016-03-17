@@ -77,8 +77,8 @@ variable length integers or any other compression methods so it is not extremely
 You can get a serializer and a deserializer very easily:
 
 ```java
-Serializer<User> = new Serializer<>(layout);
-Deserializer<User> = new Deserializer<>(layout);
+Serializer<User> serializer = new Serializer<>(layout);
+Deserializer<User> deserializer = new Deserializer<>(layout);
 ```
 
 There's one important requirement for object to be deserializable: it has
