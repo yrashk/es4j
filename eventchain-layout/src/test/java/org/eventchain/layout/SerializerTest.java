@@ -121,8 +121,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Byte.MIN_VALUE, deserialized.getPByte());
-        assertEquals((Byte)Byte.MAX_VALUE, deserialized.getOByte());
+        assertEquals(deserialized.getPByte(), Byte.MIN_VALUE);
+        assertEquals(deserialized.getOByte(), (Byte) Byte.MAX_VALUE);
     }
 
     @Test
@@ -137,8 +137,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(new byte[]{Byte.MIN_VALUE}, deserialized.getPByteArr());
-        assertEquals(new Byte[]{Byte.MAX_VALUE}, deserialized.getOByteArr());
+        assertEquals(deserialized.getPByteArr(), new byte[]{Byte.MIN_VALUE});
+        assertEquals(deserialized.getOByteArr(), new Byte[]{Byte.MAX_VALUE});
     }
 
     @Test
@@ -153,8 +153,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Short.MIN_VALUE, deserialized.getPShort());
-        assertEquals((Short)Short.MAX_VALUE, deserialized.getOShort());
+        assertEquals(deserialized.getPShort(), Short.MIN_VALUE);
+        assertEquals(deserialized.getOShort(), (Short) Short.MAX_VALUE);
     }
 
     @Test
@@ -169,8 +169,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Integer.MIN_VALUE, deserialized.getPInt());
-        assertEquals((Integer)Integer.MAX_VALUE, deserialized.getOInt());
+        assertEquals(deserialized.getPInt(), Integer.MIN_VALUE);
+        assertEquals(deserialized.getOInt(), (Integer) Integer.MAX_VALUE);
     }
 
     @Test
@@ -185,8 +185,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Long.MIN_VALUE, deserialized.getPLong());
-        assertEquals((Long)Long.MAX_VALUE, deserialized.getOLong());
+        assertEquals(deserialized.getPLong(), Long.MIN_VALUE);
+        assertEquals(deserialized.getOLong(), (Long) Long.MAX_VALUE);
     }
 
     @Test
@@ -201,8 +201,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Float.MIN_VALUE, deserialized.getPFloat());
-        assertEquals(Float.MAX_VALUE, deserialized.getOFloat());
+        assertEquals(deserialized.getPFloat(), Float.MIN_VALUE);
+        assertEquals(deserialized.getOFloat(), Float.MAX_VALUE);
     }
 
     @Test
@@ -217,8 +217,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Double.MIN_VALUE, deserialized.getPDouble());
-        assertEquals(Double.MAX_VALUE, deserialized.getODouble());
+        assertEquals(deserialized.getPDouble(), Double.MIN_VALUE);
+        assertEquals(deserialized.getODouble(), Double.MAX_VALUE);
     }
 
     @Test
@@ -233,8 +233,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(true, deserialized.isPBoolean());
-        assertEquals((Boolean)false, deserialized.getOBoolean());
+        assertEquals(deserialized.isPBoolean(), true);
+        assertEquals(deserialized.getOBoolean(), (Boolean) false);
     }
 
     @Test
@@ -249,8 +249,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(Character.MIN_VALUE, deserialized.getPChar());
-        assertEquals((Character)Character.MAX_VALUE, deserialized.getOChar());
+        assertEquals(deserialized.getPChar(), Character.MIN_VALUE);
+        assertEquals(deserialized.getOChar(), (Character) Character.MAX_VALUE);
     }
 
     @Test
@@ -264,7 +264,7 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals("test", deserialized.getStr());
+        assertEquals(deserialized.getStr(), "test");
     }
 
     @Test
@@ -279,7 +279,7 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(uuid, deserialized.getUuid());
+        assertEquals(deserialized.getUuid(), uuid);
     }
 
     @Test
@@ -293,7 +293,7 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(TestBean.E.A, deserialized.getE());
+        assertEquals(deserialized.getE(), TestBean.E.A);
     }
 
     @Test
@@ -307,7 +307,7 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals("test", deserialized.getValue().value());
+        assertEquals(deserialized.getValue().value(), "test");
     }
 
     @Test
