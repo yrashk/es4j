@@ -14,28 +14,58 @@
  */
 package org.eventchain.layout.types;
 
+import lombok.SneakyThrows;
+import org.eventchain.layout.Deserializer;
+import org.eventchain.layout.Layout;
+import org.eventchain.layout.Serializer;
 import org.eventchain.layout.TypeHandler;
 
 import java.nio.ByteBuffer;
 
 public class UnknownTypeHandler implements TypeHandler {
 
+    private final Class klass;
+    private final Layout layout;
+    private final Serializer serializer;
+    private final Deserializer deserializer;
+
+    @SneakyThrows @SuppressWarnings("unchecked")
+    public UnknownTypeHandler(Class klass) {
+        this.klass = klass;
+        layout = new Layout<>(klass);
+        serializer = new Serializer<>(layout);
+        deserializer = new Deserializer<>(layout);
+    }
+
     @Override
     public byte[] getFingerprint() {
-        return new byte[0];
+        return new byte[253];
     }
 
-    @Override
+    @Override @SuppressWarnings("unchecked")
     public int size(Object value) {
-        return 0;
+        if (value == null) {
+            return 1;
+        }
+        return 1 + serializer.size(value);
     }
 
-    @Override
+    @Override @SuppressWarnings("unchecked")
     public void serialize(Object value, ByteBuffer buffer) {
+        if (value != null) {
+            buffer.put((byte) 1);
+            serializer.serialize(value, buffer);
+        } else {
+            buffer.put((byte) 0);
+        }
     }
 
     @Override
     public Object deserialize(ByteBuffer buffer) {
-        return null;
+        if (buffer.get() == (byte)1) {
+            return deserializer.deserialize(buffer);
+        } else {
+            return null;
+        }
     }
 }

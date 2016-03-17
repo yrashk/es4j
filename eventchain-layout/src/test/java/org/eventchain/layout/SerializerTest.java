@@ -17,6 +17,7 @@ package org.eventchain.layout;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.experimental.Accessors;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
@@ -30,6 +31,12 @@ public class SerializerTest {
     private Layout<TestBean> layout;
     private Serializer<TestBean> serializer;
     private Deserializer<TestBean> deserializer;
+
+    @Accessors(fluent = true)
+    public static class SomeValue {
+        @Getter @Setter
+        private String value;
+    }
 
     private static class TestBean {
 
@@ -87,6 +94,9 @@ public class SerializerTest {
         public enum E { A, B };
         @Getter @Setter
         private E e;
+
+        @Getter @Setter
+        private SomeValue value;
 
 
     }
@@ -284,5 +294,19 @@ public class SerializerTest {
         deserializer.deserialize(deserialized, buffer);
 
         assertEquals(TestBean.E.A, deserialized.getE());
+    }
+
+    @Test
+    public void layoutSerialization() {
+        TestBean test = new TestBean();
+        test.setValue(new SomeValue().value("test"));
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals("test", deserialized.getValue().value());
     }
 }

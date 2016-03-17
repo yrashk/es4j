@@ -107,6 +107,6 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
             return new EnumTypeHandler((Class<? extends Enum>) type.getErasedType());
         }
 
-        return new UnknownTypeHandler();
+        return new UnknownTypeHandler(type.getErasedType());
     }
 }

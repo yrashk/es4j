@@ -68,6 +68,8 @@ to be improved.
 * java.util.UUID
 * Enum (Java enumerations)
 
+All other types will be handled through Layout.
+
 ## Serialization
 
 Due to properties sorting and strict typing, Eventchain's serialization format
@@ -89,3 +91,6 @@ to have an empty constructor. Otherwise, creating a deserializer will fail.
 It is important to note that Eventchain does not support a notion of a `null`
 property value. While the instances you pass for serialization *can* contain
 nulls, they will be treated as "empty" values (for example, empty String, nil UUID, zero number, false boolean, etc.)
+
+One notable exception to this is types that are not directly supported and go
+through Layout. They will preserve their nullity throughout serialization/deserialization.
