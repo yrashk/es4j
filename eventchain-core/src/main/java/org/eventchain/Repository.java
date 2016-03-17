@@ -18,10 +18,10 @@ import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.QueryFactory;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import com.googlecode.cqengine.resultset.ResultSet;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
+import org.eventchain.index.ResultSet;
 
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -161,6 +161,6 @@ public interface Repository extends Service {
      * @return
      */
     default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query, QueryOptions queryOptions) {
-        return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
+        return new ResultSet<>(getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions));
     }
 }
