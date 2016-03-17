@@ -38,7 +38,7 @@ public class RepositoryBenchmark {
     private MemoryLockProvider lockProvider;
 
     @Setup
-    public void setup() throws UnknownHostException {
+    public void setup() throws Exception {
         repository = Repository.create();
 
         journal = new MemoryJournal();
