@@ -42,30 +42,26 @@ public class UnknownTypeHandler implements TypeHandler {
         return new byte[253];
     }
 
-    @Override @SuppressWarnings("unchecked")
+    @Override @SneakyThrows
+    @SuppressWarnings("unchecked")
     public int size(Object value) {
         if (value == null) {
-            return 1;
+            return size(klass.newInstance());
         }
-        return 1 + serializer.size(value);
+        return serializer.size(value);
     }
 
-    @Override @SuppressWarnings("unchecked")
+    @Override @SneakyThrows @SuppressWarnings("unchecked")
     public void serialize(Object value, ByteBuffer buffer) {
         if (value != null) {
-            buffer.put((byte) 1);
             serializer.serialize(value, buffer);
         } else {
-            buffer.put((byte) 0);
+            serialize(klass.newInstance(), buffer);
         }
     }
 
     @Override
     public Object deserialize(ByteBuffer buffer) {
-        if (buffer.get() == (byte)1) {
-            return deserializer.deserialize(buffer);
-        } else {
-            return null;
-        }
+        return deserializer.deserialize(buffer);
     }
 }

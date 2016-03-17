@@ -309,4 +309,18 @@ public class SerializerTest {
 
         assertEquals("test", deserialized.getValue().value());
     }
+
+    @Test
+    public void nullLayoutSerialization() {
+        TestBean test = new TestBean();
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals(deserialized.getValue().value(), ""); // it is an empty string because we don't preserve String nullity
+    }
+
 }
