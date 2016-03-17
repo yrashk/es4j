@@ -52,6 +52,7 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
      *     <li><code>Character/char</code></li>
      *     <li><code>String</code></li>
      *     <li><code>UUID</code></li>
+     *     <li><code>Enum</code></li>
      * </ul>
      * @param type
      * @return
@@ -100,6 +101,10 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
         if (type.isArray() &&
            (type.getArrayElementType().isInstanceOf(Byte.TYPE) || type.getArrayElementType().isInstanceOf(Byte.class))) {
             return new ByteArrayTypeHandler(type.getArrayElementType().isPrimitive());
+        }
+
+        if (type.getErasedType().isEnum()) {
+            return new EnumTypeHandler((Class<? extends Enum>) type.getErasedType());
         }
 
         return new UnknownTypeHandler();

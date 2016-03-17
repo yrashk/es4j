@@ -66,6 +66,7 @@ to be improved.
 * Character/char
 * java.lang.String
 * java.util.UUID
+* Enum (Java enumerations)
 
 ## Serialization
 

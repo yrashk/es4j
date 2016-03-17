@@ -84,6 +84,10 @@ public class SerializerTest {
         @Getter @Setter
         private UUID uuid;
 
+        public enum E { A, B };
+        @Getter @Setter
+        private E e;
+
 
     }
 
@@ -266,5 +270,19 @@ public class SerializerTest {
         deserializer.deserialize(deserialized, buffer);
 
         assertEquals(uuid, deserialized.getUuid());
+    }
+
+    @Test
+    public void enumSerialization() {
+        TestBean test = new TestBean();
+        test.setE(TestBean.E.A);
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals(TestBean.E.A, deserialized.getE());
     }
 }
