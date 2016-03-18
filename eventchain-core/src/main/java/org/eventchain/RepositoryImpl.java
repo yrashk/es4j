@@ -49,6 +49,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
     private ServiceManager services;
     private LockProvider lockProvider;
     private Package pkg;
+    private CommandConsumer commandConsumer;
 
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
@@ -81,15 +82,9 @@ public class RepositoryImpl extends AbstractService implements Repository {
             if (configureIndices(klass)) return;
         }
 
-        Set<CommandConsumer<? extends Command, Object>> consumers =
-                commands.stream().map((java.util.function.Function<Class<? extends Command>,
-                                       CommandConsumer<? extends Command, Object>>)
-                        this::getCommandConsumer).collect(Collectors.toSet());
+        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
+        commandConsumer.startAsync().awaitRunning();
 
-        if (!consumers.isEmpty()) {
-            consumersServiceManager = new ServiceManager(consumers);
-            consumersServiceManager.startAsync().awaitHealthy();
-        }
 
         services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
         services.startAsync().awaitHealthy();
@@ -109,10 +104,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
 
     @Override
     protected void doStop() {
-        if (consumersServiceManager != null) {
-            consumersServiceManager.stopAsync().awaitStopped();
-        }
-
+        commandConsumer.stopAsync().awaitTerminated();
         services.stopAsync().awaitStopped();
 
         notifyStopped();
@@ -158,24 +150,10 @@ public class RepositoryImpl extends AbstractService implements Repository {
         }
         this.lockProvider = lockProvider;
     }
-    @Override @SuppressWarnings("unchecked")
+    @Override
     public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
-        return this.getCommandConsumer((Class<T>) command.getClass()).publish(command);
+        return this.commandConsumer.publish(command);
     }
 
-    private Map<Class<? extends Command<?>>, CommandConsumer<?, ?>> consumers = new HashMap<>();
-
-    @SuppressWarnings("unchecked")
-    private <T extends Command<C>, C> CommandConsumer<T, C> getCommandConsumer(Class<T> commandClass) {
-        if (!commands.contains(commandClass)) {
-            throw new IllegalArgumentException();
-        }
-        CommandConsumer<T, C> consumer = (CommandConsumer<T, C>) consumers.get(commandClass);
-        if (consumer == null) {
-            consumer = new CommandConsumer<>(commandClass, timeProvider, this, journal, indexEngine, lockProvider);
-            consumers.put(commandClass, consumer);
-        }
-        return consumer;
-    }
 
 }

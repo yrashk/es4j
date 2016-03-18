@@ -45,7 +45,7 @@ public abstract class Command<R> extends Entity {
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
      *
-     * This version of the function receives a {@link LockProvider} if one is needed. {@link CommandConsumer}
+     * This version of the function receives a {@link LockProvider} if one is needed. {@link DisruptorCommandConsumer}
      * will pass a special "tracking" provider that will release the locks in two situations:
      *
      * <ul>
