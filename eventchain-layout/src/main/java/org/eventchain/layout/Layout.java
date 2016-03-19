@@ -26,6 +26,7 @@ import java.beans.Introspector;
 import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
@@ -51,7 +52,7 @@ import java.util.stream.Collectors;
  *     <li>Has a getter (fluent or JavaBean style)</li>
  *     <li>Has a setter (fluent or JavaBean style)</li>
  *     <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
- *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</li>
+ *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
  * </ul>
  *
  * Inherited properties from superclasses will also be included.
@@ -160,7 +161,7 @@ public class Layout<T> {
 
                 Property<T> property = new Property<>(propertyName,
                         method.getReturnType(),
-                        TypeHandler.<T>lookup(method.getReturnType()),
+                        TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
                         new BiConsumer<T, Object>() {
                             @Override @SneakyThrows
                             public void accept(T t, Object o) {

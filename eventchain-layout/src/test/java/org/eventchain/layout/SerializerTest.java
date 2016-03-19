@@ -22,6 +22,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
@@ -98,6 +101,8 @@ public class SerializerTest {
         @Getter @Setter
         private SomeValue value;
 
+        @Getter @Setter
+        private List<List<String>> list;
 
     }
 
@@ -323,4 +328,20 @@ public class SerializerTest {
         assertEquals(deserialized.getValue().value(), ""); // it is an empty string because we don't preserve String nullity
     }
 
+
+    @Test
+    public void listSerialization() {
+        TestBean test = new TestBean();
+        LinkedList<List<String>> list = new LinkedList<>();
+        list.add(new LinkedList<>(Arrays.asList("Hello")));
+        test.setList(list);
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals(deserialized.getList().get(0).get(0), "Hello");
+    }
 }

@@ -17,6 +17,9 @@ package org.eventchain.layout;
 import com.fasterxml.classmate.ResolvedType;
 import org.eventchain.layout.types.*;
 
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -53,11 +56,12 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
      *     <li><code>String</code></li>
      *     <li><code>UUID</code></li>
      *     <li><code>Enum</code></li>
+     *     <li><code>List&lt;?&gt;</code></li>
      * </ul>
      * @param type
      * @return
      */
-    static TypeHandler lookup(ResolvedType type) {
+    static TypeHandler lookup(ResolvedType type, AnnotatedType annotatedType) {
         if (type.isInstanceOf(Byte.TYPE) || type.isInstanceOf(Byte.class)) {
             return new ByteTypeHandler();
         }
@@ -96,6 +100,10 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
 
         if (type.isInstanceOf(UUID.class)) {
             return new UUIDTypeHandler();
+        }
+
+        if (type.isInstanceOf(List.class)) {
+            return new ListTypeHandler(annotatedType);
         }
 
         if (type.isArray() &&

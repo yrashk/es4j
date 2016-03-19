@@ -18,6 +18,7 @@ import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
+import lombok.SneakyThrows;
 import org.eventchain.layout.Deserializer;
 import org.eventchain.layout.Layout;
 import org.eventchain.layout.Serializer;
@@ -25,6 +26,10 @@ import org.eventchain.layout.TypeHandler;
 import org.eventchain.layout.types.UnknownTypeHandler;
 
 import java.beans.IntrospectionException;
+import java.lang.reflect.AnnotatedParameterizedType;
+import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
@@ -41,15 +46,21 @@ public abstract class AbstractAttributeIndex<A, O> extends com.googlecode.cqengi
      * @param attribute        The attribute on which the index will be built
      * @param supportedQueries The set of {@link Query} types which the subclass implementation supports
      */
+    @SneakyThrows
     protected AbstractAttributeIndex(Attribute<O, A> attribute, Set<Class<? extends Query>> supportedQueries) {
         super(attribute, supportedQueries);
 
         ResolvedType attributeType = new TypeResolver().resolve(attribute.getAttributeType());
-        attributeSerializer = TypeHandler.lookup(attributeType);
-        attributeDeserializer = TypeHandler.lookup(attributeType);
+
+        AnnotatedParameterizedType cls = (AnnotatedParameterizedType) attribute.getClass().getAnnotatedSuperclass();
+        AnnotatedType annotatedType = cls.getAnnotatedActualTypeArguments()[1];
+
+        TypeHandler attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
+        attributeSerializer = attrTypeHandler;
+        attributeDeserializer = attrTypeHandler;
 
         ResolvedType objectType = new TypeResolver().resolve(attribute.getObjectType());
-        TypeHandler<O> objectTypeHandler = TypeHandler.lookup(objectType);
+        TypeHandler<O> objectTypeHandler = TypeHandler.lookup(objectType, null);
         if (!(objectTypeHandler instanceof UnknownTypeHandler)) {
             objectSerializer = objectTypeHandler;
             objectDeserializer = objectTypeHandler;

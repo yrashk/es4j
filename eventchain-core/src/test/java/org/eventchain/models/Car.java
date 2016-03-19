@@ -20,12 +20,13 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.eventchain.Entity;
 
 import java.util.List;
 import java.util.UUID;
 
 @ToString
-public class Car {
+public class Car extends Entity {
     public enum Color {RED, GREEN, BLUE, BLACK, WHITE}
     @Getter @Setter
     int carId;
