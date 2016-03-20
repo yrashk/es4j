@@ -16,14 +16,15 @@ package org.eventchain.h2;
 
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
+import org.eventchain.Journal;
+import org.eventchain.Repository;
 import org.eventchain.h2.index.HashIndex;
 import org.eventchain.h2.index.UniqueIndex;
 import org.eventchain.index.CQIndexEngine;
 import org.eventchain.index.IndexEngine;
 import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.Activate;
-import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.*;
 
 import java.util.Arrays;
 import java.util.List;
@@ -37,8 +38,24 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     private MVStore store;
 
-    public MVStoreIndexEngine() {
+    public MVStoreIndexEngine() {}
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Override
+    public void setRepository(Repository repository) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
+        this.repository = repository;
+    }
+
+    @Reference
+    @Override
+    public void setJournal(Journal journal) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
+        this.journal = journal;
     }
 
     public MVStoreIndexEngine(MVStore store) {

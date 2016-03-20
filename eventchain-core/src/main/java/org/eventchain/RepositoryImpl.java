@@ -31,7 +31,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
-@Component(servicefactory = true)
+@Component
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository {
 
@@ -135,6 +135,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
         this.pkg = pkg;
     }
 
+    @Reference
     @Override
     public void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) throws IllegalStateException {
         if (isRunning()) {
@@ -143,6 +144,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
         this.timeProvider = timeProvider;
     }
 
+    @Reference
     @Override
     public void setLockProvider(LockProvider lockProvider) throws IllegalStateException {
         if (isRunning()) {
@@ -150,6 +152,7 @@ public class RepositoryImpl extends AbstractService implements Repository {
         }
         this.lockProvider = lockProvider;
     }
+
     @Override
     public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
         return this.commandConsumer.publish(command);

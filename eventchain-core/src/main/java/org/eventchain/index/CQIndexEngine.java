@@ -24,26 +24,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CQIndexEngine extends AbstractIndexEngine {
     protected Repository repository;
-
-    @Reference
-    @Override
-    public void setRepository(Repository repository) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
-        this.repository = repository;
-    }
-
     protected Journal journal;
 
-    @Reference
-    @Override
-    public void setJournal(Journal journal) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
-        this.journal = journal;
-    }
 
     protected Map<String, IndexedCollection> indexedCollections = new ConcurrentHashMap<>();
 

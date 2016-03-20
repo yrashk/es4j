@@ -23,7 +23,11 @@ import com.googlecode.cqengine.index.radixinverted.InvertedRadixTreeIndex;
 import com.googlecode.cqengine.index.radixreversed.ReversedRadixTreeIndex;
 import com.googlecode.cqengine.index.suffix.SuffixTreeIndex;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
+import org.eventchain.Journal;
+import org.eventchain.Repository;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,6 +37,23 @@ import static org.eventchain.index.IndexEngine.IndexFeature.*;
 @Component
 public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
+    @Override
+    public void setRepository(Repository repository) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
+        this.repository = repository;
+    }
+
+    @Reference
+    @Override
+    public void setJournal(Journal journal) throws IllegalStateException {
+        if (isRunning()) {
+            throw new IllegalStateException();
+        }
+        this.journal = journal;
+    }
 
     @Override
     protected List<IndexCapabilities> getIndexMatrix() {

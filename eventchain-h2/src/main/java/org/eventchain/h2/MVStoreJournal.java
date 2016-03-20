@@ -30,6 +30,8 @@ import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -111,6 +113,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
     private Map<String, Layout> layoutsByHash = new HashMap<>();
     private Map<String, Layout> layoutsByClass = new HashMap<>();
 
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
         if (isRunning()) {

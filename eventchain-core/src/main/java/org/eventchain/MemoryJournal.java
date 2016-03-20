@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.AbstractService;
 import lombok.Getter;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.annotations.ReferenceCardinality;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -33,7 +34,7 @@ public class MemoryJournal extends AbstractService implements Journal {
     private Repository repository;
 
     @Override
-    @Reference
+    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     public void setRepository(Repository repository) throws IllegalStateException {
         if (isRunning()) {
             throw new IllegalStateException();
