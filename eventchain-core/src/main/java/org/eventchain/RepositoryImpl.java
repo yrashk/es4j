@@ -20,19 +20,20 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
-import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.ConfigurationPolicy;
-import org.osgi.service.component.annotations.Reference;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.*;
 import org.reflections.Reflections;
 
 import java.lang.reflect.Modifier;
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target="})
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "package="})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository {
 
@@ -52,6 +53,14 @@ public class RepositoryImpl extends AbstractService implements Repository {
     private Package pkg;
     private CommandConsumer commandConsumer;
 
+    @Activate
+    protected void activate(ComponentContext ctx) {
+        if (!isRunning()) {
+            setPackage(Package.getPackage((String)ctx.getProperties().get("package")));
+            startAsync();
+        }
+    }
+
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
         if (journal == null) {
@@ -66,6 +75,10 @@ public class RepositoryImpl extends AbstractService implements Repository {
         if (lockProvider == null) {
             notifyFailed(new IllegalStateException("lockProvider == null"));
         }
+
+        journal.setRepository(this);
+        indexEngine.setJournal(journal);
+        indexEngine.setRepository(this);
 
         Reflections reflections = pkg == null ? new Reflections() : new Reflections(pkg.getName());
         Predicate<Class<? extends Entity>> classPredicate = klass ->

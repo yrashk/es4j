@@ -18,7 +18,6 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
-import jdk.nashorn.internal.objects.annotations.Property;
 import lombok.*;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
@@ -28,12 +27,9 @@ import org.eventchain.layout.Serializer;
 import org.h2.mvstore.Cursor;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
-import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Reference;
-import org.osgi.service.component.annotations.ReferenceCardinality;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -67,7 +63,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
     }
 
     @Activate
-    public void activate(ComponentContext ctx) {
+    protected void activate(ComponentContext ctx) {
         this.store = MVStore.open((String) ctx.getProperties().get("filename"));
     }
 
@@ -109,13 +105,13 @@ public class MVStoreJournal extends AbstractService implements Journal {
 
     @Override
     protected void doStop() {
+        store.close();
         notifyStopped();
     }
 
     private Map<String, Layout> layoutsByHash = new HashMap<>();
     private Map<String, Layout> layoutsByClass = new HashMap<>();
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
         if (isRunning()) {

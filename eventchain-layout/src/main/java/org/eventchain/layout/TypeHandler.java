@@ -18,7 +18,6 @@ import com.fasterxml.classmate.ResolvedType;
 import org.eventchain.layout.types.*;
 
 import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Type;
 import java.util.List;
 import java.util.UUID;
 

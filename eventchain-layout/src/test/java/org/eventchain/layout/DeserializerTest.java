@@ -19,8 +19,6 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
-
 public class DeserializerTest {
 
     public class NoEmptyConstructor {

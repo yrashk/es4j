@@ -63,12 +63,9 @@ PhysicalTimeProvider timeProvider = new NTPServerTimeProvider();
 repository.setPhysicalTimeProvider(timeProvider);
 
 Journal journal = new MemoryJournal();
-journal.setRepository(journal);
 repository.setJournal(journal);
 
 IndexEngine indexEngine = new MemoryIndexEngine();
-indexEngine.setRepository(repository);
-indexEngine.setJournal(journal);
 repository.setIndexEngine(indexEngine);
 
 LockProvider lockProvider = new MemoryLockProvider();

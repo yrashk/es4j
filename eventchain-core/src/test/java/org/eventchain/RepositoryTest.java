@@ -56,7 +56,6 @@ public abstract class RepositoryTest<T extends Repository> {
     public void setUpEnv() throws Exception {
         repository.setPackage(RepositoryTest.class.getPackage());
         journal = createJournal();
-        journal.setRepository(repository);
         repository.setJournal(journal);
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);
@@ -64,8 +63,6 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.setIndexEngine(indexEngine);
         lockProvider = new MemoryLockProvider();
         repository.setLockProvider(lockProvider);
-        indexEngine.setRepository(repository);
-        indexEngine.setJournal(journal);
         repository.startAsync().awaitRunning();
     }
 

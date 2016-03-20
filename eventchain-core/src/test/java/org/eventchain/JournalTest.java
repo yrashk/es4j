@@ -59,10 +59,7 @@ public abstract class JournalTest<T extends Journal> {
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setLockProvider(new MemoryLockProvider());
         indexEngine = new MemoryIndexEngine();
-        indexEngine.setJournal(journal);
-        indexEngine.setRepository(repository);
         repository.setIndexEngine(indexEngine);
-        this.journal.setRepository(repository);
         repository.startAsync().awaitRunning();
     }
 

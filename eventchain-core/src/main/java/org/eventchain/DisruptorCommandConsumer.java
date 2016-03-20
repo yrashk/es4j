@@ -17,7 +17,6 @@ package org.eventchain;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.cqengine.IndexedCollection;
-import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -30,7 +29,6 @@ import org.eventchain.index.IndexEngine;
 import org.eventchain.layout.Deserializer;
 import org.eventchain.layout.Layout;
 
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;

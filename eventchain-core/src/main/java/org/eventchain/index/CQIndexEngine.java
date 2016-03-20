@@ -17,7 +17,6 @@ package org.eventchain.index;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import org.eventchain.*;
-import org.osgi.service.component.annotations.Reference;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

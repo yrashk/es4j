@@ -15,7 +15,6 @@
 package org.eventchain.h2;
 
 import com.googlecode.cqengine.attribute.Attribute;
-import com.googlecode.cqengine.index.Index;
 import org.eventchain.Journal;
 import org.eventchain.Repository;
 import org.eventchain.h2.index.HashIndex;
@@ -24,14 +23,13 @@ import org.eventchain.index.CQIndexEngine;
 import org.eventchain.index.IndexEngine;
 import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
-import org.osgi.service.component.annotations.*;
+import org.osgi.service.component.annotations.Activate;
+import org.osgi.service.component.annotations.Component;
 
 import java.util.Arrays;
 import java.util.List;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.*;
-import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
-import static org.eventchain.index.IndexEngine.IndexFeature.IN;
 
 @Component(properties = "index.properties")
 public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
@@ -40,7 +38,6 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     public MVStoreIndexEngine() {}
 
-    @Reference(cardinality = ReferenceCardinality.OPTIONAL)
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
         if (isRunning()) {
@@ -49,7 +46,6 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
         this.repository = repository;
     }
 
-    @Reference
     @Override
     public void setJournal(Journal journal) throws IllegalStateException {
         if (isRunning()) {
@@ -63,8 +59,14 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
     }
 
     @Activate
-    public void activate(ComponentContext ctx) {
+    protected void activate(ComponentContext ctx) {
         this.store = MVStore.open((String) ctx.getProperties().get("filename"));
+    }
+
+    @Override
+    protected void doStop() {
+        this.store.close();
+        super.doStop();
     }
 
     @Override
