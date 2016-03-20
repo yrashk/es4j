@@ -33,7 +33,7 @@ import static org.eventchain.index.IndexEngine.IndexFeature.*;
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.IN;
 
-@Component(properties = "org.eventchain.hlc.MVStoreIndexEngine.filename")
+@Component(properties = "index.properties")
 public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     private MVStore store;

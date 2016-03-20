@@ -18,6 +18,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
+import jdk.nashorn.internal.objects.annotations.Property;
 import lombok.*;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
@@ -27,6 +28,7 @@ import org.eventchain.layout.Serializer;
 import org.h2.mvstore.Cursor;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
+import org.osgi.framework.FrameworkUtil;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -39,7 +41,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Component(servicefactory = true, properties = "org.eventchain.hlc.MVStoreJournal.filename")
+@Component(properties = "journal.properties")
 public class MVStoreJournal extends AbstractService implements Journal {
     private Repository repository;
 
@@ -66,7 +68,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
 
     @Activate
     public void activate(ComponentContext ctx) {
-        this.store = MVStore.open((String) ctx.getProperties().get("org.eventchain.hlc.MVStoreJournal.filename"));
+        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
     }
 
     @Override
