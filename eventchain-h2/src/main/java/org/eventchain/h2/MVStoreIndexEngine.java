@@ -64,7 +64,7 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Activate
     public void activate(ComponentContext ctx) {
-        this.store = MVStore.open((String) ctx.getProperties().get("org.eventchain.hlc.MVStoreIndexEngine.filename"));
+        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
     }
 
     @Override
