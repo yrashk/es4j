@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ConfigurationPolicy;
 import org.osgi.service.component.annotations.Reference;
 import org.reflections.Reflections;
 
@@ -31,7 +32,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
-@Component
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target="})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository {
 
