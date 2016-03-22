@@ -33,9 +33,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "package="})
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "package=", "jmx.objectname=org.eventchain:type=repository"})
 @Slf4j
-public class RepositoryImpl extends AbstractService implements Repository {
+public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 
     private Journal journal;
 
