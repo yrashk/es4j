@@ -44,7 +44,6 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Getter
     private Set<Class<? extends Event>> events = new HashSet<>();
 
-    private ServiceManager consumersServiceManager;
     private PhysicalTimeProvider timeProvider;
     @Getter
     private IndexEngine indexEngine;
