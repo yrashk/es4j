@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  */
 public class PackageCommandSetProvider implements CommandSetProvider {
 
-    private final Package[] packages;
+    private final String[] packages;
     private final ClassLoader[] classLoaders;
 
     public PackageCommandSetProvider(Package[] packages) {
@@ -37,15 +37,13 @@ public class PackageCommandSetProvider implements CommandSetProvider {
     }
 
     public PackageCommandSetProvider(Package[] packages, ClassLoader[] classLoaders) {
-        this.packages = packages;
+        this.packages = Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new);
         this.classLoaders = classLoaders;
     }
 
     @Override
     public Set<Class<? extends Command>> getCommands() {
-        Configuration configuration = ConfigurationBuilder.build().
-                forPackages(Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new)).
-                addClassLoaders(classLoaders);
+        Configuration configuration = ConfigurationBuilder.build((Object[])packages).addClassLoaders(classLoaders);
         Reflections reflections = new Reflections(configuration);
         Predicate<Class<? extends Entity>> classPredicate = klass ->
                 Modifier.isPublic(klass.getModifiers()) &&

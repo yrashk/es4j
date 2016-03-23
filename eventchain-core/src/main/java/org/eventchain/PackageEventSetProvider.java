@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 public class PackageEventSetProvider implements EventSetProvider {
 
 
-    private final Package[] packages;
+    private final String[] packages;
     private final ClassLoader[] classLoaders;
 
     public PackageEventSetProvider(Package[] packages) {
@@ -38,15 +38,13 @@ public class PackageEventSetProvider implements EventSetProvider {
     }
 
     public PackageEventSetProvider(Package[] packages, ClassLoader[] classLoaders) {
-        this.packages = packages;
+        this.packages = Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new);
         this.classLoaders = classLoaders;
     }
 
     @Override
     public Set<Class<? extends Event>> getEvents() {
-        Configuration configuration = ConfigurationBuilder.build().
-                forPackages(Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new)).
-                addClassLoaders(classLoaders);
+        Configuration configuration = ConfigurationBuilder.build((Object[])packages).addClassLoaders(classLoaders);
         Reflections reflections = new Reflections(configuration);
         Predicate<Class<? extends Entity>> classPredicate = klass ->
                 Modifier.isPublic(klass.getModifiers()) &&
