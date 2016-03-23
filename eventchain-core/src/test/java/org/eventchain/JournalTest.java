@@ -53,7 +53,8 @@ public abstract class JournalTest<T extends Journal> {
     @BeforeClass
     public void setUpEnv() throws Exception {
         repository = new RepositoryImpl();
-        repository.setPackage(JournalTest.class.getPackage());
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{JournalTest.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.setJournal(this.journal);
         timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);

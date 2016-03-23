@@ -50,7 +50,8 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         journal = new MemoryJournal();
         journal.setRepository(repository);
         repository.setJournal(journal);
-        repository.setPackage(getClass().getPackage());
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{getClass().getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClass().getPackage()}));
         repository.setIndexEngine(indexEngine);
         repository.setLockProvider(new MemoryLockProvider());
         timeProvider = new NTPServerTimeProvider();

@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "package=", "jmx.objectname=org.eventchain:type=repository"})
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "jmx.objectname=org.eventchain:type=repository"})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 
@@ -48,7 +48,6 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Activate
     protected void activate(ComponentContext ctx) {
         if (!isRunning()) {
-            setPackage(Package.getPackage((String)ctx.getProperties().get("package")));
             startAsync();
         }
     }
@@ -194,4 +193,13 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     }
 
 
+    @Override
+    public String[] getInstalledCommands() {
+        return commands.stream().map(Class::getName).toArray(String[]::new);
+    }
+
+    @Override
+    public String[] getInstalledEvents() {
+        return events.stream().map(Class::getName).toArray(String[]::new);
+    }
 }

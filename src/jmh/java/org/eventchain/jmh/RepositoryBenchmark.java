@@ -57,7 +57,8 @@ public class RepositoryBenchmark {
         indexEngine.setRepository(repository);
         indexEngine.setJournal(journal);
 
-        repository.setPackage(RepositoryBenchmark.class.getPackage());
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
 
         repository.startAsync().awaitRunning();
     }

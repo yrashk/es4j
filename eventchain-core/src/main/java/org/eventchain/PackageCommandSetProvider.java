@@ -14,24 +14,39 @@
  */
 package org.eventchain;
 
+import org.reflections.Configuration;
 import org.reflections.Reflections;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Provides a command set from a given list of packages
+ */
 public class PackageCommandSetProvider implements CommandSetProvider {
 
-    private final Package pkg;
+    private final Package[] packages;
+    private final ClassLoader[] classLoaders;
 
-    public PackageCommandSetProvider(Package pkg) {
-        this.pkg = pkg;
+    public PackageCommandSetProvider(Package[] packages) {
+        this(packages, new ClassLoader[]{});
+    }
+
+    public PackageCommandSetProvider(Package[] packages, ClassLoader[] classLoaders) {
+        this.packages = packages;
+        this.classLoaders = classLoaders;
     }
 
     @Override
     public Set<Class<? extends Command>> getCommands() {
-        Reflections reflections = pkg == null ? new Reflections() : new Reflections(pkg.getName());
+        Configuration configuration = ConfigurationBuilder.build().
+                forPackages(Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new)).
+                addClassLoaders(classLoaders);
+        Reflections reflections = new Reflections(configuration);
         Predicate<Class<? extends Entity>> classPredicate = klass ->
                 Modifier.isPublic(klass.getModifiers()) &&
                         (!klass.isMemberClass() || (klass.isMemberClass() && Modifier.isStatic(klass.getModifiers()))) &&

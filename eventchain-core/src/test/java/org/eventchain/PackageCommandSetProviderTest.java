@@ -14,10 +14,15 @@
  */
 package org.eventchain;
 
-import java.util.Set;
+import boguspackage.BogusCommand;
+import org.testng.annotations.Test;
 
-public interface RepositoryMBean {
-    boolean isRunning();
-    String[] getInstalledCommands();
-    String[] getInstalledEvents();
+import static org.testng.Assert.*;
+
+public class PackageCommandSetProviderTest {
+
+    @Test
+    public void test() {
+        new PackageCommandSetProvider(new Package[]{BogusCommand.class.getPackage()}).getCommands().contains(BogusCommand.class);
+    }
 }

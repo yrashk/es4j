@@ -71,7 +71,8 @@ repository.setIndexEngine(indexEngine);
 LockProvider lockProvider = new MemoryLockProvider();
 repository.setLockProvider(lockProvider);
 
-repository.setPackage(getClass().getPackage()); // application's package
+repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{getClass().getPackage()}));
+repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClass().getPackage()});
 
 repository.startAsync().awaitRunning();
 ```

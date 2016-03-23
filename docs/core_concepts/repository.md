@@ -14,7 +14,8 @@ repository.setIndexEngine(indexEngine);
 
 // Eventchain should find commands and events in this
 // hierarchy of packages:
-repository.setPackage(getClass().getPackage());
+repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{getClass().getPackage()}));
+repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClass().getPackage()}));
 
 repository.startAsync().awaitRunning();
 ```

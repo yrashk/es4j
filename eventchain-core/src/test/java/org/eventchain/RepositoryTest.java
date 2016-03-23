@@ -56,7 +56,8 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @BeforeClass
     public void setUpEnv() throws Exception {
-        repository.setPackage(RepositoryTest.class.getPackage());
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         journal = createJournal();
         repository.setJournal(journal);
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
@@ -134,8 +135,8 @@ public abstract class RepositoryTest<T extends Repository> {
     @SneakyThrows
     public void publishingNewCommand() {
         assertFalse(repository.getCommands().contains(BogusCommand.class));
-        repository.addCommandSetProvider(new PackageCommandSetProvider(BogusCommand.class.getPackage()));
-        repository.addEventSetProvider(new PackageEventSetProvider(BogusCommand.class.getPackage()));
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{BogusCommand.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{BogusCommand.class.getPackage()}));
         assertTrue(repository.getCommands().contains(BogusCommand.class));
         assertEquals("bogus", repository.publish(new BogusCommand()).get());
         // testing its indexing

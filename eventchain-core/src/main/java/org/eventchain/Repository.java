@@ -96,22 +96,27 @@ public interface Repository extends Service {
     void setLockProvider(LockProvider lockProvider) throws IllegalStateException;
 
     /**
-     * Sets package hierarchy for command and event discovery.
-     *
-     * Should be done before invoking {@link #startAsync()}
-     *
-     * @param pkg
-     * @throws IllegalStateException if called after the service is started
+     * Adds a command set provider. Will fetch a command set upon initialization
+     * @param provider
      */
-    default void setPackage(Package pkg) {
-        addCommandSetProvider(new PackageCommandSetProvider(pkg));
-        addEventSetProvider(new PackageEventSetProvider(pkg));
-    }
-
     void addCommandSetProvider(CommandSetProvider provider);
+
+    /**
+     * Removes a command set provider
+     * @param provider
+     */
     void removeCommandSetProvider(CommandSetProvider provider);
 
+    /**
+     * Adds an event set provider. Will fetch an event set upon initialization
+     * @param provider
+     */
     void addEventSetProvider(EventSetProvider provider);
+
+    /**
+     * Removes an event set provider
+     * @param provider
+     */
     void removeEventSetProvider(EventSetProvider provider);
 
     /**
