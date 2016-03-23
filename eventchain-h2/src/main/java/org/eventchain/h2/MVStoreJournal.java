@@ -30,6 +30,7 @@ import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -64,7 +65,12 @@ public class MVStoreJournal extends AbstractService implements Journal {
 
     @Activate
     protected void activate(ComponentContext ctx) {
-        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
+        store = MVStore.open((String) ctx.getProperties().get("filename"));
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext ctx) {
+        store.close();
     }
 
     @Override

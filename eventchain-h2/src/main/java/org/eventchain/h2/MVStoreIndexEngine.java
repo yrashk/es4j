@@ -25,6 +25,7 @@ import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 
 import java.util.Arrays;
 import java.util.List;
@@ -60,7 +61,12 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Activate
     protected void activate(ComponentContext ctx) {
-        this.store = MVStore.open((String) ctx.getProperties().get("filename"));
+        store = MVStore.open((String) ctx.getProperties().get("filename"));
+    }
+
+    @Deactivate
+    protected void deactivate(ComponentContext ctx) {
+        store.close();
     }
 
     @Override
