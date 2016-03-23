@@ -85,6 +85,16 @@ public class MVStoreJournal extends AbstractService implements Journal {
         notifyStarted();
     }
 
+    @Override
+    public void onCommandsAdded(Set<Class<? extends Command>> commands) {
+        commands.forEach(new EntityLayoutExtractor());
+    }
+
+    @Override
+    public void onEventsAdded(Set<Class<? extends Event>> events) {
+        events.forEach(new EntityLayoutExtractor());
+    }
+
     void initializeStore() {
         store.setAutoCommitDelay(0);
         MVMap<String, Object> info = store.openMap("info");

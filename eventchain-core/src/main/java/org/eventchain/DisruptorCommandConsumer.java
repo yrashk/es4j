@@ -32,6 +32,7 @@ import org.eventchain.layout.Layout;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
+import java.util.function.Function;
 
 @Slf4j
 public class DisruptorCommandConsumer extends AbstractService implements CommandConsumer {
@@ -63,7 +64,15 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
             this.commandClass = klass;
         }
         public Command getCommand() {
-            return commands.get(commandClass);
+            return commands.computeIfAbsent(commandClass, new ClassCommandFunction());
+        }
+
+
+        private static class ClassCommandFunction implements Function<Class<? extends Command>, Command> {
+            @Override @SneakyThrows
+            public Command apply(Class<? extends Command> aClass) {
+                return aClass.newInstance();
+            }
         }
     }
 

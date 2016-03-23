@@ -103,8 +103,16 @@ public interface Repository extends Service {
      * @param pkg
      * @throws IllegalStateException if called after the service is started
      */
-    void setPackage(Package pkg) throws IllegalStateException;
+    default void setPackage(Package pkg) {
+        addCommandSetProvider(new PackageCommandSetProvider(pkg));
+        addEventSetProvider(new PackageEventSetProvider(pkg));
+    }
 
+    void addCommandSetProvider(CommandSetProvider provider);
+    void removeCommandSetProvider(CommandSetProvider provider);
+
+    void addEventSetProvider(EventSetProvider provider);
+    void removeEventSetProvider(EventSetProvider provider);
 
     /**
      * Returns a set of commands discovered or configured

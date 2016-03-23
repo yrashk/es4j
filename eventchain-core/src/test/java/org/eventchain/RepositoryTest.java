@@ -14,6 +14,8 @@
  */
 package org.eventchain;
 
+import boguspackage.BogusCommand;
+import boguspackage.BogusEvent;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
@@ -128,6 +130,20 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get().string(), "test");
     }
 
+    @Test
+    @SneakyThrows
+    public void publishingNewCommand() {
+        assertFalse(repository.getCommands().contains(BogusCommand.class));
+        repository.addCommandSetProvider(new PackageCommandSetProvider(BogusCommand.class.getPackage()));
+        repository.addEventSetProvider(new PackageEventSetProvider(BogusCommand.class.getPackage()));
+        assertTrue(repository.getCommands().contains(BogusCommand.class));
+        assertEquals("bogus", repository.publish(new BogusCommand()).get());
+        // testing its indexing
+        IndexedCollection<EntityHandle<BogusEvent>> coll = indexEngine.getIndexedCollection(BogusEvent.class);
+        assertTrue(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).isNotEmpty());
+        assertTrue(coll.retrieve(contains(BogusEvent.ATTR, "us")).isNotEmpty());
+        assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().get().string(), "bogus");
+    }
 
     @ToString
     public static class StreamExceptionCommand extends Command<Void> {

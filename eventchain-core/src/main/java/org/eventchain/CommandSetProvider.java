@@ -16,8 +16,6 @@ package org.eventchain;
 
 import java.util.Set;
 
-public interface RepositoryMBean {
-    boolean isRunning();
+public interface CommandSetProvider {
     Set<Class<? extends Command>> getCommands();
-    Set<Class<? extends Event>> getEvents();
 }

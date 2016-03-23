@@ -12,12 +12,23 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  */
-package org.eventchain;
+package boguspackage;
 
-import java.util.Set;
+import org.eventchain.Command;
+import org.eventchain.Event;
+import org.eventchain.Repository;
 
-public interface RepositoryMBean {
-    boolean isRunning();
-    Set<Class<? extends Command>> getCommands();
-    Set<Class<? extends Event>> getEvents();
+import java.util.stream.Stream;
+
+public class BogusCommand extends Command<String> {
+
+    @Override
+    public Stream<Event> events(Repository repository) throws Exception {
+        return Stream.of(new BogusEvent());
+    }
+
+    @Override
+    public String onCompletion() {
+        return "bogus";
+    }
 }

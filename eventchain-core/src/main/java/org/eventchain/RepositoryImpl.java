@@ -22,15 +22,9 @@ import org.eventchain.hlc.PhysicalTimeProvider;
 import org.eventchain.index.IndexEngine;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
-import org.reflections.Reflections;
 
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "package=", "jmx.objectname=org.eventchain:type=repository"})
@@ -49,7 +43,6 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     private IndexEngine indexEngine;
     private ServiceManager services;
     private LockProvider lockProvider;
-    private Package pkg;
     private CommandConsumer commandConsumer;
 
     @Activate
@@ -59,6 +52,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
             startAsync();
         }
     }
+
+    private List<Runnable> initialization = new ArrayList<>();
 
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
@@ -79,25 +74,11 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         indexEngine.setJournal(journal);
         indexEngine.setRepository(this);
 
-        Reflections reflections = pkg == null ? new Reflections() : new Reflections(pkg.getName());
-        Predicate<Class<? extends Entity>> classPredicate = klass ->
-                Modifier.isPublic(klass.getModifiers()) &&
-                        Modifier.isStatic(klass.getModifiers()) &&
-                        !Modifier.isAbstract(klass.getModifiers());
-        commands = reflections.getSubTypesOf(Command.class).stream().filter(classPredicate).collect(Collectors.toSet());
-        events = reflections.getSubTypesOf(Event.class).stream().filter(classPredicate).collect(Collectors.toSet());
-
-        for (Class<? extends Entity> klass : commands) {
-            if (configureIndices(klass)) return;
-        }
-
-        for (Class<? extends Entity> klass : events) {
-            if (configureIndices(klass)) return;
-        }
+        initialization.forEach(Runnable::run);
+        initialization.clear();
 
         commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
         commandConsumer.startAsync().awaitRunning();
-
 
         services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
         services.startAsync().awaitHealthy();
@@ -140,12 +121,53 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         }
         this.indexEngine = indexEngine;
     }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     @Override
-    public void setPackage(Package pkg) throws IllegalStateException {
+    public void addCommandSetProvider(CommandSetProvider provider) {
+        final Set<Class<? extends Command>> newCommands = provider.getCommands();
+        Runnable runnable = () -> {
+            for (Class<? extends Entity> klass : newCommands) {
+                if (configureIndices(klass)) return;
+            }
+        };
+        this.commands.addAll(newCommands);
         if (isRunning()) {
-            throw new IllegalStateException();
+           // apply immediately
+            runnable.run();
+            journal.onCommandsAdded(newCommands);
+        } else {
+            initialization.add(runnable);
         }
-        this.pkg = pkg;
+    }
+
+    @Override
+    public void removeCommandSetProvider(CommandSetProvider provider) {
+
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    @Override
+    public void addEventSetProvider(EventSetProvider provider) {
+        final Set<Class<? extends Event>> newEvents = provider.getEvents();
+        Runnable runnable = () -> {
+            for (Class<? extends Entity> klass : newEvents) {
+                if (configureIndices(klass)) return;
+            }
+        };
+        this.events.addAll(newEvents);
+        if (isRunning()) {
+            // apply immediately
+            runnable.run();
+            journal.onEventsAdded(newEvents);
+        } else {
+            initialization.add(runnable);
+        }
+    }
+
+    @Override
+    public void removeEventSetProvider(EventSetProvider provider) {
+
     }
 
     @Reference

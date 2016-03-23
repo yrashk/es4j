@@ -18,6 +18,7 @@ import com.google.common.util.concurrent.Service;
 
 import java.util.Iterator;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -27,6 +28,9 @@ import java.util.UUID;
 public interface Journal extends Service {
 
     Listener DEFAULT_LISTENER = new Listener() {};
+
+    default void onCommandsAdded(Set<Class<? extends Command>> commands) {}
+    default void onEventsAdded(Set<Class<? extends Event>> events) {}
 
     /**
      * Set repository. Should be done before invoking {@link #startAsync()}
