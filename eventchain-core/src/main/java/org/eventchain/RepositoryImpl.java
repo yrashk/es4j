@@ -142,7 +142,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
 
     @Override
     public void removeCommandSetProvider(CommandSetProvider provider) {
-
+        final Set<Class<? extends Command>> providedCommands = provider.getCommands();
+        commands.removeAll(providedCommands);
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
@@ -166,7 +167,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
 
     @Override
     public void removeEventSetProvider(EventSetProvider provider) {
-
+        final Set<Class<? extends Event>> providedEvents = provider.getEvents();
+        events.removeAll(providedEvents);
     }
 
     @Reference
