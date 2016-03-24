@@ -118,9 +118,10 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
         }
     }
 
-    synchronized TimeStamp getTimestamp() {
-        long fraction = timestamp.getFraction();
-        long seconds = timestamp.getSeconds();
+    TimeStamp getTimestamp() {
+        TimeStamp ts = new TimeStamp(timestamp.ntpValue());
+        long fraction = ts.getFraction();
+        long seconds = ts.getSeconds();
         long nanoTime = System.nanoTime();
         long l = (nanoTime - nano) / 1_000_000_000;
         double v = (nanoTime - nano) / 1_000_000_000.0 - l;
