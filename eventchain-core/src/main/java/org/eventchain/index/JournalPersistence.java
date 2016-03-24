@@ -76,6 +76,11 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
     @Override
     public abstract Set<EntityHandle<T>> create();
 
+    @Override
+    public boolean supportsIndex(Index<?> index) {
+        return true;
+    }
+
     static abstract class JournalSet<T extends Entity> implements Set<EntityHandle<T>> {
 
         protected final Journal journal;

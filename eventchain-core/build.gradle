@@ -12,6 +12,6 @@ dependencies {
     compile 'com.lmax:disruptor:3.3.4'
 
     // Indexing
-    compile 'com.googlecode.cqengine:cqengine:2.1.1'
+    compile 'com.googlecode.cqengine:cqengine:2.1.3'
 
 }

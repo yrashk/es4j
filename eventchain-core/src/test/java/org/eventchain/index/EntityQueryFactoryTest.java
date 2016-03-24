@@ -14,6 +14,7 @@
  */
 package org.eventchain.index;
 
+import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 import org.eventchain.*;
 import org.eventchain.hlc.NTPServerTimeProvider;
