@@ -50,8 +50,10 @@ public class EntityQueryFactoryTest {
 
     @Test @SneakyThrows
     public void all() {
-        repository.publish(new TestCommand()).get();
         ResultSet<EntityHandle<TestCommand>> resultSet = repository.query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
+        assertTrue(resultSet.isEmpty());
+        repository.publish(new TestCommand()).get();
+        resultSet = repository.query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
         assertTrue(resultSet.isNotEmpty());
         assertEquals(resultSet.size(), 1);
     }
