@@ -240,7 +240,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
     public <T extends Event> Iterator<EntityHandle<T>> eventIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
-        Cursor<byte[], Boolean> cursor = hashEvents.cursor(hashCommands.ceilingKey(hash));
+        Cursor<byte[], Boolean> cursor = hashEvents.cursor(hashEvents.ceilingKey(hash));
         return new CursorIterator<>(cursor, bytes -> Bytes.indexOf(bytes, hash) == 0, new EntityFunction<>(hash, layout));
     }
 
