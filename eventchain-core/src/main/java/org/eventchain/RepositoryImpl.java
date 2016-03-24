@@ -76,11 +76,11 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         initialization.forEach(Runnable::run);
         initialization.clear();
 
-        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
-        commandConsumer.startAsync().awaitRunning();
-
         services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
         services.startAsync().awaitHealthy();
+
+        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
+        commandConsumer.startAsync().awaitRunning();
 
         notifyStarted();
     }
