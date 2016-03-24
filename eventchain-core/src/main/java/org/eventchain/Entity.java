@@ -26,7 +26,7 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 public class Entity {
 
-    private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(1_000_000);
+    private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(10_000);
 
     static {
         ForkJoinPool.commonPool().execute(() -> {
