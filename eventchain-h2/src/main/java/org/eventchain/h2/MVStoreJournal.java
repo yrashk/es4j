@@ -153,7 +153,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
 
             HybridTimestamp ts = command.timestamp().clone();
 
-            long count = command.events(repository).peek(new Consumer<Event>() {
+            long count = command.events(repository, lockProvider).peek(new Consumer<Event>() {
                 @Override
                 @SneakyThrows
                 public void accept(Event event) {

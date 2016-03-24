@@ -236,4 +236,25 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(s, "hello");
     }
 
+    public static class PassingLockProvider extends Command<Boolean> {
+        @Getter
+        private boolean passed = false;
+
+        @Override
+        public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+            this.passed = lockProvider != null;
+            return super.events(repository, lockProvider);
+        }
+
+        @Override
+        public Boolean onCompletion() {
+            return passed;
+        }
+    }
+
+    @Test @SneakyThrows
+    public void passingLock() {
+        assertTrue(repository.publish(new PassingLockProvider()).get());
+    }
+
 }
