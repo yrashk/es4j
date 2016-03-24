@@ -214,4 +214,26 @@ public abstract class RepositoryTest<T extends Repository> {
         lock.unlock();
     }
 
+    public static class SameInstanceCommand extends Command<String> {
+        @Getter
+        private String field;
+
+        @Override
+        public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+            this.field = "hello";
+            return super.events(repository, lockProvider);
+        }
+
+        @Override
+        public String onCompletion() {
+            return field;
+        }
+    }
+
+    @Test @SneakyThrows
+    public void sameInstanceCompletion() {
+        String s = repository.publish(new SameInstanceCommand()).get();
+        assertEquals(s, "hello");
+    }
+
 }
