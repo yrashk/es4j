@@ -65,7 +65,8 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
             add(Equal.class);
         }}, hashFunction);
         this.store = store;
-        map = store.openMap("unique_index_" + attribute.getAttributeName());
+        String classname = attribute.getObjectType().getName();
+        map = store.openMap("unique_index_" + classname + "_" + attribute.getAttributeName());
     }
 
     public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {

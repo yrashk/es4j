@@ -105,9 +105,10 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
             add(Has.class);
         }}, hashFunction);
         this.store = store;
-        map = store.openMap("hash_index_" + attribute.getAttributeName());
-        attrHashMap = store.openMap("hash_index_attrhash_" + attribute.getAttributeName());
-        objHashMap = store.openMap("hash_index_objhash_" + attribute.getAttributeName());
+        String classname = attribute.getObjectType().getName();
+        map = store.openMap("hash_index_" + classname + "_" + attribute.getAttributeName());
+        attrHashMap = store.openMap("hash_index_attrhash_" + classname + "_" + attribute.getAttributeName());
+        objHashMap = store.openMap("hash_index_objhash_" + classname + "_" + attribute.getAttributeName());
     }
 
     public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
