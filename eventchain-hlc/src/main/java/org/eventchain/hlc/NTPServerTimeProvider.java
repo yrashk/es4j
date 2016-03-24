@@ -19,6 +19,8 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeStamp;
+import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 
 import java.io.IOException;
@@ -43,7 +45,7 @@ import java.util.stream.Collectors;
  * to using it as a PhysicalTimeProvider.
  *
  */
-@Component
+@Component(property = "ntp.servers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org,localhost")
 public class NTPServerTimeProvider extends AbstractScheduledService implements PhysicalTimeProvider {
 
 
@@ -54,7 +56,7 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
             {"0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org", "localhost"};
 
     private final NTPUDPClient client;
-    private final List<InetAddress> servers;
+    private List<InetAddress> servers;
 
     private TimeStamp timestamp;
     private long nano;
@@ -65,6 +67,12 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
     @Setter @Accessors(fluent = true)
     private TimeUnit delayUnits = TimeUnit.MINUTES;
 
+
+    @Activate
+    protected void activate(ComponentContext ctx) {
+        String serversList = (String) ctx.getProperties().get("ntp.servers");
+        setServers(serversList.split(","));
+    }
     /**
      * Creates NTPServerTimeProvider with default NTP servers
      * @throws UnknownHostException Throws UnknownHostException for the first unresolved host, if no hosts were resolvable
@@ -95,6 +103,13 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
      */
     public NTPServerTimeProvider(String[] ntpServers) throws UnknownHostException {
         client = new NTPUDPClient();
+        setServers(ntpServers);
+        if (servers.isEmpty()) {
+            throw new UnknownHostException(ntpServers[0]);
+        }
+    }
+
+    protected void setServers(String[] ntpServers) {
         servers = Arrays.asList(ntpServers).stream().map(server -> {
             try {
                 return InetAddress.getByName(server);
@@ -102,9 +117,6 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
                 return null;
             }
         }).filter(address -> address != null).collect(Collectors.toList());
-        if (servers.isEmpty()) {
-            throw new UnknownHostException(ntpServers[0]);
-        }
     }
 
     synchronized private void update() {
