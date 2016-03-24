@@ -108,6 +108,15 @@ public abstract class RepositoryTest<T extends Repository> {
         public String onCompletion() {
             return "hello, world";
         }
+
+        @Index({EQ, SC})
+        public static SimpleAttribute<RepositoryTestCommand, String> ATTR = new SimpleAttribute<RepositoryTestCommand, String>() {
+            @Override
+            public String getValue(RepositoryTestCommand object, QueryOptions queryOptions) {
+                return "test";
+            }
+        };
+
     }
 
     @Test
@@ -129,6 +138,11 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get().string(), "test");
+
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
+        assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
+        assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());
+
     }
 
     @Test
