@@ -19,6 +19,7 @@ import org.eventchain.layout.types.*;
 
 import java.lang.reflect.AnnotatedType;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -56,6 +57,7 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
      *     <li><code>UUID</code></li>
      *     <li><code>Enum</code></li>
      *     <li><code>List&lt;?&gt;</code></li>
+     *     <li><code>Optional&lt;?&gt;</code></li>
      * </ul>
      * @param type
      * @return
@@ -104,6 +106,11 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
         if (type.isInstanceOf(List.class)) {
             return new ListTypeHandler(annotatedType);
         }
+
+        if (type.isInstanceOf(Optional.class)) {
+            return new OptionalTypeHandler(annotatedType);
+        }
+
 
         if (type.isArray() &&
            (type.getArrayElementType().isInstanceOf(Byte.TYPE) || type.getArrayElementType().isInstanceOf(Byte.class))) {

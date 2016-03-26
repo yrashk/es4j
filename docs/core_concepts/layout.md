@@ -68,6 +68,7 @@ to be improved.
 * java.util.UUID
 * Enum (Java enumerations)
 * List<?> (Java lists)
+* Optional<?>
 
 All other types will be handled through Layout.
 

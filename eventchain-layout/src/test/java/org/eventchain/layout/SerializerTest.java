@@ -22,12 +22,11 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class SerializerTest {
 
@@ -103,6 +102,9 @@ public class SerializerTest {
 
         @Getter @Setter
         private List<List<String>> list;
+
+        @Getter @Setter
+        private Optional<String> optional;
 
     }
 
@@ -343,5 +345,29 @@ public class SerializerTest {
         deserializer.deserialize(deserialized, buffer);
 
         assertEquals(deserialized.getList().get(0).get(0), "Hello");
+    }
+
+    @Test
+    public void optionalSerialization() {
+        TestBean test = new TestBean();
+        test.setOptional(Optional.empty());
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertFalse(deserialized.getOptional().isPresent());
+
+        test.setOptional(Optional.of("hello"));
+
+        buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertTrue(deserialized.getOptional().isPresent());
+        assertEquals(deserialized.getOptional().get(), "hello");
     }
 }
