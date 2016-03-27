@@ -32,7 +32,7 @@ import java.util.List;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.*;
 
-@Component(properties = "index.properties")
+@Component(property = {"filename=index.db", "type=org.eventchain.h2.MVStoreIndexEngine"})
 public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
 
     private MVStore store;

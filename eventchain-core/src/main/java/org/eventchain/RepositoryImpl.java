@@ -27,7 +27,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"journal.target=", "indexEngine.target=", "lockProvider.target=", "jmx.objectname=org.eventchain:type=repository"})
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=org.eventchain:type=repository"})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 

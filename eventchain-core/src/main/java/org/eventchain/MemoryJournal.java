@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 /**
  * Memory-based {@link Journal} implementation. Not meant to be used in production.
  */
-@Component
+@Component(property = {"type=org.eventchain.MemoryJournal"})
 public class MemoryJournal extends AbstractService implements Journal {
 
     private Repository repository;

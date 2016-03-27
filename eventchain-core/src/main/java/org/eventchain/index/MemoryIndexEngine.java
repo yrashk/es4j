@@ -32,7 +32,7 @@ import java.util.List;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.*;
 
-@Component
+@Component(property = {"type=org.eventchain.index.MemoryIndexEngine"})
 public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Override

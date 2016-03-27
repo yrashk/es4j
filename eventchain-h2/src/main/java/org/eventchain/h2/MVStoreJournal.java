@@ -19,6 +19,7 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
 import org.eventchain.layout.Deserializer;
@@ -38,7 +39,8 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-@Component(properties = "journal.properties")
+@Component(property = {"filename=journal.db", "type=org.eventchain.h2.MVStoreJournal"})
+@Slf4j
 public class MVStoreJournal extends AbstractService implements Journal {
     private Repository repository;
 

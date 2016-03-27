@@ -24,7 +24,7 @@ import java.util.concurrent.Semaphore;
 /**
  * Local, in-memory lock provider
  */
-@Component
+@Component(property = {"type=org.eventchain.MemoryLockProvider"})
 public class MemoryLockProvider extends AbstractService implements LockProvider {
     private Map<Object, Semaphore> locks = new HashMap<>();
 
