@@ -28,7 +28,7 @@ import java.util.Optional;
 public class OptionalTypeHandler implements TypeHandler<Optional> {
     private final TypeHandler handler;
 
-    public OptionalTypeHandler(AnnotatedType annotatedType) {
+    public OptionalTypeHandler(AnnotatedType annotatedType) throws TypeHandlerException {
         if (!(annotatedType instanceof AnnotatedParameterizedType)) {
             throw new IllegalArgumentException("List type parameter should be specified");
         }

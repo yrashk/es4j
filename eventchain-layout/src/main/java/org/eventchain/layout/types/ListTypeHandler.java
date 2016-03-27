@@ -27,7 +27,7 @@ import java.util.List;
 public class ListTypeHandler implements TypeHandler<List> {
     private final TypeHandler handler;
 
-    public ListTypeHandler(AnnotatedType annotatedType) {
+    public ListTypeHandler(AnnotatedType annotatedType) throws TypeHandlerException {
         if (!(annotatedType instanceof AnnotatedParameterizedType)) {
             throw new IllegalArgumentException("List type parameter should be specified");
         }
@@ -38,7 +38,9 @@ public class ListTypeHandler implements TypeHandler<List> {
         Class<?> klass = Object.class;
         try {
           klass = Class.forName(classname);
-        } catch (ClassNotFoundException e) {}
+        } catch (ClassNotFoundException e) {
+            throw new TypeHandlerException(e, new TypeResolver().resolve(annotatedType.getType()));
+        }
         ResolvedType resolvedType = new TypeResolver().resolve(klass);
         handler = TypeHandler.lookup(resolvedType, arg);
     }

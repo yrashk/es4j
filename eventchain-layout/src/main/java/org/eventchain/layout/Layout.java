@@ -83,14 +83,14 @@ public class Layout<T> {
      * @param klass Bean's class
      * @throws IntrospectionException
      */
-    public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException {
+    public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
         this(klass, true);
     }
 
     // This version of the constructor is only meant to be used in tests to
     // build layouts in slightly different ways to facilitate creation of various
     // scenarios
-    Layout(Class<T> klass, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException {
+    Layout(Class<T> klass, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
         this.klass = klass;
         MethodHandles.Lookup lookup = MethodHandles.lookup();
 
