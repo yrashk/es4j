@@ -20,6 +20,7 @@ import org.eventchain.layout.TypeHandler;
 
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,12 +35,12 @@ public class OptionalTypeHandler implements TypeHandler<Optional> {
         }
         AnnotatedParameterizedType parameterizedType = (AnnotatedParameterizedType) annotatedType;
         AnnotatedType arg = parameterizedType.getAnnotatedActualTypeArguments()[0];
-        // This is a fairly ugly hack, but I couldn't find anything better yet
-        String classname = arg.getType().getTypeName().split("<")[0];
-        Class<?> klass = Object.class;
-        try {
-            klass = Class.forName(classname);
-        } catch (ClassNotFoundException e) {}
+        Class<?> klass;
+        if (arg.getType() instanceof ParameterizedType) {
+            klass = (Class<?>)((ParameterizedType)(arg.getType())).getRawType();
+        } else {
+            klass = (Class<?>) arg.getType();
+        }
         ResolvedType resolvedType = new TypeResolver().resolve(klass);
         handler = TypeHandler.lookup(resolvedType, arg);
     }
