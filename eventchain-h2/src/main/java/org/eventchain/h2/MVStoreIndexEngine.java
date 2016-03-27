@@ -82,4 +82,9 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
             new IndexCapabilities<Attribute>("Unique", new IndexFeature[]{UNIQUE, EQ, IN}, attribute -> UniqueIndex.onAttribute(store, attribute))
         );
     }
+
+    @Override
+    public String toString() {
+        return "MVStoreIndexEngine[" + store.getFileStore().getFileName() + "]";
+    }
 }

@@ -14,10 +14,13 @@
  */
 package org.eventchain.index;
 
+import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.Value;
 import org.eventchain.Entity;
 import org.eventchain.EntityHandle;
@@ -79,7 +82,20 @@ public interface IndexEngine extends Service {
     }
 
     <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature...features) throws IndexNotSupported;
-    class IndexNotSupported extends Exception {}
+    @AllArgsConstructor
+    class IndexNotSupported extends Exception {
+        @Getter
+        private Attribute[] attribute;
+        @Getter
+        private IndexFeature[] features;
+        @Getter
+        private IndexEngine indexEngine;
+
+        @Override
+        public String getMessage() {
+            return "Index " + Joiner.on(", ").join(features) + " on " + Joiner.on(", ").join(attribute) + " is not supported by " + indexEngine;
+        }
+    }
 
     <T extends Entity> IndexedCollection<EntityHandle<T>> getIndexedCollection(Class<T> klass);
 

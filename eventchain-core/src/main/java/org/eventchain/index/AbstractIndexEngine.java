@@ -33,7 +33,7 @@ public abstract class AbstractIndexEngine extends AbstractService implements Ind
                 return ((IndexCapabilities<Attribute>)capabilities).getIndex().apply(attribute);
             }
         }
-        throw new IndexNotSupported();
+        throw new IndexNotSupported(new Attribute[]{attribute}, features, this);
     }
 
     @Override @SuppressWarnings("unchecked")
@@ -43,6 +43,6 @@ public abstract class AbstractIndexEngine extends AbstractService implements Ind
                 return ((IndexCapabilities<Attribute[]>)capabilities).getIndex().apply(attributes);
             }
         }
-        throw new IndexNotSupported();
+        throw new IndexNotSupported(attributes, features, this);
     }
 }

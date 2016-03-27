@@ -14,6 +14,7 @@
  */
 package org.eventchain.index;
 
+import com.google.common.base.Joiner;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
@@ -103,7 +104,7 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
             } catch (IndexNotSupported e) {
             }
         }
-        throw new IndexNotSupported();
+        throw new IndexNotSupported(new Attribute[]{attribute}, features, this);
     }
 
     @Override
@@ -114,7 +115,12 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
             } catch (IndexNotSupported e) {
             }
         }
-        throw new IndexNotSupported();
+        throw new IndexNotSupported(attributes, features, this);
+    }
+
+    @Override
+    public String toString() {
+        return "CascadingIndexEngine[" + Joiner.on(", ").join(indexEngines) + "]";
     }
 
     @Override
