@@ -15,12 +15,9 @@
 package org.eventchain.index;
 
 import com.google.common.base.Joiner;
-import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import lombok.extern.slf4j.Slf4j;
-import org.eventchain.Entity;
-import org.eventchain.EntityHandle;
 import org.eventchain.Journal;
 import org.eventchain.Repository;
 import org.osgi.service.component.ComponentContext;
