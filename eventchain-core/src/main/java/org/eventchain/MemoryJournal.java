@@ -17,9 +17,14 @@ package org.eventchain;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import org.eventchain.hlc.HybridTimestamp;
+import org.eventchain.layout.Deserializer;
+import org.eventchain.layout.Layout;
+import org.eventchain.layout.Serializer;
 import org.osgi.service.component.annotations.Component;
 
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -67,7 +72,7 @@ public class MemoryJournal extends AbstractService implements Journal {
         Map<UUID, UUID>  eventCommands_ = new HashMap<>();
         EventConsumer eventConsumer = new EventConsumer(events_, eventCommands_, command, listener);
 
-        Stream<Event> events = null;
+        Stream<Event> events;
         events = command.events(repository, lockProvider);
 
         long count;
@@ -81,6 +86,16 @@ public class MemoryJournal extends AbstractService implements Journal {
 
         this.events.putAll(events_);
         this.eventCommands.putAll(eventCommands_);
+
+        Layout<Command> layout = new Layout<>((Class<Command>)command.getClass());
+        Serializer<Command> serializer = new Serializer<>(layout);
+        Deserializer<Command> deserializer = new Deserializer<>(layout);
+
+        ByteBuffer buffer = serializer.serialize(command);
+        buffer.rewind();
+        deserializer.deserialize(command, buffer);
+
+
         commands.put(command.uuid(), command);
 
         listener.onCommit();
@@ -163,9 +178,19 @@ public class MemoryJournal extends AbstractService implements Journal {
         }
 
         @Override
+        @SneakyThrows
         public synchronized void accept(Event event) {
             ts.update();
             event.timestamp(ts.clone());
+
+            Layout<Event> layout = new Layout<>((Class<Event>)event.getClass());
+            Serializer<Event> serializer = new Serializer<>(layout);
+            Deserializer<Event> deserializer = new Deserializer<>(layout);
+
+            ByteBuffer buffer = serializer.serialize(event);
+            buffer.rewind();
+            deserializer.deserialize(event, buffer);
+
             events.put(event.uuid(), event);
             eventCommands.put(event.uuid(), command.uuid());
             listener.onEvent(event);

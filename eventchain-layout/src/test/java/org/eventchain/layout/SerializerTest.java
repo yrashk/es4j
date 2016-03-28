@@ -24,9 +24,7 @@ import org.testng.annotations.Test;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class SerializerTest {
 
@@ -350,12 +348,19 @@ public class SerializerTest {
     @Test
     public void optionalSerialization() {
         TestBean test = new TestBean();
+        assertNull(test.getOptional());
+        ByteBuffer buffer = serializer.serialize(test);
+        TestBean deserialized = new TestBean();
+        buffer.rewind();
+        deserializer.deserialize(deserialized, buffer);
+        assertFalse(deserialized.getOptional().isPresent());
+
         test.setOptional(Optional.empty());
 
-        ByteBuffer buffer = serializer.serialize(test);
+        buffer = serializer.serialize(test);
 
         buffer.rewind();
-        TestBean deserialized = new TestBean();
+        deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
         assertFalse(deserialized.getOptional().isPresent());

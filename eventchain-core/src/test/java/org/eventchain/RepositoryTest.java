@@ -18,7 +18,6 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -33,6 +32,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -40,8 +40,10 @@ import java.util.stream.Stream;
 
 import static com.googlecode.cqengine.query.QueryFactory.contains;
 import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static org.eventchain.index.EntityQueryFactory.all;
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.SC;
+import static org.eventchain.index.IndexEngine.IndexFeature.UNIQUE;
 import static org.testng.Assert.*;
 
 public abstract class RepositoryTest<T extends Repository> {
@@ -283,6 +285,51 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test @SneakyThrows
     public void passingLock() {
         assertTrue(repository.publish(new PassingLockProvider()).get());
+    }
+
+    @Accessors(fluent = true) @ToString
+    public static class TestOptionalEvent extends Event {
+        @Getter @Setter
+        private Optional<String> optional;
+
+        @Index({EQ, UNIQUE})
+        public static SimpleAttribute<TestOptionalEvent, UUID> ATTR = new SimpleAttribute<TestOptionalEvent, UUID>() {
+            @Override
+            public UUID getValue(TestOptionalEvent object, QueryOptions queryOptions) {
+                return object.uuid();
+            }
+        };
+    }
+
+    @Accessors(fluent = true)
+    @ToString
+    public static class TestOptionalCommand extends Command<Void> {
+        @Getter @Setter
+        private Optional<String> optional;
+        @Override
+        public Stream<Event> events(Repository repository) {
+            return Stream.of(new TestOptionalEvent());
+        }
+
+        @Index({EQ, UNIQUE})
+        public static SimpleAttribute<TestOptionalCommand, UUID> ATTR = new SimpleAttribute<TestOptionalCommand, UUID>() {
+            @Override
+            public UUID getValue(TestOptionalCommand object, QueryOptions queryOptions) {
+                return object.uuid();
+            }
+        };
+
+    }
+    @Test @SneakyThrows
+    public void goesThroughLayoutSerialization() {
+        TestOptionalCommand command = new TestOptionalCommand();
+        repository.publish(command).get();
+
+        TestOptionalCommand test = repository.query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get().get();
+        assertFalse(test.optional().isPresent());
+
+        TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class)).uniqueResult().get().get();
+        assertFalse(testOptionalEvent.optional().isPresent());
     }
 
 }
