@@ -13,7 +13,7 @@ There is only one command/event pair (Rename/NameChanged) that takes and stores 
 ```java
 public interface NameProtocol extends Protocol {
     public String name() {
-        try (ResultSet&lt;EntityHandle&lt;NameChanged&gt;&gt; resultSet =
+        try (ResultSet<EntityHandle<NameChanged>> resultSet =
              repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, id()),
                               queryOptions(orderBy(descending(attribute)),
                                            applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
