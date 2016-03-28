@@ -35,7 +35,7 @@ library that has been used in real projects, so a lot was learned and incorporat
 
 Documentation is available at [doc.eventchain.org](http://doc.eventchain.org)
 
-# Getting Started
+# Downloading
 
 You can get packages from Bintray:
 
@@ -54,7 +54,7 @@ dependencies {
 }
 ```
 
-That said, Eventchain is evolving quickly and in some cases, having Eventchain from the master branch as a git submodule can be a better fit.
+That said, Eventchain is evolving quickly and in some cases, having Eventchain from the master branch can be a better fit.
 
 ``
 ## Repository
