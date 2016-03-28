@@ -15,10 +15,18 @@
 package org.eventchain.hlc;
 
 import com.google.common.util.concurrent.AbstractService;
+import lombok.SneakyThrows;
+import org.eventchain.layout.Deserializer;
+import org.eventchain.layout.Layout;
+import org.eventchain.layout.Serializer;
+import org.eventchain.layout.TypeHandler;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.nio.ByteBuffer;
+
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class HybridTimestampTest {
 
@@ -50,6 +58,36 @@ public class HybridTimestampTest {
     @BeforeClass
     public void setup() {
         physicalTimeProvider = new TestPhysicalTimeProvider();
+    }
+
+    @Test
+    public void testTimestamp() {
+        HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
+        timestamp.update();
+        timestamp.update();
+        assertTrue(timestamp.getLogicalCounter() > 0);
+        byte[] ts = timestamp.getByteArray();
+        HybridTimestamp timestamp1 = new HybridTimestamp(physicalTimeProvider, ts);
+        assertEquals(timestamp1.getByteArray(), ts);
+        assertEquals(timestamp1.getLogicalCounter(), timestamp.getLogicalCounter());
+    }
+
+    @Test @SneakyThrows
+    public void layout() {
+        HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
+        timestamp.update();
+
+        Layout<HybridTimestamp> layout = new Layout<>(HybridTimestamp.class);
+        Serializer<HybridTimestamp> serializer = new Serializer<>(layout);
+        Deserializer<HybridTimestamp> deserializer = new Deserializer<>(layout);
+        assertEquals(serializer.size(timestamp), 16 + TypeHandler.SIZE_TAG_LENGTH);
+
+        ByteBuffer buffer = serializer.serialize(timestamp);
+        buffer.rewind();
+
+        HybridTimestamp timestamp1 = deserializer.deserialize(buffer);
+
+        assertEquals(timestamp1.compareTo(timestamp), 0);
     }
 
     @Test

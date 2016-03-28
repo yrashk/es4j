@@ -14,8 +14,12 @@
  */
 package org.eventchain;
 
-public class RepositoryImplTest extends RepositoryTest<RepositoryImpl> {
-    public RepositoryImplTest() {
+public class MemoryJournalRepositoryTest extends RepositoryTest<RepositoryImpl> {
+    public MemoryJournalRepositoryTest() {
         super(new RepositoryImpl());
+    }
+
+    protected Journal createJournal() {
+        return new MemoryJournal();
     }
 }

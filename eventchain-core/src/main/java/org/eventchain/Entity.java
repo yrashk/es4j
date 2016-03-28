@@ -53,7 +53,7 @@ public class Entity {
         return uuid;
     }
 
-    @Getter(onMethod = @__(@LayoutIgnore)) @Setter @Accessors(fluent = true)
+    @Getter @Setter @Accessors(fluent = true)
     private HybridTimestamp timestamp;
 
 }

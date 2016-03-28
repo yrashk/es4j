@@ -184,7 +184,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     private void journal(CommandEvent event, long sequence, boolean endOfBatch) throws Exception {
         timestamp.update();
         Command command = event.getCommand();
-        command.timestamp(timestamp);
+        command.timestamp(timestamp.clone());
         event.lockProvider = new TrackingLockProvider(this.lockProvider);
         event.lockProvider.startAsync().awaitRunning();
         journal.journal(command, new JournalListener(indexEngine, journal, command), event.lockProvider);

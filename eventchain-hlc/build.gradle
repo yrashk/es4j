@@ -5,4 +5,6 @@ dependencies {
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
 
+    compile project(':eventchain-layout')
+
 }

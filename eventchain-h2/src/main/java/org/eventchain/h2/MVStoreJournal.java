@@ -33,6 +33,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
+import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.BiFunction;
@@ -47,12 +48,10 @@ public class MVStoreJournal extends AbstractService implements Journal {
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
     private MVStore store;
     private MVMap<UUID, byte[]> commandPayloads;
-    private MVMap<UUID, Long> commandTimestamps;
     private MVMap<UUID, byte[]> commandHashes;
     private MVMap<byte[], Boolean> hashCommands;
     private MVMap<UUID, byte[]> eventPayloads;
     private MVMap<UUID, UUID> eventCommands;
-    private MVMap<UUID, Long> eventTimestamps;
     private MVMap<byte[], Boolean> hashEvents;
     private MVMap<UUID, byte[]> eventHashes;
     private MVMap<byte[], byte[]> commandEvents;
@@ -110,12 +109,10 @@ public class MVStoreJournal extends AbstractService implements Journal {
         store.commit();
 
         commandPayloads = store.openMap("commandPayloads");
-        commandTimestamps = store.openMap("commandTimestamps");
-        commandHashes = store.openMap("commandPayloads");
+        commandHashes = store.openMap("commandHashes");
         hashCommands = store.openMap("hashCommands");
         eventPayloads = store.openMap("eventPayloads");
         eventCommands = store.openMap("eventCommands");
-        eventTimestamps = store.openMap("eventTimestamps");
         eventHashes = store.openMap("eventHashes");
         hashEvents = store.openMap("hashEvents");
         commandEvents = store.openMap("commandEvents");
@@ -153,49 +150,16 @@ public class MVStoreJournal extends AbstractService implements Journal {
             hashBuffer.putLong(command.uuid().getMostSignificantBits());
             hashBuffer.putLong(command.uuid().getLeastSignificantBits());
 
-            HybridTimestamp ts = command.timestamp().clone();
-
-            long count = command.events(repository, lockProvider).peek(new Consumer<Event>() {
-                @Override
-                @SneakyThrows
-                public void accept(Event event) {
-                    ts.update();
-                    event.timestamp(ts.clone());
-
-                    Layout layout = layoutsByClass.get(event.getClass().getName());
-
-                    ByteBuffer buffer1 = new Serializer<>(layout).serialize(event);
-
-                    ByteBuffer hashBuffer1 = ByteBuffer.allocate(16 + layout.getHash().length);
-                    hashBuffer1.put(layout.getHash());
-                    hashBuffer1.putLong(event.uuid().getMostSignificantBits());
-                    hashBuffer1.putLong(event.uuid().getLeastSignificantBits());
-
-                    ByteBuffer commandEventBuf = ByteBuffer.allocate(16 * 2);
-                    commandEventBuf.putLong(command.uuid().getMostSignificantBits());
-                    commandEventBuf.putLong(command.uuid().getLeastSignificantBits());
-                    commandEventBuf.putLong(event.uuid().getMostSignificantBits());
-                    commandEventBuf.putLong(event.uuid().getLeastSignificantBits());
-
-                    eventPayloads.put(event.uuid(), buffer1.array());
-                    hashEvents.put(hashBuffer1.array(), true);
-                    eventHashes.put(event.uuid(), layout.getHash());
-                    eventTimestamps.put(event.uuid(), event.timestamp().timestamp());
-                    eventCommands.put(event.uuid(), command.uuid());
-                    commandEvents.put(commandEventBuf.array(), layout.getHash());
-
-                    listener.onEvent(event);
-                }
-            }).count();
+            long count = command.events(repository, lockProvider).peek(new EventConsumer(command, listener)).count();
 
             commandPayloads.put(command.uuid(), buffer.array());
             hashCommands.put(hashBuffer.array(), true);
-            commandTimestamps.put(command.uuid(), command.timestamp().timestamp());
             commandHashes.put(command.uuid(), commandLayout.getHash());
 
             listener.onCommit();
 
             store.commit();
+
             return count;
         } catch (Exception e) {
             store.rollback();
@@ -210,19 +174,17 @@ public class MVStoreJournal extends AbstractService implements Journal {
     public <T extends Entity> Optional<T> get(UUID uuid) {
         if (commandPayloads.containsKey(uuid)) {
             byte[] payload = commandPayloads.get(uuid);
-            Long timestamp = commandTimestamps.get(uuid);
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
             Layout<Command<?>> layout = layoutsByHash.get(encodedHash);
-            Command command = (Command) layout.getLayoutClass().newInstance().uuid(uuid).timestamp(new HybridTimestamp(null, timestamp));
+            Command command = (Command) layout.getLayoutClass().newInstance().uuid(uuid);
             new Deserializer<>(layout).deserialize(command, ByteBuffer.wrap(payload));
             return Optional.of((T) command);
         }
         if (eventPayloads.containsKey(uuid)) {
             byte[] payload = eventPayloads.get(uuid);
-            Long timestamp = eventTimestamps.get(uuid);
             String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
             Layout<Event> layout = layoutsByHash.get(encodedHash);
-            Event event = (Event) layout.getLayoutClass().newInstance().uuid(uuid).timestamp(new HybridTimestamp(null, timestamp));
+            Event event = (Event) layout.getLayoutClass().newInstance().uuid(uuid);
             new Deserializer<>(layout).deserialize(event, ByteBuffer.wrap(payload));
             return Optional.of((T) event);
         }
@@ -249,11 +211,9 @@ public class MVStoreJournal extends AbstractService implements Journal {
     @Override
     public void clear() {
         commandPayloads.clear();
-        commandTimestamps.clear();
         hashCommands.clear();
         eventPayloads.clear();
         eventCommands.clear();
-        eventTimestamps.clear();
         eventHashes.clear();
         hashEvents.clear();
         commandEvents.clear();
@@ -342,4 +302,47 @@ public class MVStoreJournal extends AbstractService implements Journal {
         }
     }
 
+    private class EventConsumer implements Consumer<Event> {
+        private final HybridTimestamp ts;
+        private final Command<?> command;
+        private final Journal.Listener listener;
+
+        public EventConsumer(Command<?> command, Journal.Listener listener) {
+            this.command = command;
+            this.listener = listener;
+            this.ts = command.timestamp().clone();
+        }
+
+        @Override
+        @SneakyThrows
+        public void accept(Event event) {
+            ts.update();
+            event.timestamp(ts.clone());
+
+            System.out.println(event.timestamp() + " vs " + command.timestamp());
+
+            Layout layout = layoutsByClass.get(event.getClass().getName());
+
+            ByteBuffer buffer1 = new Serializer<>(layout).serialize(event);
+
+            ByteBuffer hashBuffer1 = ByteBuffer.allocate(16 + layout.getHash().length);
+            hashBuffer1.put(layout.getHash());
+            hashBuffer1.putLong(event.uuid().getMostSignificantBits());
+            hashBuffer1.putLong(event.uuid().getLeastSignificantBits());
+
+            ByteBuffer commandEventBuf = ByteBuffer.allocate(16 * 2);
+            commandEventBuf.putLong(command.uuid().getMostSignificantBits());
+            commandEventBuf.putLong(command.uuid().getLeastSignificantBits());
+            commandEventBuf.putLong(event.uuid().getMostSignificantBits());
+            commandEventBuf.putLong(event.uuid().getLeastSignificantBits());
+
+            eventPayloads.put(event.uuid(), buffer1.array());
+            hashEvents.put(hashBuffer1.array(), true);
+            eventHashes.put(event.uuid(), layout.getHash());
+            eventCommands.put(event.uuid(), command.uuid());
+            commandEvents.put(commandEventBuf.array(), layout.getHash());
+
+            listener.onEvent(event);
+        }
+    }
 }

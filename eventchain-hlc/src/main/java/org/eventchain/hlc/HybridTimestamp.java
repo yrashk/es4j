@@ -16,6 +16,9 @@ package org.eventchain.hlc;
 
 import lombok.Getter;
 import org.apache.commons.net.ntp.TimeStamp;
+import org.eventchain.layout.LayoutIgnore;
+
+import java.nio.ByteBuffer;
 
 /**
  * HybridTimestamp implements <a href="http://www.cse.buffalo.edu/tech-reports/2014-04.pdf">Hybrid Logical Clock</a>,
@@ -29,6 +32,10 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
     long logicalTime = 0;
     @Getter
     long logicalCounter = 0;
+
+    public HybridTimestamp() {
+        this(null, 0, 0);
+    }
 
     public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider) {
         this(physicalTimeProvider, 0, 0);
@@ -44,6 +51,11 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
         this.logicalCounter = logicalCounter;
     }
 
+    public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider, byte[] byteArray) {
+        this.physicalTimeProvider = physicalTimeProvider;
+        setByteArray(byteArray);
+    }
+
     /**
      * Creates a new instance of HybridTimestamp with the same data
      * @return a new object instance
@@ -54,9 +66,12 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     @Override
     public int compareTo(HybridTimestamp o) {
-        TimeStamp t1 = TimeStamp.getNtpTime(timestamp());
-        TimeStamp t2 = TimeStamp.getNtpTime(o.timestamp());
-        return compare(t1, t2);
+        int ntpComparison = compare(logicalTime, o.logicalTime);
+        if (ntpComparison == 0) {
+            return new Long(logicalCounter).compareTo(o.logicalCounter);
+        } else {
+            return ntpComparison;
+        }
     }
 
     /**
@@ -86,6 +101,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
      * Updates timestamp for local or send events
      * @return updated timestamp
      */
+    @LayoutIgnore
     public long update() {
         long physicalTime = physicalTimeProvider.getPhysicalTime();
         if (compare(logicalTime, physicalTime) < 0) {
@@ -136,15 +152,31 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
     /**
      * @return 64-bit timestamp
      */
+    @LayoutIgnore
     public long timestamp() {
         return (logicalTime >> 16 << 16) | (logicalCounter << 48 >> 48);
     }
 
 
+    @LayoutIgnore
     public String toString() {
         String logical = TimeStamp.getNtpTime(logicalTime).toUTCString();
-        String ntpValue = TimeStamp.getNtpTime(timestamp()).toUTCString();
-        return "<[" + logical + "]," + logicalCounter + ": " + ntpValue + ">";
+        TimeStamp timeStamp = new TimeStamp(timestamp());
+        String ntpValue = timeStamp.toUTCString();
+        return "<[logical: " + logical + "@" + logicalCounter + "] NTP:" + ntpValue + "/" + timeStamp.toString() + "/" + timestamp() + ">";
+    }
+
+    public byte[] getByteArray() {
+        ByteBuffer buf = ByteBuffer.allocate(16);
+        buf.putLong(logicalTime);
+        buf.putLong(logicalCounter);
+        return buf.array();
+    }
+
+    public void setByteArray(byte[] byteArray) {
+        ByteBuffer buffer = ByteBuffer.wrap(byteArray);
+        this.logicalTime = buffer.getLong();
+        this.logicalCounter = buffer.getLong();
     }
 
 }

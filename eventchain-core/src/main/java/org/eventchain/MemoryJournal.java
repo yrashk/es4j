@@ -17,6 +17,7 @@ package org.eventchain;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.Getter;
+import org.eventchain.hlc.HybridTimestamp;
 import org.osgi.service.component.annotations.Component;
 
 import java.util.*;
@@ -151,16 +152,20 @@ public class MemoryJournal extends AbstractService implements Journal {
         private Map<UUID, Event> events = new HashMap<>();
         @Getter
         private Map<UUID, UUID>  eventCommands = new HashMap<>();
+        private final HybridTimestamp ts;
 
         public EventConsumer(Map<UUID, Event> events, Map<UUID, UUID> eventCommands, Command command, Journal.Listener listener) {
             this.events = events;
             this.eventCommands = eventCommands;
             this.command = command;
             this.listener = listener;
+            ts = command.timestamp().clone();
         }
 
         @Override
         public synchronized void accept(Event event) {
+            ts.update();
+            event.timestamp(ts.clone());
             events.put(event.uuid(), event);
             eventCommands.put(event.uuid(), command.uuid());
             listener.onEvent(event);

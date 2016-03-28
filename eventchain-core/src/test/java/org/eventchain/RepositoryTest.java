@@ -18,6 +18,7 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -69,9 +70,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.startAsync().awaitRunning();
     }
 
-    protected Journal createJournal() {
-        return new MemoryJournal();
-    }
+    protected abstract Journal createJournal();
 
     @AfterClass
     public void tearDownEnv() throws Exception {
@@ -128,6 +127,21 @@ public abstract class RepositoryTest<T extends Repository> {
     @SneakyThrows
     public void basicPublish() {
         assertEquals("hello, world", repository.publish(new RepositoryTestCommand()).get());
+    }
+
+    @Test
+    @SneakyThrows
+    public void timestamping() {
+        repository.publish(new RepositoryTestCommand()).get();
+        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
+        TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get();
+        assertNotNull(test.timestamp());
+
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
+        RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get().get();
+        assertNotNull(test1.timestamp());
+
+        assertTrue(test.timestamp().compareTo(test1.timestamp()) > 0);
     }
 
     @Test
