@@ -3,20 +3,23 @@
 One of the primary ways to interact with data (especially on the query side) within an Eventchain application is by using *domain models*. Domain model is
 simple a POJO class that encapsulates aggregation of events by querying.
 
-Typically it would have a protected constructor that takes a `Repository`:
+Typically it would have a constructor that takes a `Repository` and an identifier:
 
 
 ```java
 @Accessors(fluent = true)
 class User {
-  @Getter @Setter
-  private UUID uuid;
-  @Getter @Setter
+  @Getter
   private String email;
 
-  protected final Repository repository;
-  protected User(Repository repository) {
+  @Getter
+  public final Repository repository;
+  @Getter
+  private UUID id;
+
+  public User(Repository repository, UUID id) {
     this.repository = repository;
+    this.id = id;
   }
 }
 ```
@@ -45,3 +48,5 @@ In the above example, we query for `UserCreated` (assuming there can be only zer
 
 Further user information can be either pre-loaded in the static lookup method
 or it can be loaded (and potentially cached) on-demand in models' instance methods.
+
+Eventchain exposes a simple interface for domain models (`org.eventchain.Model`). Although it is not mandatory, it can be useful for further composability, and particularly, [domain protocols](domain_protocol.md).

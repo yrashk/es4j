@@ -10,3 +10,4 @@
   * [Event](core_concepts/event.md)
   * [Repository](core_concepts/repository.md)
   * [Domain Model](core_concepts/domain_model.md)
+  * [Domain Protocol](core_concepts/domain_protocol.md)
