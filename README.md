@@ -31,6 +31,10 @@ library that has been used in real projects, so a lot was learned and incorporat
 * Causality-preserving [Hybrid Logical Clocks](http://www.cse.buffalo.edu/tech-reports/2014-04.pdf)
 * Locking synchronization primitive
 
+# Documentation
+
+Documentation is available at [doc.eventchain.org](http://doc.eventchain.org)
+
 # Getting Started
 
 You can get packages from Bintray:
