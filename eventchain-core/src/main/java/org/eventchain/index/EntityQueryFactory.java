@@ -86,7 +86,8 @@ public class EntityQueryFactory {
 
     /**
      * Creates a query which matches all objects in the collection.
-     * <p/>
+     *
+     *
      * This is equivalent to a literal boolean 'true'.
      *
      * @param <O> The type of the objects in the collection
