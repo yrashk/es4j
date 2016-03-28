@@ -3,6 +3,8 @@
 
 # Eventchain
 
+[![Join the chat at https://gitter.im/eventchain/eventchain](https://badges.gitter.im/eventchain/eventchain.svg)](https://gitter.im/eventchain/eventchain?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Eventchain is an **event sourcing** framework for Java. Instead of mutating data in a database, it stores all changes
 (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability
 to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation
