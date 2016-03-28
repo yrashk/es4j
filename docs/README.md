@@ -19,6 +19,6 @@ for deep analytics, data recovery, audit trails and other associated benefits.
 * Compact data storage layout
 * Using [Disruptor](https://lmax-exchange.github.io/disruptor/) for fast message processing
 * Using [CQengine](https://github.com/npgall/cqengine) for fast indexing and querying
-* In-memory and on-disk (*coming soon*) storage
+* In-memory and on-disk (**more persistent indices coming soon**) storage
 * Causality-preserving [Hybrid Logical Clocks](http://www.cse.buffalo.edu/tech-reports/2014-04.pdf)
 * Locking synchronization primitive
