@@ -56,7 +56,6 @@ dependencies {
 
 That said, Eventchain is evolving quickly and in some cases, having Eventchain from the master branch can be a better fit.
 
-``
 ## Repository
 
 First of all, the repository has to be configured. Currently, the procedure is
