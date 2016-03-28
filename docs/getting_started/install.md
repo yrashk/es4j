@@ -10,11 +10,9 @@ repositories {
 }
 
 dependencies {
-  compile 'org.eventchain:eventchain-core:0.1.0'
-  compile 'org.eventchain:eventchain-h2:0.1.0' // for H2 (MVStore) storage
+  compile 'org.eventchain:eventchain-core:0.2.0'
+  compile 'org.eventchain:eventchain-h2:0.2.0' // for H2 (MVStore) storage
 }
 ```
 
-That said, Eventchain is currently evolving quickly and in some cases, having Eventchain from the master branch as a git submodule can be a better fit. In fact, this documentation describes version `0.2.0-SNAPSHOT` so if you want
-to be able to use it to the full extent, this approach should be used. Snapshot
-versions are not currently published.
+That said, Eventchain is currently evolving quickly and in some cases, having a maven local / private maven repository based snapshot version of Eventchain can be a better fit.
