@@ -319,8 +319,6 @@ public class MVStoreJournal extends AbstractService implements Journal {
             ts.update();
             event.timestamp(ts.clone());
 
-            System.out.println(event.timestamp() + " vs " + command.timestamp());
-
             Layout layout = layoutsByClass.get(event.getClass().getName());
 
             ByteBuffer buffer1 = new Serializer<>(layout).serialize(event);
