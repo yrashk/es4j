@@ -13,7 +13,7 @@ plugins {
     id "com.github.hierynomus.license" version "0.12.1"
     id 'me.champeau.gradle.jmh' version '0.3.0'
     id "com.jfrog.bintray" version "1.6"
-
+    id 'net.researchgate.release' version '2.3.4'
 }
 
 apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
@@ -22,7 +22,12 @@ apply plugin: 'nebula-aggregate-javadocs'
 jmh {
     include=''
 }
+
 version = "0.3.0-SNAPSHOT"
+
+release {
+    tagTemplate = 'v${version}'
+}
 
 allprojects {
     apply plugin: 'idea'
