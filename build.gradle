@@ -23,8 +23,6 @@ jmh {
     include=''
 }
 
-version = "0.2.1"
-
 release {
     tagTemplate = 'v${version}'
     failOnPublishNeeded = false
