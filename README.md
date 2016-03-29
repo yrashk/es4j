@@ -49,8 +49,8 @@ repositories {
 }
 
 dependencies {
-  compile 'org.eventchain:eventchain-core:0.2.0'
-  compile 'org.eventchain:eventchain-h2:0.2.0' // for H2 storage
+  compile 'org.eventchain:eventchain-core:0.2.1'
+  compile 'org.eventchain:eventchain-h2:0.2.1' // for H2 storage
 }
 ```
 
