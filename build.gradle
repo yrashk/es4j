@@ -23,10 +23,11 @@ jmh {
     include=''
 }
 
-version = "0.3.0-SNAPSHOT"
+version = "0.2.1"
 
 release {
     tagTemplate = 'v${version}'
+    failOnPublishNeeded = false
 }
 
 allprojects {
