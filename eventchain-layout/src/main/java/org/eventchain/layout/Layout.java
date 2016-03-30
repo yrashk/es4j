@@ -71,6 +71,9 @@ public class Layout<T> {
     @Getter
     private final byte[] hash;
 
+    @Getter
+    private boolean readOnly = false;
+
     private final Class<T> klass;
 
     public Class<T> getLayoutClass() {
@@ -84,13 +87,24 @@ public class Layout<T> {
      * @throws IntrospectionException
      */
     public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
-        this(klass, true);
+        this(klass, false);
+    }
+
+    /**
+     * Creates POJO's class layout
+     *
+     * @param klass Bean's class
+     * @param allowReadonly Allow readonly layouts (no setters required)
+     * @throws IntrospectionException
+     */
+    public Layout(Class<T> klass, boolean allowReadonly) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
+        this(klass, allowReadonly, true);
     }
 
     // This version of the constructor is only meant to be used in tests to
     // build layouts in slightly different ways to facilitate creation of various
     // scenarios
-    Layout(Class<T> klass, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
+    Layout(Class<T> klass, boolean allowReadonly, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
         this.klass = klass;
         MethodHandles.Lookup lookup = MethodHandles.lookup();
 
@@ -153,28 +167,55 @@ public class Layout<T> {
                     filter(member -> member.getName().contentEquals(propertyName) ||
                             member.getName().contentEquals("set" + capitalizedPropertyName)).findFirst();
 
-            if (matchingSetter.isPresent()) {
-                Method setter = matchingSetter.get().getRawMember();
+            if (allowReadonly || matchingSetter.isPresent()) {
 
-                MethodHandle getterHandler = lookup.unreflect(getter);
-                MethodHandle setterHandler = lookup.unreflect(setter);
+                if (matchingSetter.isPresent()) {
+                    Method setter = matchingSetter.get().getRawMember();
 
-                Property<T> property = new Property<>(propertyName,
-                        method.getReturnType(),
-                        TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
-                        new BiConsumer<T, Object>() {
-                            @Override @SneakyThrows
-                            public void accept(T t, Object o) {
-                                setterHandler.invoke(t, o);
-                            }
-                        },
-                        new Function<T, Object>() {
-                            @Override @SneakyThrows
-                            public Object apply(T t) {
-                                return getterHandler.invoke(t);
-                            }
-                        });
-                props.add(property);
+                    MethodHandle getterHandler = lookup.unreflect(getter);
+                    MethodHandle setterHandler = lookup.unreflect(setter);
+
+                    Property<T> property = new Property<>(propertyName,
+                            method.getReturnType(),
+                            TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
+                            new BiConsumer<T, Object>() {
+                                @Override
+                                @SneakyThrows
+                                public void accept(T t, Object o) {
+                                    setterHandler.invoke(t, o);
+                                }
+                            },
+                            new Function<T, Object>() {
+                                @Override
+                                @SneakyThrows
+                                public Object apply(T t) {
+                                    return getterHandler.invoke(t);
+                                }
+                            });
+                    props.add(property);
+                } else {
+                    readOnly = true;
+                    MethodHandle getterHandler = lookup.unreflect(getter);
+
+                    Property<T> property = new Property<>(propertyName,
+                            method.getReturnType(),
+                            TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
+                            new BiConsumer<T, Object>() {
+                                @Override
+                                @SneakyThrows
+                                public void accept(T t, Object o) {
+                                    throw new IllegalAccessError();
+                                }
+                            },
+                            new Function<T, Object>() {
+                                @Override
+                                @SneakyThrows
+                                public Object apply(T t) {
+                                    return getterHandler.invoke(t);
+                                }
+                            });
+                    props.add(property);
+                }
             }
         }
 

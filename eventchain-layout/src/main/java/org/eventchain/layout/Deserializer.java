@@ -27,6 +27,9 @@ public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<
     private final Layout<T> layout;
 
     public Deserializer(Layout<T> layout) throws NoEmptyConstructorException {
+        if (layout.isReadOnly()) {
+            throw new IllegalArgumentException("Read-only layout");
+        }
         if (layout.getLayoutClass().getConstructors().length > 0) {
             try {
                 layout.getLayoutClass().getConstructor();

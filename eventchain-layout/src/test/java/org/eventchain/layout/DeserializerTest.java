@@ -19,6 +19,10 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
+import java.util.List;
+
+import static org.testng.Assert.assertTrue;
+
 public class DeserializerTest {
 
     public class NoEmptyConstructor {
@@ -31,4 +35,19 @@ public class DeserializerTest {
     public void noEmptyConstuctor() {
         new Deserializer<>(new Layout<>(NoEmptyConstructor.class));
     }
+
+    private static class ReadonlyTest {
+        @Getter
+        private String getter;
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    @SneakyThrows
+    public void readonly() {
+        Layout<ReadonlyTest> layout = new Layout<>(ReadonlyTest.class, true);
+        assertTrue(layout.isReadOnly());
+        new Deserializer<>(layout);
+    }
+
+
 }

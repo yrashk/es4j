@@ -105,6 +105,24 @@ public class LayoutTest {
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
     }
 
+    private static class ReadonlyTest {
+        @Getter
+        private String getter;
+        @Getter @Setter
+        private String getterAndSetter;
+    }
+
+    @Test(expectedExceptions = IllegalAccessError.class)
+    @SneakyThrows
+    public void readonly() {
+        Layout<ReadonlyTest> layout = new Layout<>(ReadonlyTest.class, true);
+        assertTrue(layout.isReadOnly());
+        List<Property<ReadonlyTest>> properties = layout.getProperties();
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter")));
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getterAndSetter")));
+        Property<ReadonlyTest> getter = properties.stream().filter(property -> property.getName().contentEquals("getter")).findFirst().get();
+        getter.set(new ReadonlyTest(), "hello");
+    }
 
 
     private static class NamingTest {
@@ -184,8 +202,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashSameContent() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
-        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
+        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class, false, false);
 
         assertEquals(layout1, layout1Name);
         assertEquals(layout1.getHash(), layout1Name.getHash());
@@ -194,8 +212,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentPropName() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
-        Layout<DigestTest1PropName> layout1Name = new Layout<>(DigestTest1PropName.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
+        Layout<DigestTest1PropName> layout1Name = new Layout<>(DigestTest1PropName.class, false, false);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
@@ -204,8 +222,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentType() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false);
-        Layout<DigestTest1Type> layout1Name = new Layout<>(DigestTest1Type.class, false);
+        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
+        Layout<DigestTest1Type> layout1Name = new Layout<>(DigestTest1Type.class, false, false);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
@@ -224,8 +242,8 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashBoxed() {
-        Layout<DigestTest1Unboxed> layout1 = new Layout<>(DigestTest1Unboxed.class, false);
-        Layout<DigestTest1Boxed> layout1Name = new Layout<>(DigestTest1Boxed.class, false);
+        Layout<DigestTest1Unboxed> layout1 = new Layout<>(DigestTest1Unboxed.class, false, false);
+        Layout<DigestTest1Boxed> layout1Name = new Layout<>(DigestTest1Boxed.class, false, false);
 
         assertEquals(layout1, layout1Name);
         assertEquals(layout1.getHash(), layout1Name.getHash());
