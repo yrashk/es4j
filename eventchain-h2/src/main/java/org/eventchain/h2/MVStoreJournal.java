@@ -14,11 +14,13 @@
  */
 package org.eventchain.h2;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.*;
+import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.eventchain.*;
 import org.eventchain.hlc.HybridTimestamp;
@@ -33,12 +35,13 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
-import java.nio.Buffer;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component(property = {"filename=journal.db", "type=org.eventchain.h2.MVStoreJournal"})
 @Slf4j
@@ -56,12 +59,19 @@ public class MVStoreJournal extends AbstractService implements Journal {
     private MVMap<UUID, byte[]> eventHashes;
     private MVMap<byte[], byte[]> commandEvents;
 
+    private MVMap<byte[], byte[]> layouts;
+
 
     public MVStoreJournal(MVStore store) {
+        this();
         this.store = store;
     }
 
+    @SneakyThrows
     public MVStoreJournal() {
+        layoutInformationLayout = new Layout<>(LayoutInformation.class);
+        layoutInformationSerializer = new Serializer<>(layoutInformationLayout);
+        layoutInformationDeserializer = new Deserializer<>(layoutInformationLayout);
     }
 
     @Activate
@@ -89,17 +99,45 @@ public class MVStoreJournal extends AbstractService implements Journal {
         repository.getCommands().forEach(new EntityLayoutExtractor());
         repository.getEvents().forEach(new EntityLayoutExtractor());
 
+        reportUnrecognizedEntities();
+
         notifyStarted();
     }
 
     @Override
     public void onCommandsAdded(Set<Class<? extends Command>> commands) {
         commands.forEach(new EntityLayoutExtractor());
+        reportUnrecognizedEntities();
     }
 
     @Override
     public void onEventsAdded(Set<Class<? extends Event>> events) {
         events.forEach(new EntityLayoutExtractor());
+        reportUnrecognizedEntities();
+    }
+
+    void reportUnrecognizedEntities() {
+        getUnrecognizedEntities().forEach(layoutInformation -> {
+            String properties = Joiner.on("\n  ").join(layoutInformation.properties().stream().
+                    map(propertyInformation ->
+                            propertyInformation.name() + ": " + propertyInformation.type()).
+                    collect(Collectors.toList()));
+            log.warn("Unrecognized entity {} (hash: {})\nProperties:\n  {}\n",
+                    layoutInformation.className(), BaseEncoding.base16().encode(layoutInformation.hash()), properties);
+        });
+    }
+
+    List<LayoutInformation> getUnrecognizedEntities() {
+        List<LayoutInformation> result = new ArrayList<>();
+        layouts.forEach(new BiConsumer<byte[], byte[]>() {
+            @Override
+            public void accept(byte[] hash, byte[] info) {
+                if (!layoutsByHash.containsKey(BaseEncoding.base16().encode(hash))) {
+                    result.add(layoutInformationDeserializer.deserialize(ByteBuffer.wrap(info)));
+                }
+            }
+        });
+        return result;
     }
 
     void initializeStore() {
@@ -116,6 +154,8 @@ public class MVStoreJournal extends AbstractService implements Journal {
         eventHashes = store.openMap("eventHashes");
         hashEvents = store.openMap("hashEvents");
         commandEvents = store.openMap("commandEvents");
+
+        layouts = store.openMap("layouts");
     }
 
     @Override
@@ -217,6 +257,7 @@ public class MVStoreJournal extends AbstractService implements Journal {
         eventHashes.clear();
         hashEvents.clear();
         commandEvents.clear();
+        layouts.clear();
     }
 
     @Override @SuppressWarnings("unchecked")
@@ -241,7 +282,33 @@ public class MVStoreJournal extends AbstractService implements Journal {
         throw new IllegalArgumentException();
     }
 
+    @Accessors(fluent = true)
+    public static class PropertyInformation {
+        @Getter @Setter
+        private String name;
+
+        @Getter @Setter
+        private String type;
+    }
+
+    @Accessors(fluent = true)
+    public static class LayoutInformation {
+        @Getter @Setter
+        private byte[] hash;
+
+        @Getter @Setter
+        private String className;
+        @Getter @Setter
+        private List<PropertyInformation> properties;
+    }
+
+    private final Layout<LayoutInformation> layoutInformationLayout;
+    private final Serializer<LayoutInformation> layoutInformationSerializer;
+    private final Deserializer<LayoutInformation> layoutInformationDeserializer;
+
+
     private class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
+
         @Override
         @SneakyThrows
         public void accept(Class<? extends Entity> aClass) {
@@ -250,6 +317,19 @@ public class MVStoreJournal extends AbstractService implements Journal {
             String encodedHash = BaseEncoding.base16().encode(hash);
             layoutsByHash.put(encodedHash, layout);
             layoutsByClass.put(aClass.getName(), layout);
+
+            List<PropertyInformation> properties = layout.getProperties().stream().
+                    map(property -> new PropertyInformation().
+                            name(property.getName()).
+                            type(property.getType().getBriefDescription())).
+                    collect(Collectors.toList());
+
+            LayoutInformation layoutInformation = new LayoutInformation().
+                    className(aClass.getName()).
+                    hash(hash).
+                    properties(properties);
+            
+            layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
         }
 
     }

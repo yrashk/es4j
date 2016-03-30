@@ -40,7 +40,7 @@ import static org.testng.Assert.*;
 
 public abstract class JournalTest<T extends Journal> {
 
-    protected final T journal;
+    protected T journal;
     private RepositoryImpl repository;
     private IndexEngine indexEngine;
     protected NTPServerTimeProvider timeProvider;

@@ -14,13 +14,46 @@
  */
 package org.eventchain.h2;
 
+import lombok.Getter;
+import lombok.Setter;
+import org.eventchain.Event;
 import org.eventchain.JournalTest;
 import org.h2.mvstore.MVStore;
+import org.testng.annotations.Test;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 
 public class MVStoreJournalTest extends JournalTest<MVStoreJournal> {
 
+    private final MVStore store;
+
     public MVStoreJournalTest() {
         super(new MVStoreJournal(MVStore.open(null)));
+        store = journal.getStore();
     }
 
+    public class TestEvent extends Event {
+        @Getter @Setter
+        private String value;
+    }
+
+    @Test
+    public void unrecognizedEntities() {
+        journal.clear();
+        journal.onEventsAdded(Collections.singletonList(TestEvent.class).stream().collect(Collectors.toSet()));
+        journal = new MVStoreJournal(store);
+        journal.initializeStore();
+        List<MVStoreJournal.LayoutInformation> unrecognizedEntities = journal.getUnrecognizedEntities();
+        assertFalse(unrecognizedEntities.isEmpty());
+        assertEquals(unrecognizedEntities.size(), 1);
+        MVStoreJournal.LayoutInformation entity = unrecognizedEntities.get(0);
+        assertEquals(entity.className(), TestEvent.class.getName());
+        assertEquals(entity.properties().get(1).name(), "value");
+        assertEquals(entity.properties().get(1).type(), "java.lang.String");
+    }
 }
