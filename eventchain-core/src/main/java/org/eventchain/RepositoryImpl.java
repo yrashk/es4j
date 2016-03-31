@@ -15,6 +15,7 @@
 package org.eventchain;
 
 import com.google.common.util.concurrent.AbstractService;
+import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import org.osgi.service.component.annotations.*;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=org.eventchain:type=repository"})
@@ -73,7 +75,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         indexEngine.setJournal(journal);
         indexEngine.setRepository(this);
 
-        services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
+        services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider).stream().
+                filter(s -> !s.isRunning()).collect(Collectors.toSet()));
         services.startAsync().awaitHealthy();
 
         initialization.forEach(Runnable::run);
@@ -99,7 +102,10 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     protected void doStop() {
         commandConsumer.stopAsync().awaitTerminated();
         services.stopAsync().awaitStopped();
-
+        // Try stopping services that were started beforehand and didn't
+        // make it into `services`
+        Arrays.asList(journal, indexEngine, lockProvider, timeProvider).stream().
+                filter(Service::isRunning).forEach(s -> s.stopAsync().awaitTerminated());
         notifyStopped();
     }
 
