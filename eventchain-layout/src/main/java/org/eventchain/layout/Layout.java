@@ -231,7 +231,8 @@ public class Layout<T> {
         // when POJOs have indistinguishable layouts, and therefore it is impossible to
         // guarantee that we'd pick the right class
         if (hashClassName) {
-            digest.update(klass.getName().getBytes());
+            String name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class).value() : klass.getName();
+            digest.update(name.getBytes());
         }
 
         for (Property<T> property : properties) {

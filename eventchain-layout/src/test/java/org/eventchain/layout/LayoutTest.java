@@ -20,6 +20,7 @@ import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.testng.Assert.*;
@@ -179,6 +180,12 @@ public class LayoutTest {
         private String x;
     }
 
+    @LayoutName("org.eventchain.layout.LayoutTest$DigestTest1")
+    private static class DigestTest1SameName {
+        @Getter @Setter
+        private String x;
+    }
+
     private static class DigestTest1PropName {
         @Getter @Setter
         private String y;
@@ -194,9 +201,13 @@ public class LayoutTest {
     public void hashDifferentClassName() {
         Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class);
         Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class);
+        Layout<DigestTest1SameName> layout1SameName = new Layout<>(DigestTest1SameName.class);
 
         assertNotEquals(layout1, layout1Name);
-        assertNotEquals(layout1.getHash(), layout1Name.getHash());
+        assertFalse(Arrays.equals(layout1.getHash(), layout1Name.getHash()));
+
+        assertEquals(layout1, layout1SameName);
+        assertTrue(Arrays.equals(layout1.getHash(), layout1SameName.getHash()));
     }
 
     @Test
