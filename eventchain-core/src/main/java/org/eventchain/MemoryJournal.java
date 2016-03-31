@@ -38,10 +38,7 @@ public class MemoryJournal extends AbstractService implements Journal {
     private Repository repository;
 
     @Override
-    public void setRepository(Repository repository) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
+    public void setRepository(Repository repository) {
         this.repository = repository;
     }
 

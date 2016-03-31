@@ -36,9 +36,8 @@ public interface Journal extends Service {
      * Set repository. Should be done before invoking {@link #startAsync()}
      *
      * @param repository
-     * @throws IllegalStateException if called after the service is started
      */
-    void setRepository(Repository repository) throws IllegalStateException;
+    void setRepository(Repository repository);
 
     /**
      * Journal <code>command</code> in repository <code>repository</code>,

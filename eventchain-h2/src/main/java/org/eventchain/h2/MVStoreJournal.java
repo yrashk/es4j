@@ -208,10 +208,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private Map<String, Layout> layoutsByClass = new HashMap<>();
 
     @Override
-    public void setRepository(Repository repository) throws IllegalStateException {
-        if (isRunning()) {
-            throw new IllegalStateException();
-        }
+    public void setRepository(Repository repository) {
         this.repository = repository;
     }
 
