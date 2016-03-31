@@ -35,6 +35,7 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
+import javax.management.openmbean.*;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -43,9 +44,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Component(property = {"filename=journal.db", "type=org.eventchain.h2.MVStoreJournal"})
+@Component(property = {"filename=journal.db", "type=org.eventchain.h2.MVStoreJournal", "jmx.objectname=org.eventchain:type=journal,name=MVStoreJournal"})
 @Slf4j
-public class MVStoreJournal extends AbstractService implements Journal {
+public class MVStoreJournal extends AbstractService implements Journal, JournalMBean {
     private Repository repository;
 
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
@@ -139,6 +140,45 @@ public class MVStoreJournal extends AbstractService implements Journal {
         });
         return result;
     }
+
+
+    @Override
+    public String getName() {
+        return store.getFileStore().getFileName();
+    }
+
+    @Override @SneakyThrows
+    public TabularData getEntities() {
+        CompositeType propertyType = new CompositeType("Entity Property", "Entity Property", new String[]{"Name", "Type"}, new String[]{"Name", "Type"},
+                new OpenType[]{SimpleType.STRING, SimpleType.STRING});
+        TabularType propertyTabular = new TabularType("Property", "Property", propertyType, new String[]{"Name"});
+        CompositeType compositeType = new CompositeType("Entity", "Entity", new String[]{"Name", "Hash", "Recognized", "Properties"}, new String[]{"Name", "Hash", "Recognized", "Properties"},
+                new OpenType[]{SimpleType.STRING, SimpleType.STRING, SimpleType.BOOLEAN, propertyTabular});
+        TabularDataSupport tabular = new TabularDataSupport(new TabularType("Entity", "Journalled entity", compositeType, new String[]{"Name"}));
+        layouts.forEach(new BiConsumer<byte[], byte[]>() {
+            @Override @SneakyThrows
+            public void accept(byte[] hash, byte[] info) {
+                LayoutInformation layoutInformation = layoutInformationDeserializer.deserialize(ByteBuffer.wrap(info));
+                boolean recognized = layoutsByHash.containsKey(BaseEncoding.base16().encode(hash));
+                Map<String, Object> entity = new HashMap<>();
+                entity.put("Name", layoutInformation.className());
+                entity.put("Hash", BaseEncoding.base16().encode(layoutInformation.hash()));
+                entity.put("Recognized", recognized);
+                TabularDataSupport propertyTab = new TabularDataSupport(propertyTabular);
+                layoutInformation.properties().forEach(new Consumer<PropertyInformation>() {
+                    @Override @SneakyThrows
+                    public void accept(PropertyInformation propertyInformation) {
+                        propertyTab.put(new CompositeDataSupport(propertyType, new String[]{"Name", "Type"},
+                                new Object[]{propertyInformation.name(), propertyInformation.type()}));
+                    }
+                });
+                entity.put("Properties", propertyTab);
+                tabular.put(new CompositeDataSupport(compositeType, entity));
+            }
+        });
+        return tabular;
+    }
+
 
     void initializeStore() {
         store.setAutoCommitDelay(0);
