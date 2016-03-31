@@ -31,9 +31,13 @@ interface BundleClassScanner {
         return names.stream().map(new Function<String, Class<?>>() {
             @Override @SneakyThrows
             public Class<?> apply(String name) {
-                    String n = name.replaceAll("\\.class$", "").replace('/', '.');
+                String n = name.replaceAll("\\.class$", "").replace('/', '.');
+                try {
                     return BundleClassScanner.this.getClass().getClassLoader().loadClass(n);
+                } catch (ClassNotFoundException e) {
+                    return null;
+                }
             }
-        }).filter(superclass::isAssignableFrom).map((Function<Class<?>, Class<? extends T>>) aClass -> (Class<? extends T>) aClass).collect(Collectors.toList());
+        }).filter(c -> c != null).filter(superclass::isAssignableFrom).map((Function<Class<?>, Class<? extends T>>) aClass -> (Class<? extends T>) aClass).collect(Collectors.toList());
     }
 }
