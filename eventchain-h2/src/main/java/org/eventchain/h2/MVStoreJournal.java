@@ -100,8 +100,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         repository.getCommands().forEach(new EntityLayoutExtractor());
         repository.getEvents().forEach(new EntityLayoutExtractor());
 
-        reportUnrecognizedEntities();
-
         notifyStarted();
     }
 
@@ -128,7 +126,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         });
     }
 
-    List<LayoutInformation> getUnrecognizedEntities() {
+    public List<LayoutInformation> getUnrecognizedEntities() {
         List<LayoutInformation> result = new ArrayList<>();
         layouts.forEach(new BiConsumer<byte[], byte[]>() {
             @Override

@@ -73,11 +73,11 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         indexEngine.setJournal(journal);
         indexEngine.setRepository(this);
 
-        initialization.forEach(Runnable::run);
-        initialization.clear();
-
         services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider));
         services.startAsync().awaitHealthy();
+
+        initialization.forEach(Runnable::run);
+        initialization.clear();
 
         commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
         commandConsumer.startAsync().awaitRunning();
