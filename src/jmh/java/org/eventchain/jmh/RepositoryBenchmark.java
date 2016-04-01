@@ -17,20 +17,15 @@ package org.eventchain.jmh;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import org.eventchain.*;
 import org.eventchain.annotations.Index;
-import org.eventchain.h2.MVStoreIndexEngine;
-import org.eventchain.h2.MVStoreJournal;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.index.IndexEngine;
-import org.eventchain.index.MemoryIndexEngine;
 import org.eventchain.index.SimpleAttribute;
-import org.h2.mvstore.MVStore;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
-import static org.eventchain.index.IndexEngine.IndexFeature.SC;
 
 @State(Scope.Benchmark)
 public abstract class RepositoryBenchmark {
