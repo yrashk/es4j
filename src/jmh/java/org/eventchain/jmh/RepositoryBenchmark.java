@@ -42,8 +42,10 @@ public class RepositoryBenchmark {
     public void setup() throws Exception {
         repository = Repository.create();
 
-        journal = new MemoryJournal();
-        journal.setRepository(repository);
+//        journal = new MVStoreJournal(MVStore.open("nio:benchmark_journal.db"));
+//        journal = new MemoryJournal();
+        journal = new MVStoreJournal(MVStore.open(null));
+
         repository.setJournal(journal);
 
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
@@ -54,9 +56,6 @@ public class RepositoryBenchmark {
 
         lockProvider = new MemoryLockProvider();
         repository.setLockProvider(lockProvider);
-
-        indexEngine.setRepository(repository);
-        indexEngine.setJournal(journal);
 
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
