@@ -124,4 +124,8 @@ idea {
 dependencies {
     compile project(':eventchain-core')
     compile project(':eventchain-h2')
+
+    // Remove boilerplate
+    compile 'org.projectlombok:lombok:1.16.8'
+
 }
