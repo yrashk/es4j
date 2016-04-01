@@ -17,8 +17,10 @@ package org.eventchain.jmh;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import org.eventchain.*;
 import org.eventchain.annotations.Index;
+import org.eventchain.h2.MVStoreIndexEngine;
 import org.eventchain.h2.MVStoreJournal;
 import org.eventchain.hlc.NTPServerTimeProvider;
+import org.eventchain.index.IndexEngine;
 import org.eventchain.index.MemoryIndexEngine;
 import org.eventchain.index.SimpleAttribute;
 import org.h2.mvstore.MVStore;
@@ -31,27 +33,25 @@ import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
 import static org.eventchain.index.IndexEngine.IndexFeature.SC;
 
 @State(Scope.Benchmark)
-public class RepositoryBenchmark {
+public abstract class RepositoryBenchmark {
 
     private Repository repository;
     private Journal journal;
-    private MemoryIndexEngine indexEngine;
+    private IndexEngine indexEngine;
     private MemoryLockProvider lockProvider;
 
     @Setup
     public void setup() throws Exception {
         repository = Repository.create();
 
-//        journal = new MVStoreJournal(MVStore.open("nio:benchmark_journal.db"));
-//        journal = new MemoryJournal();
-        journal = new MVStoreJournal(MVStore.open(null));
+        journal = createJournal();
 
         repository.setJournal(journal);
 
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
         repository.setPhysicalTimeProvider(timeProvider);
 
-        indexEngine = new MemoryIndexEngine();
+        indexEngine = createIndex();
         repository.setIndexEngine(indexEngine);
 
         lockProvider = new MemoryLockProvider();
@@ -63,6 +63,10 @@ public class RepositoryBenchmark {
         repository.startAsync().awaitRunning();
     }
 
+    protected abstract IndexEngine createIndex();
+
+    protected abstract Journal createJournal();
+
     @TearDown
     public void teardown() {
         repository.stopAsync().awaitTerminated();
@@ -72,8 +76,8 @@ public class RepositoryBenchmark {
     public static class TestEvent extends Event {
         private String string;
 
-        @Index({EQ, SC})
-        public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
+        @Index({EQ})
+        public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>("attr") {
             @Override
             public String getValue(TestEvent object, QueryOptions queryOptions) {
                 return object.string();
