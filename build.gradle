@@ -19,10 +19,6 @@ plugins {
 apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
 apply plugin: 'nebula-aggregate-javadocs'
 
-jmh {
-    include=''
-}
-
 release {
     tagTemplate = 'v${version}'
     failOnPublishNeeded = false
