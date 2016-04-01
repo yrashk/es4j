@@ -17,32 +17,81 @@ package org.eventchain.jmh.models;
 import com.googlecode.cqengine.attribute.MultiValueAttribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 import org.eventchain.Entity;
 
 import java.util.List;
 import java.util.UUID;
 
-@ToString
 public class Car extends Entity {
+    public String toString() {
+        return "org.eventchain.jmh.models.Car(carId=" + this.carId + ", manufacturer=" + this.manufacturer + ", model=" + this.model + ", color=" + this.color + ", doors=" + this.doors + ", price=" + this.price + ", features=" + this.features + ", uuid=" + this.uuid + ")";
+    }
+
+    public int getCarId() {
+        return this.carId;
+    }
+
+    public String getManufacturer() {
+        return this.manufacturer;
+    }
+
+    public String getModel() {
+        return this.model;
+    }
+
+    public int getDoors() {
+        return this.doors;
+    }
+
+    public double getPrice() {
+        return this.price;
+    }
+
+    public List<String> getFeatures() {
+        return this.features;
+    }
+
+    public UUID getUuid() {
+        return this.uuid;
+    }
+
+    public void setCarId(int carId) {
+        this.carId = carId;
+    }
+
+    public void setManufacturer(String manufacturer) {
+        this.manufacturer = manufacturer;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
+    }
+
+    public void setDoors(int doors) {
+        this.doors = doors;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public void setFeatures(List<String> features) {
+        this.features = features;
+    }
+
+    public void setUuid(UUID uuid) {
+        this.uuid = uuid;
+    }
+
     public enum Color {RED, GREEN, BLUE, BLACK, WHITE}
-    @Getter @Setter
     int carId;
-    @Getter @Setter
     String manufacturer;
-    @Getter @Setter
     String model;
     Color color;
-    @Getter @Setter
     int doors;
-    @Getter @Setter
     double price;
-    @Getter @Setter
     List<String> features;
 
-    @Getter @Setter
     private UUID uuid = UUID.randomUUID();
 
     public Car() {
