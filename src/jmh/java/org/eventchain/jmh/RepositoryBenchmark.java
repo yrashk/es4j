@@ -17,12 +17,13 @@ package org.eventchain.jmh;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import org.eventchain.*;
 import org.eventchain.annotations.Index;
+import org.eventchain.h2.MVStoreJournal;
 import org.eventchain.hlc.NTPServerTimeProvider;
 import org.eventchain.index.MemoryIndexEngine;
 import org.eventchain.index.SimpleAttribute;
+import org.h2.mvstore.MVStore;
 import org.openjdk.jmh.annotations.*;
 
-import java.net.UnknownHostException;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 

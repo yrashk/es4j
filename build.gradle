@@ -129,7 +129,4 @@ dependencies {
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'
-
-    compile project(':eventchain-core').sourceSets.test.output
-
 }
