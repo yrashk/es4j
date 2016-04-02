@@ -213,7 +213,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     @Override @SuppressWarnings("unchecked")
     @Synchronized("store")
     public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
-        long version = store.getCurrentVersion();
         try {
 
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
