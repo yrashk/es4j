@@ -17,8 +17,6 @@ package org.eventchain;
 import boguspackage.BogusCommand;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
-
 public class PackageCommandSetProviderTest {
 
     @Test

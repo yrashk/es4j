@@ -41,9 +41,7 @@ import java.util.stream.Stream;
 import static com.googlecode.cqengine.query.QueryFactory.contains;
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.eventchain.index.EntityQueryFactory.all;
-import static org.eventchain.index.IndexEngine.IndexFeature.EQ;
-import static org.eventchain.index.IndexEngine.IndexFeature.SC;
-import static org.eventchain.index.IndexEngine.IndexFeature.UNIQUE;
+import static org.eventchain.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 
 public abstract class RepositoryTest<T extends Repository> {

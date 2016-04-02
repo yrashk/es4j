@@ -22,8 +22,6 @@ import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 public class OptionalTypeHandler implements TypeHandler<Optional> {

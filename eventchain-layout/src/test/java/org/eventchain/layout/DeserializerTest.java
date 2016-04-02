@@ -19,8 +19,6 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import java.util.List;
-
 import static org.testng.Assert.assertTrue;
 
 public class DeserializerTest {

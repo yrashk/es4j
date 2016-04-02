@@ -14,8 +14,6 @@
  */
 package org.eventchain;
 
-import java.util.Set;
-
 public interface RepositoryMBean {
     boolean isRunning();
     String[] getInstalledCommands();

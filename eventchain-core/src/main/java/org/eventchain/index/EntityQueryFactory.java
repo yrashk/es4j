@@ -14,7 +14,7 @@
  */
 package org.eventchain.index;
 
-import com.googlecode.cqengine.attribute.*;
+import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.query.simple.SimpleQuery;

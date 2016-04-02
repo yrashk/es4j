@@ -21,7 +21,6 @@ import org.eventchain.layout.TypeHandler;
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
