@@ -16,11 +16,17 @@ package org.eventchain.h2;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
+import org.eventchain.Command;
 import org.eventchain.Event;
+import org.eventchain.Journal;
 import org.eventchain.JournalTest;
+import org.eventchain.hlc.HybridTimestamp;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,6 +34,7 @@ import java.util.stream.Collectors;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
+@Slf4j
 public class MVStoreJournalTest extends JournalTest<MVStoreJournal> {
 
     private final MVStore store;
@@ -37,23 +44,4 @@ public class MVStoreJournalTest extends JournalTest<MVStoreJournal> {
         store = journal.getStore();
     }
 
-    public class TestEvent extends Event {
-        @Getter @Setter
-        private String value;
-    }
-
-    @Test
-    public void unrecognizedEntities() {
-        journal.clear();
-        journal.onEventsAdded(Collections.singletonList(TestEvent.class).stream().collect(Collectors.toSet()));
-        journal = new MVStoreJournal(store);
-        journal.initializeStore();
-        List<MVStoreJournal.LayoutInformation> unrecognizedEntities = journal.getUnrecognizedEntities();
-        assertFalse(unrecognizedEntities.isEmpty());
-        assertEquals(unrecognizedEntities.size(), 1);
-        MVStoreJournal.LayoutInformation entity = unrecognizedEntities.get(0);
-        assertEquals(entity.className(), TestEvent.class.getName());
-        assertEquals(entity.properties().get(1).name(), "value");
-        assertEquals(entity.properties().get(1).type(), "java.lang.String");
-    }
 }

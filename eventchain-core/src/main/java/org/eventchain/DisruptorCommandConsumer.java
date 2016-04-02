@@ -181,16 +181,20 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         }
     }
 
-    private void journal(CommandEvent event, long sequence, boolean endOfBatch) throws Exception {
+    private void timestamp(CommandEvent event, long sequence, boolean endOfBatch) throws Exception {
         timestamp.update();
         Command command = event.getCommand();
         command.timestamp(timestamp.clone());
+    }
+
+    private void journal(CommandEvent event) throws Exception {
+        Command command = event.getCommand();
         event.lockProvider = new TrackingLockProvider(this.lockProvider);
         event.lockProvider.startAsync().awaitRunning();
         journal.journal(command, new JournalListener(indexEngine, journal, command), event.lockProvider);
     }
 
-    private void complete(CommandEvent event, long sequence, boolean endOfBatch) throws Exception {
+    private void complete(CommandEvent event) throws Exception {
         if (!event.completed.isCompletedExceptionally()) {
             event.completed.complete(event.getCommand().onCompletion());
             event.lockProvider.release();
@@ -220,14 +224,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         disruptor = new Disruptor<>(() -> new CommandEvent(commandClasses), RING_BUFFER_SIZE, threadFactory);
         disruptor.setDefaultExceptionHandler(new CommandEventExceptionHandler());
 
-        List<EventHandler<CommandEvent>> eventHandlers =
-                Arrays.asList(this::journal, this::complete);
-
-        EventHandlerGroup<CommandEvent> handler = disruptor.handleEventsWith(eventHandlers.get(0));
-
-        for (EventHandler<CommandEvent> h : eventHandlers.subList(1, eventHandlers.size())) {
-            handler = handler.then(h);
-        }
+        disruptor.handleEventsWith(this::timestamp).thenHandleEventsWithWorkerPool(this::journal).thenHandleEventsWithWorkerPool(this::complete);
 
         ringBuffer = disruptor.start();
 
