@@ -56,7 +56,7 @@ public abstract class JournalTest<T extends Journal> {
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.setJournal(this.journal);
-        timeProvider = new NTPServerTimeProvider();
+        timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setLockProvider(new MemoryLockProvider());
         indexEngine = new MemoryIndexEngine();

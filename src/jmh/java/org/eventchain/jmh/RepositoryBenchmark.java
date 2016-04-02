@@ -43,7 +43,7 @@ public abstract class RepositoryBenchmark {
 
         repository.setJournal(journal);
 
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
+        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
 
         indexEngine = createIndex();

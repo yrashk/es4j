@@ -35,7 +35,7 @@ public class EntityQueryFactoryTest {
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
         repository.setJournal(new MemoryJournal());
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
+        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setIndexEngine(new MemoryIndexEngine());
         repository.setLockProvider(new MemoryLockProvider());

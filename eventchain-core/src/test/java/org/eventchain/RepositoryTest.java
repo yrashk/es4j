@@ -61,7 +61,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         journal = createJournal();
         repository.setJournal(journal);
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider();
+        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
