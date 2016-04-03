@@ -3,6 +3,4 @@ include 'eventchain-hlc'
 include 'eventchain-core'
 include 'eventchain-h2'
 
-include 'eventchain-admin'
-
 rootProject.name = 'eventchain'
