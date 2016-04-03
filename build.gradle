@@ -129,3 +129,8 @@ dependencies {
     compile 'org.projectlombok:lombok:1.16.8'
 
 }
+
+afterReleaseBuild.dependsOn project(':eventchain-layout').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventchain-hlc').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventchain-core').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventchain-h2').tasks.findByName("bintrayUpload")
