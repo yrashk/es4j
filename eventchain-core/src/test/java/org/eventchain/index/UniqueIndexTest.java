@@ -146,4 +146,20 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
         assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
     }
+
+    @Test
+    public void indexingExistingData() {
+        IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
+
+        // Add some objects to the collection...
+        cars.add(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof")));
+        cars.add(new Car(2, "ford taurus", "bar", Arrays.asList("radio", "cd player")));
+
+        // Add some indexes...
+        cars.addIndex(onAttribute(Car.FEATURES));
+
+        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
+        assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
+    }
+
 }

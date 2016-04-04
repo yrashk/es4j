@@ -122,4 +122,18 @@ public abstract class HashIndexTest<HashIndex extends AttributeIndex> {
         assertTrue(cars.isNotEmpty());
         assertEquals(cars.size(), coll.size());
     }
+
+    @Test
+    public void indexExistingData() {
+        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+
+        collection.addAll(CarFactory.createCollectionOfCars(10));
+
+        collection.addIndex(MANUFACTURER_INDEX);
+
+        ResultSet<Car> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
+        assertTrue(cars.isNotEmpty());
+        assertTrue(StreamSupport.stream(cars.spliterator(), false).allMatch(car -> car.getManufacturer().contentEquals("Honda")));
+    }
 }
