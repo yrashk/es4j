@@ -63,6 +63,7 @@ to be improved.
 * Long/long
 * Float/float
 * Double/double
+* BigDecimal
 * Boolean/boolean
 * Character/char
 * java.lang.String

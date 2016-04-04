@@ -20,6 +20,7 @@ import lombok.Getter;
 import org.eventchain.layout.types.*;
 
 import java.lang.reflect.AnnotatedType;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -53,6 +54,7 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
      *     <li><code>Long/long</code></li>
      *     <li><code>Float/float</code></li>
      *     <li><code>Double/double</code></li>
+     *     <li><code>BigDecimal</code></li>
      *     <li><code>Boolean/boolean</code></li>
      *     <li><code>Character/char</code></li>
      *     <li><code>String</code></li>
@@ -88,6 +90,10 @@ public interface TypeHandler<T> extends org.eventchain.layout.core.Serializer<T>
 
             if (type.isInstanceOf(Double.TYPE) || type.isInstanceOf(Double.class)) {
                 return new DoubleTypeHandler();
+            }
+
+            if (type.isInstanceOf(BigDecimal.class)) {
+                return new BigDecimalTypeHandler();
             }
 
             if (type.isInstanceOf(Boolean.TYPE) || type.isInstanceOf(Boolean.class)) {
