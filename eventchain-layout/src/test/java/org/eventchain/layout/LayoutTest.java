@@ -14,6 +14,7 @@
  */
 package org.eventchain.layout;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -125,6 +126,41 @@ public class LayoutTest {
         getter.set(new ReadonlyTest(), "hello");
     }
 
+    @AllArgsConstructor
+    private static class ConstructorTest {
+        @Getter
+        private String getter1;
+        @Getter
+        private String getter2;
+    }
+
+    @Test(expectedExceptions = IllegalAccessError.class)
+    @SneakyThrows
+    public void constructor() {
+        Layout<ConstructorTest> layout = new Layout<>(ConstructorTest.class);
+        assertFalse(layout.isReadOnly());
+        List<Property<ConstructorTest>> properties = layout.getProperties();
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter1")));
+        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter2")));
+        Property<ConstructorTest> getter = properties.stream().filter(property -> property.getName().contentEquals("getter1")).findFirst().get();
+        getter.set(new ConstructorTest("test1", "test2"), "hello");
+    }
+
+    private static class MismatchedConstructorsTest {
+        @Getter
+        private String getter1;
+        @Getter
+        private String getter2;
+
+        public MismatchedConstructorsTest(String a, int b) {}
+        public MismatchedConstructorsTest(int a, String b) {}
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    @SneakyThrows
+    public void mismatchedConstructors() {
+        new Layout<>(MismatchedConstructorsTest.class);
+    }
 
     private static class NamingTest {
         @Getter @Setter

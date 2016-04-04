@@ -30,6 +30,7 @@ layout hash.
 Layout defines following rules for property inclusion:
 
 * Every property should have both getter and setter accessors
+  (or a getter and a matching constructor for all properties)
 * Accessors must be public
 * Neither of accessors should be annotated with `@LayoutIgnore`
 * Property must be of a supported type (see below)

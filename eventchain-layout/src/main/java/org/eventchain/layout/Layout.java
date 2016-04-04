@@ -15,6 +15,7 @@
 package org.eventchain.layout;
 
 import com.fasterxml.classmate.*;
+import com.fasterxml.classmate.members.RawConstructor;
 import com.fasterxml.classmate.members.ResolvedMethod;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.google.common.io.BaseEncoding;
@@ -27,6 +28,7 @@ import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
@@ -37,6 +39,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -50,7 +53,7 @@ import java.util.stream.Collectors;
  *
  * <ul>
  *     <li>Has a getter (fluent or JavaBean style)</li>
- *     <li>Has a setter (fluent or JavaBean style)</li>
+ *     <li>Has a setter (fluent or JavaBean style), or a matching constructor for all properties</li>
  *     <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
  *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
  * </ul>
@@ -73,6 +76,18 @@ public class Layout<T> {
 
     @Getter
     private boolean readOnly = false;
+
+    @Getter
+    private Constructor constructor;
+
+    protected boolean setConstructor(Constructor constructor) {
+        if (this.constructor == null || this.constructor.equals(constructor)) {
+            this.constructor = constructor;
+            return true;
+        } else {
+            return false;
+        }
+    }
 
     private final Class<T> klass;
 
@@ -157,7 +172,17 @@ public class Layout<T> {
         });
         ResolvedTypeWithMembers setters = setterResolver.resolve(klassType, new LayoutAnnotationConfiguration(), null);
 
-        for (ResolvedMethod method : getters.getMemberMethods()) {
+        int getterIndex = 0;
+
+        ResolvedMethod[] getterMembers = getters.getMemberMethods();
+
+        int numberOfGetters = getterMembers.length;
+
+        List<RawConstructor> matchingConstructors = klassType.getConstructors().stream().
+                filter(constructor -> constructor.getRawMember().getParameterCount() == numberOfGetters).
+                collect(Collectors.toList());
+
+        for (ResolvedMethod method : getterMembers) {
             String propertyName = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
             String capitalizedPropertyName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
 
@@ -167,7 +192,12 @@ public class Layout<T> {
                     filter(member -> member.getName().contentEquals(propertyName) ||
                             member.getName().contentEquals("set" + capitalizedPropertyName)).findFirst();
 
-            if (allowReadonly || matchingSetter.isPresent()) {
+            final int finalGetterIndex = getterIndex;
+            Predicate<RawConstructor> matchingConstructorPredicate = constructor -> constructor.getRawMember().getGenericParameterTypes()[finalGetterIndex].equals(getter.getGenericReturnType());
+
+            boolean hasAMatchingConstructor = matchingConstructors.stream().anyMatch(matchingConstructorPredicate);
+
+            if (allowReadonly || matchingSetter.isPresent() || hasAMatchingConstructor) {
 
                 if (matchingSetter.isPresent()) {
                     Method setter = matchingSetter.get().getRawMember();
@@ -194,8 +224,18 @@ public class Layout<T> {
                             });
                     props.add(property);
                 } else {
-                    readOnly = true;
+                    readOnly = !hasAMatchingConstructor;
                     MethodHandle getterHandler = lookup.unreflect(getter);
+
+                    if (hasAMatchingConstructor) {
+                        Optional<RawConstructor> matchingConstructor = matchingConstructors.stream().
+                                filter(matchingConstructorPredicate).
+                                filter(constructor -> setConstructor(constructor.getRawMember())).
+                                findFirst();
+                        if (!matchingConstructor.isPresent()) {
+                            throw new IllegalArgumentException("getter " + getter.getName() + " doesn't have a matching argument in a common constructor");
+                        }
+                    }
 
                     Property<T> property = new Property<>(propertyName,
                             method.getReturnType(),
@@ -217,6 +257,7 @@ public class Layout<T> {
                     props.add(property);
                 }
             }
+            getterIndex++;
         }
 
         // Sort properties lexicographically (by default, they seem to be sorted anyway,

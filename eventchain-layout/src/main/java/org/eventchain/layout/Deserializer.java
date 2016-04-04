@@ -17,6 +17,8 @@ package org.eventchain.layout;
 import lombok.SneakyThrows;
 
 import java.nio.ByteBuffer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Layout deserializer
@@ -30,7 +32,7 @@ public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<
         if (layout.isReadOnly()) {
             throw new IllegalArgumentException("Read-only layout");
         }
-        if (layout.getLayoutClass().getConstructors().length > 0) {
+        if (layout.getConstructor() == null && layout.getLayoutClass().getConstructors().length > 0) {
             try {
                 layout.getLayoutClass().getConstructor();
             } catch (NoSuchMethodException e) {
@@ -54,10 +56,27 @@ public class Deserializer<T> implements org.eventchain.layout.core.Deserializer<
     @Override
     @SneakyThrows
     public T deserialize(ByteBuffer buffer) {
-        T value = layout.getLayoutClass().newInstance();
-        deserialize(value, buffer);
-        return value;
+        if (layout.getConstructor() != null) {
+            return (T) layout.getConstructor().newInstance(layout.getProperties().stream().map(new PropertyFunction<>(buffer)).toArray());
+        } else {
+            T value = layout.getLayoutClass().newInstance();
+            deserialize(value, buffer);
+            return value;
+        }
     }
 
     public static class NoEmptyConstructorException extends Exception {}
+
+    private class PropertyFunction<T> implements Function<Property<T>, T> {
+        private final ByteBuffer buffer;
+
+        public PropertyFunction(ByteBuffer buffer) {
+            this.buffer = buffer;
+        }
+
+        @Override
+        public T apply(Property<T> prop) {
+            return prop.getTypeHandler().deserialize(buffer);
+        }
+    }
 }
