@@ -31,13 +31,17 @@ license {
     header project.file('../../LICENSE')
 }
 
+Properties props = new Properties()
+props.load(new FileInputStream("../../gradle.properties"))
+def eventchainVersion = props.get("version")
+
 dependencies {
     testCompile 'org.testng:testng:6.9.10'
 
     compile 'org.projectlombok:lombok:1.16.8'
 
-    compile 'org.eventchain:eventchain-core:0.3.0-SNAPSHOT'
-    compile 'org.eventchain:eventchain-h2:0.3.0-SNAPSHOT'
+    compile "org.eventchain:eventchain-core:${eventchainVersion}"
+    compile "org.eventchain:eventchain-h2:${eventchainVersion}"
 }
 
 test.useTestNG()
