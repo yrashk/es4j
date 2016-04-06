@@ -16,6 +16,7 @@ package org.eventchain.layout.types;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
+import com.google.common.primitives.Bytes;
 import org.eventchain.layout.TypeHandler;
 
 import java.lang.reflect.AnnotatedParameterizedType;
@@ -45,7 +46,7 @@ public class OptionalTypeHandler implements TypeHandler<Optional> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{(byte) 251};
+        return Bytes.concat(new byte[]{(byte) 251}, handler.getFingerprint());
     }
 
     @Override

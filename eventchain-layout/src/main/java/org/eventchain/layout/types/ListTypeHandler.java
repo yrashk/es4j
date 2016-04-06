@@ -16,6 +16,7 @@ package org.eventchain.layout.types;
 
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
+import com.google.common.primitives.Bytes;
 import org.eventchain.layout.TypeHandler;
 
 import java.lang.reflect.AnnotatedParameterizedType;
@@ -46,7 +47,7 @@ public class ListTypeHandler implements TypeHandler<List> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{(byte) 252};
+        return Bytes.concat(new byte[]{(byte) 252}, handler.getFingerprint());
     }
 
     @Override

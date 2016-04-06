@@ -23,6 +23,7 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.testng.Assert.*;
 
@@ -296,4 +297,45 @@ public class LayoutTest {
         assertEquals(layout1.getHash(), layout1Name.getHash());
     }
 
+    private static class ListParametrizedTest1 {
+        @Getter @Setter
+        private List<Integer> x;
+
+    }
+
+    private static class ListParametrizedTest2 {
+        @Getter @Setter
+        private List<String> x;
+    }
+
+    @Test
+    @SneakyThrows
+    public void respectsParametrizedList() {
+        Layout<ListParametrizedTest1> layout1 = new Layout<>(ListParametrizedTest1.class, false, false);
+        Layout<ListParametrizedTest2> layout2 = new Layout<>(ListParametrizedTest2.class, false, false);
+
+        assertNotEquals(layout1, layout2, "Should be different");
+        assertFalse(Arrays.equals(layout1.getHash(), layout2.getHash()));
+    }
+
+    private static class OptionalParametrizedTest1 {
+        @Getter @Setter
+        private Optional<Integer> y;
+
+    }
+
+    private static class OptionalParametrizedTest2 {
+        @Getter @Setter
+        private Optional<String> y;
+    }
+
+    @Test
+    @SneakyThrows
+    public void respectsParametrizedOptional() {
+        Layout<OptionalParametrizedTest1> layout1 = new Layout<>(OptionalParametrizedTest1.class, false, false);
+        Layout<OptionalParametrizedTest2> layout2 = new Layout<>(OptionalParametrizedTest2.class, false, false);
+
+        assertNotEquals(layout1, layout2, "Should be different");
+        assertFalse(Arrays.equals(layout1.getHash(), layout2.getHash()));
+    }
 }
