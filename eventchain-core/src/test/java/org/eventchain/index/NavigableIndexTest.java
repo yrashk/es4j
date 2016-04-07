@@ -64,13 +64,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
         Set<String> distinctModels = setOf(MODEL_INDEX.getDistinctKeys(noQueryOptions()));
-        assertEquals(asList("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius", "Taurus"), new ArrayList<>(distinctModels));
+        assertEquals(new ArrayList<>(distinctModels), asList("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius", "Taurus"));
         for (String model : distinctModels) {
             assertEquals(Integer.valueOf(2), MODEL_INDEX.getCountForKey(model, noQueryOptions()));
         }
 
         Set<String> distinctModelsDescending = setOf(MODEL_INDEX.getDistinctKeysDescending(noQueryOptions()));
-        assertEquals(asList("Taurus", "Prius", "M6", "Insight", "Hilux", "Fusion", "Focus", "Civic", "Avensis", "Accord"), new ArrayList<>(distinctModelsDescending));
+        assertEquals(new ArrayList<>(distinctModelsDescending), asList("Taurus", "Prius", "M6", "Insight", "Hilux", "Fusion", "Focus", "Civic", "Avensis", "Accord"));
     }
 
     @Test
@@ -81,7 +81,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
-        assertEquals(Integer.valueOf(4), MANUFACTURER_INDEX.getCountOfDistinctKeys(noQueryOptions()));
+        assertEquals(MANUFACTURER_INDEX.getCountOfDistinctKeys(noQueryOptions()), Integer.valueOf(4));
     }
 
     @Test
@@ -93,14 +93,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
         Set<KeyStatistics<String>> keyStatistics = setOf(MANUFACTURER_INDEX.getStatisticsForDistinctKeys(noQueryOptions()));
-        assertEquals(setOf(
+        assertEquals(keyStatistics, setOf(
                 new KeyStatistics<>("Ford", 6),
                 new KeyStatistics<>("Honda", 6),
                 new KeyStatistics<>("Toyota", 6),
                 new KeyStatistics<>("BMW", 2)
 
-                ),
-                keyStatistics);
+        ));
     }
 
     @Test
@@ -112,14 +111,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
         Set<KeyStatistics<String>> keyStatistics = setOf(MANUFACTURER_INDEX.getStatisticsForDistinctKeysDescending(noQueryOptions()));
-        assertEquals(setOf(
+        assertEquals(keyStatistics, setOf(
                 new KeyStatistics<>("Toyota", 6),
                 new KeyStatistics<>("Honda", 6),
                 new KeyStatistics<>("Ford", 6),
                 new KeyStatistics<>("BMW", 2)
 
-                ),
-                keyStatistics);
+        ));
     }
 
     @Test
@@ -129,14 +127,14 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 20 because this query spans 2 buckets (each containing 10 objects)...
-        assertEquals(20, collection.retrieve(between(Car.CAR_ID, 47, 53)).getMergeCost());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 47, 53)).getMergeCost(), 20);
 
         // 7 objects match the query (between is inclusive)...
-        assertEquals(7, collection.retrieve(between(Car.CAR_ID, 47, 53)).size());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 47, 53)).size(), 7);
 
         // The matching objects are...
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 47, 53));
-        assertEquals(asList(47, 48, 49, 50, 51, 52, 53), carIdsFound);
+        assertEquals(carIdsFound, asList(47, 48, 49, 50, 51, 52, 53));
     }
 
     @Test
@@ -146,13 +144,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(10, collection.retrieve(between(Car.CAR_ID, 2, 4)).getMergeCost());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 2, 4)).getMergeCost(), 10);
 
         // 3 objects match the query...
-        assertEquals(3, collection.retrieve(between(Car.CAR_ID, 2, 4)).size());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 2, 4)).size(), 3);
 
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 2, 4));
-        assertEquals(asList(2, 3, 4), carIdsFound);
+        assertEquals(carIdsFound, asList(2, 3, 4));
     }
 
     @Test
@@ -162,13 +160,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(10, collection.retrieve(between(Car.CAR_ID, 96, 98)).getMergeCost());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 96, 98)).getMergeCost(), 10);
 
         // 3 objects match the query...
-        assertEquals(3, collection.retrieve(between(Car.CAR_ID, 96, 98)).size());
+        assertEquals(collection.retrieve(between(Car.CAR_ID, 96, 98)).size(), 3);
 
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 96, 98));
-        assertEquals(asList(96, 97, 98), carIdsFound);
+        assertEquals(carIdsFound, asList(96, 97, 98));
     }
 
 
@@ -178,10 +176,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
-        assertEquals(5, collection.retrieve(lessThan(Car.CAR_ID, 5)).size());
-        assertEquals(15, collection.retrieve(lessThan(Car.CAR_ID, 15)).size());
-        assertEquals(6, collection.retrieve(lessThanOrEqualTo(Car.CAR_ID, 5)).size());
-        assertEquals(16, collection.retrieve(lessThanOrEqualTo(Car.CAR_ID, 15)).size());
+        assertEquals(collection.retrieve(lessThan(Car.CAR_ID, 5)).size(), 5);
+        assertEquals(collection.retrieve(lessThan(Car.CAR_ID, 15)).size(), 15);
+        assertEquals(collection.retrieve(lessThanOrEqualTo(Car.CAR_ID, 5)).size(), 6);
+        assertEquals(collection.retrieve(lessThanOrEqualTo(Car.CAR_ID, 15)).size(), 16);
     }
 
     @Test
@@ -190,10 +188,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
-        assertEquals(4, collection.retrieve(greaterThan(Car.CAR_ID, 95)).size());
-        assertEquals(14, collection.retrieve(greaterThan(Car.CAR_ID, 85)).size());
-        assertEquals(5, collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 95)).size());
-        assertEquals(15, collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 85)).size());
+        assertEquals(collection.retrieve(greaterThan(Car.CAR_ID, 95)).size(), 4);
+        assertEquals(collection.retrieve(greaterThan(Car.CAR_ID, 85)).size(), 14);
+        assertEquals(collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 95)).size(), 5);
+        assertEquals(collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 85)).size(), 15);
     }
 
     @Test
@@ -203,24 +201,24 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         Query<Car> query = between(Car.CAR_ID, 88, 92);
-        assertEquals(5, collection.retrieve(query).size());
-        assertEquals(asList(88, 89, 90, 91, 92), retrieveCarIds(collection, query));
+        assertEquals(collection.retrieve(query).size(), 5);
+        assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, true, 92, true);
-        assertEquals(5, collection.retrieve(query).size());
-        assertEquals(asList(88, 89, 90, 91, 92), retrieveCarIds(collection, query));
+        assertEquals(collection.retrieve(query).size(), 5);
+        assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, false, 92, true);
-        assertEquals(4, collection.retrieve(query).size());
-        assertEquals(asList(89, 90, 91, 92), retrieveCarIds(collection, query));
+        assertEquals(collection.retrieve(query).size(), 4);
+        assertEquals(retrieveCarIds(collection, query), asList(89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, true, 92, false);
-        assertEquals(4, collection.retrieve(query).size());
-        assertEquals(asList(88, 89, 90, 91), retrieveCarIds(collection, query));
+        assertEquals(collection.retrieve(query).size(), 4);
+        assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91));
 
         query = between(Car.CAR_ID, 88, false, 92, false);
-        assertEquals(3, collection.retrieve(query).size());
-        assertEquals(asList(89, 90, 91), retrieveCarIds(collection, query));
+        assertEquals(collection.retrieve(query).size(), 3);
+        assertEquals(retrieveCarIds(collection, query), asList(89, 90, 91));
     }
 
     @Test
@@ -231,13 +229,13 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         Query<Car> query = and(between(Car.CAR_ID, 96, 98), greaterThan(Car.CAR_ID, 95));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(10, collection.retrieve(query).getMergeCost());
+        assertEquals(collection.retrieve(query).getMergeCost(), 10);
 
         // 3 objects match the query...
-        assertEquals(3, collection.retrieve(query).size());
+        assertEquals(collection.retrieve(query).size(), 3);
 
         List<Integer> carIdsFound = retrieveCarIds(collection, query);
-        assertEquals(asList(96, 97, 98), carIdsFound);
+        assertEquals(carIdsFound, asList(96, 97, 98));
     }
 
     static List<Integer> retrieveCarIds(IndexedCollection<Car> collection, Query<Car> query) {
