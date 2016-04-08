@@ -44,4 +44,16 @@ public class StringTypeHandler implements TypeHandler<String> {
         buffer.get(buf);
         return new String(buf);
     }
+
+    @Override
+    public int comparableSize(String value) {
+        return size(value) - SIZE_TAG_LENGTH;
+    }
+
+    @Override
+    public void serializeComparable(String value, ByteBuffer buffer) {
+        if (value != null) {
+            buffer.put(value.getBytes());
+        }
+    }
 }

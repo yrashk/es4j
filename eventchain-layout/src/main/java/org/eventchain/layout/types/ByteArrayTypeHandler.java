@@ -70,4 +70,14 @@ public class ByteArrayTypeHandler implements TypeHandler {
         throw new IllegalArgumentException(value.toString());
     }
 
+    @Override
+    public int comparableSize(Object value) {
+        return size(value) - SIZE_TAG_LENGTH;
+    }
+
+    @Override
+    public void serializeComparable(Object value, ByteBuffer buffer) {
+        byte[] bytes = getPrimitiveArray(value);
+        buffer.put(bytes);
+    }
 }

@@ -82,4 +82,25 @@ public class ListTypeHandler implements TypeHandler<List> {
             }
         }
     }
+
+    @Override @SuppressWarnings("unchecked")
+    public int comparableSize(List value) {
+        int sz = 0;
+        if (value != null) {
+            for (Object o : value) {
+                sz += handler.comparableSize(o);
+            }
+        }
+        return sz;
+    }
+
+    @Override @SuppressWarnings("unchecked")
+    public void serializeComparable(List value, ByteBuffer buffer) {
+        if (value == null) {
+        } else {
+            for (Object o : value) {
+                handler.serializeComparable(o, buffer);
+            }
+        }
+    }
 }

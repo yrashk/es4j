@@ -54,4 +54,21 @@ public class BigDecimalTypeHandler implements TypeHandler<BigDecimal> {
             buffer.put(bytes);
         }
     }
+
+    @Override
+    public int comparableSize(BigDecimal value) {
+        if (value == null) {
+            return comparableSize(BigDecimal.ZERO);
+        }
+        return value.unscaledValue().toByteArray().length;
+    }
+
+    @Override
+    public void serializeComparable(BigDecimal value, ByteBuffer buffer) {
+        if (value == null) {
+            serializeComparable(BigDecimal.ZERO, buffer);
+        } else {
+            buffer.put(value.unscaledValue().toByteArray());
+        }
+    }
 }

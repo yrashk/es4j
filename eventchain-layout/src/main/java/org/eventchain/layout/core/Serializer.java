@@ -44,4 +44,24 @@ public interface Serializer<T> {
      */
     void serialize(T value, ByteBuffer buffer);
 
+    /**
+     * @param value value to be serialized
+     * @return serialized comparable value size in bytes
+     */
+    default int comparableSize(T value) {
+        return size(value);
+    }
+
+    /**
+     * Serializes a comparable (sortable, etc.) value of type <code>T</code> to a {@link ByteBuffer}.
+     *
+     * {@link ByteBuffer} should be of a correct size. The size can be obtained
+     * from {@link #comparableSize(Object)} (Object)}
+     * @param value value to serialize
+     * @param buffer ByteBuffer
+     */
+    default void serializeComparable(T value, ByteBuffer buffer) {
+        serialize(value, buffer);
+    }
+
 }

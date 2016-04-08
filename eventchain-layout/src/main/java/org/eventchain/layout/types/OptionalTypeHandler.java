@@ -76,4 +76,22 @@ public class OptionalTypeHandler implements TypeHandler<Optional> {
             }
         }
     }
+
+    @Override @SuppressWarnings("unchecked")
+    public int comparableSize(Optional value) {
+        if (value == null) {
+            return 0;
+        }
+        return value.isPresent() ? handler.comparableSize(value.get()) : 0;
+    }
+
+    @Override @SuppressWarnings("unchecked")
+    public void serializeComparable(Optional value, ByteBuffer buffer) {
+        if (value == null) {
+        } else {
+            if (value.isPresent()) {
+                handler.serializeComparable(value.get(), buffer);
+            }
+        }
+    }
 }
