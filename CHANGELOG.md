@@ -1,3 +1,16 @@
+0.2.4
+=====
+
+The project has been renamed to Eventsourcing for Java
+
+**Backwards-incompatible changes**
+
+* org.eventchain package got renamed to com.eventsourcing
+
+**Features**
+
+* [Layout] Introduce serialization of comparable values
+
 0.2.3
 =====
 

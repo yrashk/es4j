@@ -71,7 +71,7 @@ subprojects {
         key = System.getenv('BINTRAY_KEY')
         publications = ['MyPublication']
         pkg {
-            repo = 'com.eventsourcing'
+            repo = 'maven'
             name = project.name
             userOrg = 'eventsourcing'
             licenses = ['Apache-2.0']
