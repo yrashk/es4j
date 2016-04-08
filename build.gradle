@@ -59,7 +59,7 @@ subprojects {
         publications {
             MyPublication(MavenPublication) {
                 from components.java
-                groupId 'org.eventchain'
+                groupId 'com.eventsourcing'
                 artifactId project.name
                 version project.version
             }
@@ -71,11 +71,11 @@ subprojects {
         key = System.getenv('BINTRAY_KEY')
         publications = ['MyPublication']
         pkg {
-            repo = 'org.eventchain'
+            repo = 'com.eventsourcing'
             name = project.name
-            userOrg = 'eventchain'
+            userOrg = 'eventsourcing'
             licenses = ['Apache-2.0']
-            vcsUrl = 'https://github.com/eventchain/eventchain'
+            vcsUrl = 'https://github.com/eventsourcing/es4j'
             version {
                 name = project.version
             }
@@ -122,15 +122,15 @@ idea {
 }
 
 dependencies {
-    compile project(':eventchain-core')
-    compile project(':eventchain-h2')
+    compile project(':eventsourcing-core')
+    compile project(':eventsourcing-h2')
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'
 
 }
 
-afterReleaseBuild.dependsOn project(':eventchain-layout').tasks.findByName("bintrayUpload")
-afterReleaseBuild.dependsOn project(':eventchain-hlc').tasks.findByName("bintrayUpload")
-afterReleaseBuild.dependsOn project(':eventchain-core').tasks.findByName("bintrayUpload")
-afterReleaseBuild.dependsOn project(':eventchain-h2').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-layout').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-hlc').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-core').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-h2').tasks.findByName("bintrayUpload")

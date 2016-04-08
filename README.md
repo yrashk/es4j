@@ -1,11 +1,9 @@
-[![Build Status](https://travis-ci.org/eventchain/eventchain.svg?branch=master)](https://travis-ci.org/eventchain/eventchain)
-[ ![Download](https://api.bintray.com/packages/eventchain/org.eventchain/eventchain-core/images/download.svg) ](https://bintray.com/eventchain/org.eventchain/eventchain-core/_latestVersion)
+[![Build Status](https://travis-ci.org/eventsourcing/es4j.svg?branch=master)](https://travis-ci.org/eventsourcing/es4j)
+[ ![Download](https://api.bintray.com/packages/eventsourcing/maven/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven/eventsourcing-core/_latestVersion)
 
-# Eventchain
+# Eventsourcing for Java
 
-[![Join the chat at https://gitter.im/eventchain/eventchain](https://badges.gitter.im/eventchain/eventchain.svg)](https://gitter.im/eventchain/eventchain?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-Eventchain is an **event sourcing** framework for Java. Instead of mutating data in a database, it stores all changes
+Instead of mutating data in a database, it stores all changes
 (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability
 to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation
 for deep analytics, data recovery, audit trails and other associated benefits.
@@ -33,7 +31,7 @@ library that has been used in real projects, so a lot was learned and incorporat
 
 # Documentation
 
-Documentation is available at [doc.eventchain.org](http://doc.eventchain.org)
+Documentation is available at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
 
 # Downloading
 
@@ -44,17 +42,16 @@ You can get packages from Bintray:
 ```groovy
 repositories {
     maven {
-        url  "http://dl.bintray.com/eventchain/org.eventchain"
+        url  "http://dl.bintray.com/eventsourcing/maven"
     }
 }
 
 dependencies {
-  compile 'org.eventchain:eventchain-core:0.2.3'
-  compile 'org.eventchain:eventchain-h2:0.2.3' // for H2 storage
+  compile "com.eventsourcing:eventsourcing-core:${eventsourcingVersion}"
+  compile "com.eventsourcing:eventsourcing-h2:${eventsourcingVersion}"
 }
 ```
 
-That said, Eventchain is evolving quickly and in some cases, having Eventchain from the master branch can be a better fit.
 
 ## Repository
 

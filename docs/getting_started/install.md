@@ -5,14 +5,14 @@ Currently you can get packages from Bintray. The example below shows configurati
 ```groovy
 repositories {
     maven {
-        url  "http://dl.bintray.com/eventchain/org.eventchain"
+        url  "http://dl.bintray.com/Eventsourcing/org.Eventsourcing"
     }
 }
 
 dependencies {
-  compile 'org.eventchain:eventchain-core:0.2.0'
-  compile 'org.eventchain:eventchain-h2:0.2.0' // for H2 (MVStore) storage
+  compile 'org.Eventsourcing:Eventsourcing-core:0.2.0'
+  compile 'org.Eventsourcing:Eventsourcing-h2:0.2.0' // for H2 (MVStore) storage
 }
 ```
 
-That said, Eventchain is currently evolving quickly and in some cases, having a maven local / private maven repository based snapshot version of Eventchain can be a better fit.
+That said, Eventsourcing is currently evolving quickly and in some cases, having a maven local / private maven repository based snapshot version of Eventsourcing can be a better fit.

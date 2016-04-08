@@ -33,15 +33,15 @@ license {
 
 Properties props = new Properties()
 props.load(new FileInputStream("../../gradle.properties"))
-def eventchainVersion = props.get("version")
+def eventsourcingVersion = props.get("version")
 
 dependencies {
     testCompile 'org.testng:testng:6.9.10'
 
     compile 'org.projectlombok:lombok:1.16.8'
 
-    compile "org.eventchain:eventchain-core:${eventchainVersion}"
-    compile "org.eventchain:eventchain-h2:${eventchainVersion}"
+    compile "com.eventsourcing:eventsourcing-core:${eventsourcingVersion}"
+    compile "com.eventsourcing:eventsourcing-h2:${eventsourcingVersion}"
 }
 
 test.useTestNG()

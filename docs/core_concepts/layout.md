@@ -1,8 +1,8 @@
 # Layout
 
-Eventchain uses a concept of layout to give a deterministic shape to any object
+Eventsourcing uses a concept of layout to give a deterministic shape to any object
 (POJO). Layout allows to specify what class properties are included into serialized object's representation and unique class identifier (hash). Other
-Eventchain components use it to serialize, deserialize and identify classes according to their layout.
+Eventsourcing components use it to serialize, deserialize and identify classes according to their layout.
 
 
 Lets start with an example:
@@ -17,7 +17,7 @@ public class User {
 
 This class defines one property (`email`) by having both accessors (JavaBean, chain and fluent naming conventions are supported).
 
-Implemented in the `eventchain-layout` package, `org.eventchain.layout.Layout` is the main class used to create layouts:
+Implemented in the `Eventsourcing-layout` package, `org.Eventsourcing.layout.Layout` is the main class used to create layouts:
 
 ```java
 Layout<User> layout = new Layout(User.class);
@@ -38,7 +38,7 @@ Layout defines following rules for property inclusion:
 Inheritance can also be used to build hierarchies that share fragments of
 their layout. In fact, it is even possible to use interfaces to create layouts.
 
-Note: Since Eventchain requires the use of accessors, using code generation tools like Lombok is advisable. In fact, most of Eventchain's documentation
+Note: Since Eventsourcing requires the use of accessors, using code generation tools like Lombok is advisable. In fact, most of Eventsourcing's documentation
 will be using Lombok annotations for brevity.
 
 ## Hash
@@ -53,7 +53,7 @@ Every layout has a hash which is a unique fingerprint of such a class. It is com
 
 ## Supported Property Types
 
-Currently, Eventchain supports a rather limited set of types, but this is going
+Currently, Eventsourcing supports a rather limited set of types, but this is going
 to be improved.
 
 * Byte/byte
@@ -76,8 +76,8 @@ All other types will be handled through Layout.
 
 ## Serialization
 
-Due to properties sorting and strict typing, Eventchain's serialization format
-is fairly compact. All property information is stripped and only the actual data is stored, in the same lexicographical order. Eventchain doesn't currently use
+Due to properties sorting and strict typing, Eventsourcing's serialization format
+is fairly compact. All property information is stripped and only the actual data is stored, in the same lexicographical order. Eventsourcing doesn't currently use
 variable length integers or any other compression methods so it is not extremely compact (this might change in the future).
 
 You can get a serializer and a deserializer very easily:
@@ -92,6 +92,6 @@ to have an empty constructor. Otherwise, creating a deserializer will fail.
 
 ### `null` values
 
-It is important to note that Eventchain does not support a notion of a `null`
+It is important to note that Eventsourcing does not support a notion of a `null`
 property value. While the instances you pass for serialization *can* contain
 nulls, they will be treated as "empty" values (for example, empty String, nil UUID, zero number, false boolean, etc.)
