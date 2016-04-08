@@ -66,7 +66,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         Set<String> distinctModels = setOf(MODEL_INDEX.getDistinctKeys(noQueryOptions()));
         assertEquals(new ArrayList<>(distinctModels), asList("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius", "Taurus"));
         for (String model : distinctModels) {
-            assertEquals(Integer.valueOf(2), MODEL_INDEX.getCountForKey(model, noQueryOptions()));
+            assertEquals(MODEL_INDEX.getCountForKey(model, noQueryOptions()), Integer.valueOf(2));
         }
 
         Set<String> distinctModelsDescending = setOf(MODEL_INDEX.getDistinctKeysDescending(noQueryOptions()));
