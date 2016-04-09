@@ -1,6 +1,6 @@
 # Repository
 
-Repository is an entry point to most of end-user Eventsourcing functionality.
+Repository is an entry point to most of end-user ES4J functionality.
 It puts all components (journalling, indexing, querying) together.
 
 ```java
@@ -12,7 +12,7 @@ repository.setJournal(journal);
 IndexEngine indexEngine = new MemoryIndexEngine();
 repository.setIndexEngine(indexEngine);
 
-// Eventsourcing should find commands and events in this
+// ES4J should find commands and events in this
 // hierarchy of packages:
 repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{getClass().getPackage()}));
 repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClass().getPackage()}));

@@ -1,6 +1,6 @@
 # Domain Model
 
-One of the primary ways to interact with data (especially on the query side) within an Eventsourcing application is by using *domain models*. Domain model is
+One of the primary ways to interact with data (especially on the query side) within an ES4J application is by using *domain models*. Domain model is
 simple a POJO class that encapsulates aggregation of events by querying.
 
 Typically it would have a constructor that takes a `Repository` and an identifier:
@@ -49,4 +49,4 @@ In the above example, we query for `UserCreated` (assuming there can be only zer
 Further user information can be either pre-loaded in the static lookup method
 or it can be loaded (and potentially cached) on-demand in models' instance methods.
 
-Eventsourcing exposes a simple interface for domain models (`org.Eventsourcing.Model`). Although it is not mandatory, it can be useful for further composability, and particularly, [domain protocols](domain_protocol.md).
+ES4J exposes a simple interface for domain models (`com.eventsourcing.Model`). Although it is not mandatory, it can be useful for further composability, and particularly, [domain protocols](domain_protocol.md).
