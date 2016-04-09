@@ -19,3 +19,9 @@ repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClas
 
 repository.startAsync().awaitRunning();
 ```
+
+Now we're ready to publish the command:
+
+```java
+User result = repository.publish(new CreateUser().email("foo@bar.com")).get();
+```

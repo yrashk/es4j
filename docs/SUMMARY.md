@@ -8,6 +8,7 @@
   * [Entity](core_concepts/entity.md)
   * [Command](core_concepts/command.md)
   * [Event](core_concepts/event.md)
+  * [Indexing](core_concepts/indexing.md)
   * [Repository](core_concepts/repository.md)
   * [Domain Model](core_concepts/domain_model.md)
   * [Domain Protocol](core_concepts/domain_protocol.md)
