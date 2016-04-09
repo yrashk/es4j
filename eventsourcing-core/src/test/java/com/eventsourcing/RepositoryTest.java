@@ -134,11 +134,11 @@ public abstract class RepositoryTest<T extends Repository> {
     public void timestamping() {
         repository.publish(new RepositoryTestCommand()).get();
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
-        TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get();
+        TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
         assertNotNull(test.timestamp());
 
         IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
-        RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get().get();
+        RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get();
         assertNotNull(test1.timestamp());
 
         assertTrue(test.timestamp().compareTo(test1.timestamp()) > 0);
@@ -151,7 +151,7 @@ public abstract class RepositoryTest<T extends Repository> {
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
-        assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().get().string(), "test");
+        assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
 
         IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
@@ -171,7 +171,7 @@ public abstract class RepositoryTest<T extends Repository> {
         IndexedCollection<EntityHandle<BogusEvent>> coll = indexEngine.getIndexedCollection(BogusEvent.class);
         assertTrue(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).isNotEmpty());
         assertTrue(coll.retrieve(contains(BogusEvent.ATTR, "us")).isNotEmpty());
-        assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().get().string(), "bogus");
+        assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().string(), "bogus");
     }
 
     @ToString
@@ -323,10 +323,10 @@ public abstract class RepositoryTest<T extends Repository> {
         TestOptionalCommand command = new TestOptionalCommand();
         repository.publish(command).get();
 
-        TestOptionalCommand test = repository.query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get().get();
+        TestOptionalCommand test = repository.query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get();
         assertFalse(test.optional().isPresent());
 
-        TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class)).uniqueResult().get().get();
+        TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class)).uniqueResult().get();
         assertFalse(testOptionalEvent.optional().isPresent());
     }
 

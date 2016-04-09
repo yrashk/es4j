@@ -48,7 +48,7 @@ public class EntityQueryFactory {
 
                 @Override
                 public Iterable<O> getValues(EntityHandle<O> object, QueryOptions queryOptions) {
-                    return Collections.singletonList(object.get().get());
+                    return Collections.singletonList(object.get());
                 }
             });
             this.attributeType = attributeType;

@@ -45,7 +45,7 @@ package com.eventsourcing;
  *              if (resultSet.isEmpty()) {
  *                  return null;
  *              }
- *              return resultSet.iterator().next().get().get().name();
+ *              return resultSet.iterator().next().getOptional().getOptional().name();
  *        }
  *     }
  * }

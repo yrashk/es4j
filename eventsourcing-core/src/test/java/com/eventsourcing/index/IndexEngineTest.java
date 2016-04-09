@@ -114,12 +114,12 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         coll.add(new EntityHandle<>(journal, event.uuid()));
 
         EntityHandle<TestEvent> handle = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult();
-        assertTrue(handle.get().isPresent());
+        assertTrue(handle.getOptional().isPresent());
 
         handle = coll.retrieve(contains(TestEvent.ATTR, "es")).uniqueResult();
-        assertTrue(handle.get().isPresent());
+        assertTrue(handle.getOptional().isPresent());
 
         handle = coll.retrieve(not(contains(TestEvent.ATTR, "se"))).uniqueResult();
-        assertTrue(handle.get().isPresent());
+        assertTrue(handle.getOptional().isPresent());
     }
 }

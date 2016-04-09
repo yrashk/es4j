@@ -43,7 +43,7 @@ public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecod
 
     @Override
     public A getValue(EntityHandle<O> object, QueryOptions queryOptions) {
-        return getValue(object.get().get(), queryOptions);
+        return getValue(object.get(), queryOptions);
     }
 
     public abstract A getValue(O object, QueryOptions queryOptions);

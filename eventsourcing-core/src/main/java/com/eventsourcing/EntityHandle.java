@@ -34,7 +34,22 @@ public class EntityHandle<T extends Entity> {
         this.uuid = uuid;
     }
 
-    public Optional<T> get() {
+    /**
+     * Returns an optional value of the referenced entity (empty if an entity specified by a given
+     * UUID can't be found). When the entity is expected to be found, {@link #get()}
+     * should be used instead
+     * @return
+     */
+    public Optional<T> getOptional() {
         return journal.get(uuid);
+    }
+
+    /**
+     * Returns the referenced entity
+     * @return
+     * @throws java.util.NoSuchElementException if the entity wasn't found
+     */
+    public T get() {
+        return get();
     }
 }
