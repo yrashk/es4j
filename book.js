@@ -1,6 +1,6 @@
-var execSync = require('child_process').execSync;
+var fs = require('fs');
 
-var version = execSync("git describe --abbrev=0 | sed s/v//").toString().replace(/\n$/, "");
+var version = fs.readFileSync('gradle.properties').toString().split("\n").filter(function(s) { return s.startsWith("lastRelease"); })[0].split("=")[1];
 
 module.exports = {
     // Documentation for GitBook is stored under "docs"
