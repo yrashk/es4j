@@ -33,6 +33,10 @@ library that has been used in real projects, so a lot was learned and incorporat
 
 Installation instructions and documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
 
+# Related projects
+
+* [es4j-graphql](https://github.com/eventsourcing/es4j-graphql) A Relay.js/GraphQL adaptor for ES4J-based applications.
+
 # Contributing
 
 Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or
