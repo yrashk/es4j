@@ -406,8 +406,6 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
         for (O object : objects) {
             for (A value : attribute.getValues(object, queryOptions)) {
                 if (value != null) { // Don't index null attribute values
-                    ByteBuffer buffer = ByteBuffer.allocate(objectSerializer.size(object));
-                    objectSerializer.serialize(object, buffer);
                     Entry entry = encodeEntry(object, value);
                     map.put(entry.getKey(), true);
                     attrHashMap.putIfAbsent(entry.getAttrHash(), entry.getAttr());
