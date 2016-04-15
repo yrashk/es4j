@@ -15,6 +15,7 @@
 package com.eventsourcing.h2;
 
 import com.eventsourcing.*;
+import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
@@ -47,6 +48,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component(property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
 @Slf4j
@@ -221,6 +223,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     @Override @SuppressWarnings("unchecked")
     public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
+        return journal(command, listener, lockProvider, null);
+    }
+
+    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events) throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
@@ -236,7 +242,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             TransactionMap<byte[], Boolean> txHashCommands = tx.openMap("hashCommands");
             TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
 
-            long count = command.events(repository, lockProvider).peek(new EventConsumer(tx, command, listener)).count();
+            Stream<Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
+            long count = actualEvents.peek(new EventConsumer(tx, command, listener)).count();
 
             txCommandPayloads.put(command.uuid(), buffer.array());
             txHashCommands.put(hashBuffer.array(), true);
@@ -251,6 +258,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         } catch (Exception e) {
             tx.rollback();
             listener.onAbort(e);
+
+            try {
+                journal(command, listener, lockProvider, Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
+            } catch (Exception e1) {
+                throw e1;
+            }
+
             throw e;
         }
 

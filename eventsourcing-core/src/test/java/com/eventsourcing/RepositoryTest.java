@@ -17,12 +17,14 @@ package com.eventsourcing;
 import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -174,42 +176,6 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().string(), "bogus");
     }
 
-    @ToString
-    public static class StreamExceptionCommand extends Command<Void> {
-
-        private UUID eventUUID = UUID.randomUUID();
-
-        public StreamExceptionCommand() {
-        }
-
-        public StreamExceptionCommand(UUID eventUUID) {
-            this.eventUUID = eventUUID;
-        }
-
-        @Override
-        public Stream<Event> events(Repository repository) {
-            return Stream.concat(Stream.of(
-                    (TestEvent) new TestEvent().string("test").uuid(eventUUID)),
-                    Stream.generate((Supplier<Event>) () -> {
-                        throw new IllegalStateException();
-                    }));
-        }
-    }
-    @Test
-    @SneakyThrows
-    public void streamExceptionIndexing() {
-        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
-        coll.clear();
-        UUID eventUUID = UUID.randomUUID();
-        StreamExceptionCommand command = new StreamExceptionCommand(eventUUID);
-        CompletableFuture<Void> future = repository.publish(command);
-        while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
-        assertTrue(future.isCompletedExceptionally());
-        assertFalse(journal.get(command.uuid()).isPresent());
-        assertFalse(journal.get(eventUUID).isPresent());
-        assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isEmpty());
-    }
-
     public static class LockCommand extends Command<Void> {
         @Override
         public Stream<Event> events(Repository repository, LockProvider lockProvider) {
@@ -241,6 +207,69 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(lock.isLocked());
         lock.unlock();
     }
+
+
+    public static class ExceptionalCommand extends Command<Object> {
+        @Override
+        public Stream<Event> events(Repository repository) {
+            throw new IllegalStateException();
+        }
+    }
+
+    @Test @SneakyThrows
+    public void exceptionalCommand() {
+        ExceptionalCommand command = new ExceptionalCommand();
+        Object o = repository.publish(command).exceptionally(throwable -> throwable).get();
+        assertTrue(o instanceof IllegalStateException);
+        Optional<Entity> commandLookup = journal.get(command.uuid());
+        assertTrue(commandLookup.isPresent());
+        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository.query(CommandTerminatedExceptionally.class, equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
+        assertEquals(resultSet.size(), 1);
+        EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
+        assertEquals(result.get().className(), IllegalStateException.class.getName());
+    }
+
+
+    @ToString
+    public static class StreamExceptionCommand extends Command<Void> {
+
+        private UUID eventUUID = UUID.randomUUID();
+
+        public StreamExceptionCommand() {
+        }
+
+        public StreamExceptionCommand(UUID eventUUID) {
+            this.eventUUID = eventUUID;
+        }
+
+        @Override
+        public Stream<Event> events(Repository repository) {
+            return Stream.concat(Stream.of(
+                    (TestEvent) new TestEvent().string("test").uuid(eventUUID)),
+                    Stream.generate((Supplier<Event>) () -> {
+                        throw new IllegalStateException();
+                    }));
+        }
+    }
+    @Test
+    @SneakyThrows
+    public void streamExceptionIndexing() {
+        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
+        coll.clear();
+        UUID eventUUID = UUID.randomUUID();
+        StreamExceptionCommand command = new StreamExceptionCommand(eventUUID);
+        CompletableFuture<Void> future = repository.publish(command);
+        while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
+        assertTrue(future.isCompletedExceptionally());
+        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository.query(CommandTerminatedExceptionally.class, equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
+        assertEquals(resultSet.size(), 1);
+        EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
+        assertEquals(result.get().className(), IllegalStateException.class.getName());
+        assertTrue(journal.get(command.uuid()).isPresent());
+        assertFalse(journal.get(eventUUID).isPresent());
+        assertTrue(repository.query(TestEvent.class, equal(TestEvent.ATTR, "test")).isEmpty());
+    }
+
 
     public static class SameInstanceCommand extends Command<String> {
         @Getter

@@ -14,6 +14,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
@@ -70,15 +71,31 @@ public class MemoryJournal extends AbstractService implements Journal {
         EventConsumer eventConsumer = new EventConsumer(events_, eventCommands_, command, listener);
 
         Stream<Event> events;
-        events = command.events(repository, lockProvider);
+        Exception exception = null;
 
-        long count;
+        try {
+            events = command.events(repository, lockProvider);
+        } catch (Exception e) {
+            events = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e));
+            exception = e;
+        }
+
+        long count = 0;
 
         try {
             count = events.peek(eventConsumer).count();
         } catch (Exception e) {
+            events_.clear();
+            eventCommands_.clear();
             listener.onAbort(e);
-            throw e;
+            exception = e;
+            try {
+                count = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer).count();
+            } catch (Exception e1) {
+                events_.clear();
+                eventCommands_.clear();
+                exception = e1;
+            }
         }
 
         this.events.putAll(events_);
@@ -92,10 +109,14 @@ public class MemoryJournal extends AbstractService implements Journal {
         buffer.rewind();
         deserializer.deserialize(command, buffer);
 
-
         commands.put(command.uuid(), command);
 
         listener.onCommit();
+
+        if (exception != null) {
+            throw exception;
+        }
+
         return count;
     }
 
