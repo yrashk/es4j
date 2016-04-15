@@ -75,6 +75,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     public static class TestEvent extends Event {}
+    public static class AnotherTestEvent extends Event {}
 
     @EqualsAndHashCode(callSuper = false)
     public static class TestCommand extends Command<Void> {
@@ -213,6 +214,8 @@ public abstract class JournalTest<T extends Journal> {
         assertTrue(eventIterator.hasNext());
         assertEquals(eventIterator.next().uuid(), event.uuid());
         assertFalse(eventIterator.hasNext());
+
+        assertFalse(journal.eventIterator(AnotherTestEvent.class).hasNext());
     }
 
 }

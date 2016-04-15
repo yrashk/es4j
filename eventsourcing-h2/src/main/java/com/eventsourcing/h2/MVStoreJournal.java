@@ -386,7 +386,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         private final Iterator<Map.Entry<K, V>> iterator;
         private Function<K, Boolean> hasNext;
         private final BiFunction<K, V, R> function;
-        private K next;
+        private Map.Entry<K, V> entry;
 
         public EntityHandleIterator(Iterator<Map.Entry<K, V>> iterator, Function<K, Boolean> hasNext, BiFunction<K, V, R>function) {
             this.iterator = iterator;
@@ -396,13 +396,22 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
         @Override
         public boolean hasNext() {
-            return iterator.hasNext();
+            if (iterator.hasNext()) {
+                entry = iterator.next();
+                return hasNext.apply(entry.getKey());
+            } else {
+                return false;
+            }
         }
 
         @Override
         public R next() {
-            Map.Entry<K, V> entry = iterator.next();
-            return function.apply(entry.getKey(), entry.getValue());
+            if (entry == null) {
+                entry = iterator.next();
+            }
+            R result = function.apply(entry.getKey(), entry.getValue());
+            entry = null;
+            return result;
         }
     }
 
