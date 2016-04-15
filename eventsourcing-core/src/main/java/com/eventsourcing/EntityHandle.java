@@ -50,6 +50,6 @@ public class EntityHandle<T extends Entity> {
      * @throws java.util.NoSuchElementException if the entity wasn't found
      */
     public T get() {
-        return get();
+        return getOptional().get();
     }
 }
