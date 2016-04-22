@@ -1,3 +1,25 @@
+0.2.6
+=====
+
+This release is a quick fix for 0.2.5 removing accidentally
+added premature code (MVStore-based NavigableIndex)
+
+0.2.5
+=====
+
+**Backwards-incompatible changes**
+
+* If a command results in exception (during #events() call or
+  during stream generation), all events will be replaced
+  with a CommandTerminatedExceptionally event so that
+  the exception does not get lost.
+* EntityHandle#get() has been split into get() and getOptional()
+  for usability reasons.
+
+**Bugfixes**
+
+* MVStoreJournal entity iterator was iterating over non-matching keys
+
 0.2.4
 =====
 
