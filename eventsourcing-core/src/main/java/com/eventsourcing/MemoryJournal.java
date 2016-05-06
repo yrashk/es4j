@@ -21,6 +21,7 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
+import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import org.osgi.service.component.annotations.Component;
@@ -132,19 +133,19 @@ public class MemoryJournal extends AbstractService implements Journal {
     }
 
     @Override
-    public synchronized  <T extends Command<?>> Iterator<EntityHandle<T>> commandIterator(Class<T> klass) {
-        return commands.values().stream().
+    public synchronized  <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+        return new CloseableWrappingIterator<>(commands.values().stream().
                 filter(command -> klass.isAssignableFrom(command.getClass())).
                 map(command -> new EntityHandle<T>(this, command.uuid())).
-                iterator();
+                iterator());
     }
 
     @Override
-    public synchronized <T extends Event> Iterator<EntityHandle<T>> eventIterator(Class<T> klass) {
-        return events.values().stream().
+    public synchronized <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
+        return new CloseableWrappingIterator<>(events.values().stream().
                 filter(event -> klass.isAssignableFrom(event.getClass())).
                 map(event -> new EntityHandle<T>(this, event.uuid())).
-                iterator();
+                iterator());
     }
 
     @Override

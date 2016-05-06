@@ -20,7 +20,9 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
 import com.googlecode.cqengine.attribute.Attribute;
+import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
+import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.query.simple.Equal;
@@ -138,7 +140,7 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
             }
 
             @Override
-            public void close() throws IOException {
+            public void close() {
 
             }
 
@@ -163,7 +165,7 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
         }
 
         @Override
-        public void close() throws IOException {
+        public void close() {
         }
 
         @Override
@@ -402,18 +404,36 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
     }
 
     @Override
+    public Index<O> getEffectiveIndex() {
+        return this;
+    }
+
+    @Override
     public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
         for (O object : objects) {
-            for (A value : attribute.getValues(object, queryOptions)) {
-                if (value != null) { // Don't index null attribute values
-                    Entry entry = encodeEntry(object, value);
-                    map.put(entry.getKey(), true);
-                    attrHashMap.putIfAbsent(entry.getAttrHash(), entry.getAttr());
-                    objHashMap.putIfAbsent(entry.getValueHash(), entry.getValue());
-                }
-            }
+            addObject(queryOptions, object);
         }
         return true;
+    }
+
+    public boolean addAll(ObjectStore<O> objects, QueryOptions queryOptions) {
+        CloseableIterator<O> iterator = objects.iterator(queryOptions);
+        while (iterator.hasNext()) {
+            O object = iterator.next();
+            addObject(queryOptions, object);
+        }
+        return true;
+    }
+
+    private void addObject(QueryOptions queryOptions, O object) {
+        for (A value : attribute.getValues(object, queryOptions)) {
+            if (value != null) { // Don't index null attribute values
+                Entry entry = encodeEntry(object, value);
+                map.put(entry.getKey(), true);
+                attrHashMap.putIfAbsent(entry.getAttrHash(), entry.getAttr());
+                objHashMap.putIfAbsent(entry.getValueHash(), entry.getValue());
+            }
+        }
     }
 
     @Override
@@ -433,9 +453,10 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
     }
 
     @Override
-    public void init(Set<O> collection, QueryOptions queryOptions) {
-        addAll(collection, queryOptions);
+    public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+        addAll(objectStore, queryOptions);
     }
+
 
     private class CursorIterator implements Iterator<O> {
 

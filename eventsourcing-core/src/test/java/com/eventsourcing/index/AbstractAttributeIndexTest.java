@@ -17,6 +17,8 @@ package com.eventsourcing.index;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.models.Car;
 import com.googlecode.cqengine.attribute.Attribute;
+import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import org.testng.annotations.Test;
@@ -56,6 +58,11 @@ public class AbstractAttributeIndexTest {
         }
 
         @Override
+        public Index<O> getEffectiveIndex() {
+            return this;
+        }
+
+        @Override
         public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
             return false;
         }
@@ -71,9 +78,10 @@ public class AbstractAttributeIndexTest {
         }
 
         @Override
-        public void init(Set<O> collection, QueryOptions queryOptions) {
+        public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
 
         }
+
     }
 
     @Test

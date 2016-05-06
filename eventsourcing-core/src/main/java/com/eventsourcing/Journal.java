@@ -15,6 +15,7 @@
 package com.eventsourcing;
 
 import com.google.common.util.concurrent.Service;
+import com.googlecode.cqengine.index.support.CloseableIterator;
 
 import java.util.Iterator;
 import java.util.Optional;
@@ -93,14 +94,14 @@ public interface Journal extends Service {
      * @param <T>
      * @return iterator
      */
-    <T extends Command<?>> Iterator<EntityHandle<T>> commandIterator(Class<T> klass);
+    <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass);
     /**
      * Iterate over events of a specific type (through {@code EntityHandler<T>})
      * @param klass
      * @param <T>
      * @return iterator
      */
-    <T extends Event> Iterator<EntityHandle<T>> eventIterator(Class<T> klass);
+    <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass);
 
     /**
      * Removes everything from the journal.

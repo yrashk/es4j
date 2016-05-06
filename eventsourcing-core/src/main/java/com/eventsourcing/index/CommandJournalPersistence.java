@@ -17,6 +17,10 @@ package com.eventsourcing.index;
 import com.eventsourcing.Command;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Journal;
+import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.index.support.CloseableIterator;
+import com.googlecode.cqengine.persistence.support.ObjectStore;
+import com.googlecode.cqengine.query.option.QueryOptions;
 
 import java.util.Iterator;
 import java.util.Set;
@@ -27,18 +31,33 @@ public class CommandJournalPersistence<T extends Command<?>> extends JournalPers
     }
 
     @Override
-    public Set<EntityHandle<T>> create() {
-        return new CommandJournalSet<>(journal, klass);
+    public ObjectStore<EntityHandle<T>> createObjectStore() {
+        return new CommandJournalObjectStore<>(journal, klass);
     }
 
-    static class CommandJournalSet<T extends Command<?>> extends JournalSet<T> {
+    @Override
+    public boolean supportsIndex(Index<EntityHandle<T>> index) {
+        return true;
+    }
 
-        public CommandJournalSet(Journal journal, Class<T> klass) {
+    @Override
+    public void openRequestScopeResources(QueryOptions queryOptions) {
+
+    }
+
+    @Override
+    public void closeRequestScopeResources(QueryOptions queryOptions) {
+
+    }
+
+    static class CommandJournalObjectStore<T extends Command<?>> extends JournalObjectStore<T> {
+
+        public CommandJournalObjectStore(Journal journal, Class<T> klass) {
             super(journal, klass);
         }
 
         @Override
-        public Iterator<EntityHandle<T>> iterator() {
+        public CloseableIterator<EntityHandle<T>> iterator(QueryOptions queryOptions) {
             return journal.commandIterator(klass);
         }
     }

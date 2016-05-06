@@ -20,6 +20,9 @@ import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
 import com.googlecode.cqengine.attribute.Attribute;
+import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.index.support.CloseableIterator;
+import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.query.simple.Equal;
@@ -155,6 +158,11 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
         throw new IllegalArgumentException("Unsupported query: " + query);
     }
 
+    @Override
+    public Index<O> getEffectiveIndex() {
+        return this;
+    }
+
 
     @Value
     static class Entry {
@@ -203,23 +211,36 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     @Override
     public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
         for (O object : objects) {
-            for (A value : attribute.getValues(object, queryOptions)) {
-                if (value != null) { // Don't index null attribute values
-                    Entry entry = encodeEntry(object, value);
-                    if (map.containsKey(entry.getKey()) && !decodeVal(map.get(entry.getKey())).getObject().equals(object)) {
-                            throw new com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException(
-                                    "The application has attempted to add a duplicate object to the UniqueIndex on attribute '"
-                                            + attribute.getAttributeName() +
-                                            "', potentially causing inconsistencies between indexes. " +
-                                            "UniqueIndex should not be used with attributes which do not uniquely identify objects. " +
-                                            "Problematic attribute value: '" + decodeVal(map.get(entry.getKey())).getAttr() + "', " +
-                                            "problematic duplicate object: " + object);
-                    }
-                    map.put(entry.getKey(), entry.getValue());
-                }
-            }
+            addObject(queryOptions, object);
         }
         return true;
+    }
+
+    public boolean addAll(ObjectStore<O> objects, QueryOptions queryOptions) {
+        CloseableIterator<O> iterator = objects.iterator(queryOptions);
+        while (iterator.hasNext()) {
+            O object = iterator.next();
+            addObject(queryOptions, object);
+        }
+        return true;
+    }
+
+    private void addObject(QueryOptions queryOptions, O object) {
+        for (A value : attribute.getValues(object, queryOptions)) {
+            if (value != null) { // Don't index null attribute values
+                Entry entry = encodeEntry(object, value);
+                if (map.containsKey(entry.getKey()) && !decodeVal(map.get(entry.getKey())).getObject().equals(object)) {
+                    throw new com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException(
+                            "The application has attempted to add a duplicate object to the UniqueIndex on attribute '"
+                                    + attribute.getAttributeName() +
+                                    "', potentially causing inconsistencies between indexes. " +
+                                    "UniqueIndex should not be used with attributes which do not uniquely identify objects. " +
+                                    "Problematic attribute value: '" + decodeVal(map.get(entry.getKey())).getAttr() + "', " +
+                                    "problematic duplicate object: " + object);
+                }
+                map.put(entry.getKey(), entry.getValue());
+            }
+        }
     }
 
     @Override
@@ -239,7 +260,8 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public void init(Set<O> collection, QueryOptions queryOptions) {
-        addAll(collection, queryOptions);
+    public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+        addAll(objectStore, queryOptions);
     }
+
 }

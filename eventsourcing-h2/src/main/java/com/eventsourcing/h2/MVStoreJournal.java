@@ -25,6 +25,7 @@ import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
+import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -294,7 +295,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     }
 
     @Override
-    public <T extends Command<?>> Iterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+    public <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey(hash, 1));
@@ -302,7 +303,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     }
 
     @Override
-    public <T extends Event> Iterator<EntityHandle<T>> eventIterator(Class<T> klass) {
+    public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.relativeKey(hash, 1));
@@ -395,7 +396,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     }
 
-    static private class EntityHandleIterator<K, V, R> implements Iterator<R> {
+    static private class EntityHandleIterator<K, V, R> implements CloseableIterator<R> {
 
         private final Iterator<Map.Entry<K, V>> iterator;
         private Function<K, Boolean> hasNext;
@@ -426,6 +427,11 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             R result = function.apply(entry.getKey(), entry.getValue());
             entry = null;
             return result;
+        }
+
+        @Override
+        public void close() {
+
         }
     }
 
