@@ -6,3 +6,7 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y ntp
   - sudo service ntp start
+script:
+  - ./gradlew check
+  - gradle publishToMavenLocal
+  - cd examples/order && ./gradlew check
