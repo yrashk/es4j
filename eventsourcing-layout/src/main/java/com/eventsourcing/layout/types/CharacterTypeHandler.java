@@ -25,7 +25,7 @@ public class CharacterTypeHandler implements TypeHandler<Character> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{7};
+        return "Character".getBytes();
     }
 
     @Override

@@ -26,7 +26,7 @@ public class UUIDTypeHandler implements TypeHandler<UUID> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{9};
+        return "UUID".getBytes();
     }
 
     @Override

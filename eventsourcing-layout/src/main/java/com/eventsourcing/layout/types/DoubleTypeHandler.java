@@ -25,7 +25,7 @@ public class DoubleTypeHandler implements TypeHandler<Double> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{5};
+        return "Double".getBytes();
     }
 
     @Override

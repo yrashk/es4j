@@ -25,7 +25,7 @@ public class ByteTypeHandler implements TypeHandler<Byte> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{0};
+        return "Byte".getBytes();
     }
 
     @Override

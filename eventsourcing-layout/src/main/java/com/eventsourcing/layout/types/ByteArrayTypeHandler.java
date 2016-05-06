@@ -30,7 +30,7 @@ public class ByteArrayTypeHandler implements TypeHandler {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{(byte)255, 0};
+        return "ByteArray".getBytes();
     }
 
     @Override

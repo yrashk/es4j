@@ -46,7 +46,7 @@ public class OptionalTypeHandler implements TypeHandler<Optional> {
 
     @Override
     public byte[] getFingerprint() {
-        return Bytes.concat(new byte[]{(byte) 251}, handler.getFingerprint());
+        return Bytes.concat("Optional[".getBytes(), handler.getFingerprint(), "]".getBytes());
     }
 
     @Override

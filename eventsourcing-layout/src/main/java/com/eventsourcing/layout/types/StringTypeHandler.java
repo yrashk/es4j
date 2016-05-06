@@ -21,7 +21,7 @@ import java.nio.ByteBuffer;
 public class StringTypeHandler implements TypeHandler<String> {
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{8};
+        return "String".getBytes();
     }
 
     @Override

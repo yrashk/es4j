@@ -31,7 +31,7 @@ public class EnumTypeHandler implements TypeHandler<Enum> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{(byte) 254};
+        return "Enum".getBytes();
     }
 
     @Override

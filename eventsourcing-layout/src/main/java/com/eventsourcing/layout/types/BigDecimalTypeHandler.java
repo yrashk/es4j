@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 public class BigDecimalTypeHandler implements TypeHandler<BigDecimal> {
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{5, 1};
+        return "BigDecimal".getBytes();
     }
 
     @Override

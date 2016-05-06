@@ -25,7 +25,7 @@ public class ShortTypeHandler implements TypeHandler<Short> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{1};
+        return "Short".getBytes();
     }
 
     @Override

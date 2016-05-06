@@ -25,7 +25,7 @@ public class FloatTypeHandler implements TypeHandler<Float> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{4};
+        return "Float".getBytes();
     }
 
     @Override

@@ -25,7 +25,7 @@ public class IntegerTypeHandler implements TypeHandler<Integer> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{2};
+        return "Integer".getBytes();
     }
 
     @Override

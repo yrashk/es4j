@@ -47,7 +47,7 @@ public class ListTypeHandler implements TypeHandler<List> {
 
     @Override
     public byte[] getFingerprint() {
-        return Bytes.concat(new byte[]{(byte) 252}, handler.getFingerprint());
+        return Bytes.concat("List[".getBytes(), handler.getFingerprint(), "]".getBytes());
     }
 
     @Override

@@ -25,7 +25,7 @@ public class LongTypeHandler implements TypeHandler<Long> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{3};
+        return "Long".getBytes();
     }
 
     @Override

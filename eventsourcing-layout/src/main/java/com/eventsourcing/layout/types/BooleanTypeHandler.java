@@ -25,7 +25,7 @@ public class BooleanTypeHandler implements TypeHandler<Boolean> {
 
     @Override
     public byte[] getFingerprint() {
-        return new byte[]{6};
+        return "Boolean".getBytes();
     }
 
     @Override
