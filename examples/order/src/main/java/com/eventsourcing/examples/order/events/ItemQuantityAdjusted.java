@@ -18,6 +18,7 @@ import com.eventsourcing.Event;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;

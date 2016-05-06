@@ -33,7 +33,7 @@ public interface QueryUtilities {
             if (resultSet.isEmpty()) {
                 return Optional.empty();
             }
-            return resultSet.iterator().next().get();
+            return resultSet.iterator().next().getOptional();
         }
     }
 

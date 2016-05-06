@@ -21,6 +21,7 @@ import com.eventsourcing.examples.order.Product;
 import com.eventsourcing.examples.order.events.NameChanged;
 import com.eventsourcing.examples.order.events.PriceChanged;
 import com.eventsourcing.examples.order.events.ProductCreated;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;

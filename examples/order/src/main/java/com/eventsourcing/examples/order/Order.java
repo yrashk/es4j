@@ -78,12 +78,12 @@ public class Order {
                             ProductAddedToOrder.ID, ItemRemovedFromOrder.LINE_ID))),
                 queryOptions(orderBy(ascending(ProductAddedToOrder.TIMESTAMP))))) {
             Map<UUID, Item> items = StreamSupport.stream(resultSet.spliterator(), false).
-                    map(addition -> addition.get().get()).
+                    map(EntityHandle::get).
                     map(addition -> new Item(addition.uuid(), Product.lookup(repository, addition.productId()).get(), addition.quantity())).
                     collect(Collectors.toMap(Item::id, Function.identity()));
             try (ResultSet<EntityHandle<ItemQuantityAdjusted>> adjustments = repository.query(ItemQuantityAdjusted.class, in(ItemQuantityAdjusted.ITEM_ID, items.keySet()))) {
                 adjustments.forEach(adj -> {
-                    ItemQuantityAdjusted itemQuantityAdjusted = adj.get().get();
+                    ItemQuantityAdjusted itemQuantityAdjusted = adj.get();
                     items.get(itemQuantityAdjusted.itemId()).quantity(itemQuantityAdjusted.quantity());
                 });
             }

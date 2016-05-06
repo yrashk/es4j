@@ -18,6 +18,7 @@ import com.eventsourcing.Command;
 import com.eventsourcing.Event;
 import com.eventsourcing.Repository;
 import com.eventsourcing.examples.order.events.ItemRemovedFromOrder;
+import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;

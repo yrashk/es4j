@@ -14,6 +14,7 @@
  */
 package com.eventsourcing.examples.order;
 
+import com.eventsourcing.*;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
 import org.testng.annotations.AfterMethod;
