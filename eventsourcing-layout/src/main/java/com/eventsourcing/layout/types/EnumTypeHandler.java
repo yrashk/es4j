@@ -15,9 +15,12 @@
 package com.eventsourcing.layout.types;
 
 import com.eventsourcing.layout.TypeHandler;
+import com.google.common.primitives.Bytes;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class EnumTypeHandler implements TypeHandler<Enum> {
 
@@ -31,7 +34,13 @@ public class EnumTypeHandler implements TypeHandler<Enum> {
 
     @Override
     public byte[] getFingerprint() {
-        return "Enum".getBytes();
+        byte[] shape = Arrays.asList(klass.getEnumConstants()).stream().
+                sorted((o1, o2) -> o1.name().compareTo(o2.name())).
+                map(c -> c.name() + ":" + c.ordinal()).
+                collect(Collectors.joining(",")).getBytes();
+
+
+        return Bytes.concat("Enum[".getBytes(), shape, "]".getBytes());
     }
 
     @Override
