@@ -3,6 +3,19 @@
 
 Relicensed under MPL 2.0
 
+**Backwards-incompatible changes**
+
+* All type handler fingerprints were changed to become human-readable
+
+**Bugfixes**
+
+* Enum type handler fingerprint is based on enum's shape now (previously,
+  all enums were considered the same with regards to their fingerprint)
+
+**Upgrades**
+
+* cqengine 2.5.0
+
 0.2.6
 =====
 
