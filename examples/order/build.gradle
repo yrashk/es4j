@@ -28,7 +28,7 @@ idea {
 }
 
 license {
-    header project.file('../../LICENSE')
+    header project.file('../../LICENSE-HEADER')
 }
 
 Properties props = new Properties()
