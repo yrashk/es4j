@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.org/eventsourcing/es4j.svg?branch=master)](https://travis-ci.org/eventsourcing/es4j)
 [ ![Download](https://api.bintray.com/packages/eventsourcing/maven/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven/eventsourcing-core/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/eventsourcing/maven-snapshots/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven-snapshots/eventsourcing-core/_latestVersion)
 [![Join the chat at https://gitter.im/eventsourcing/eventsourcing](https://badges.gitter.im/eventsourcing/eventsourcing.svg)](https://gitter.im/eventsourcing/eventsourcing?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 # Eventsourcing for Java
@@ -33,6 +34,57 @@ library that has been used in real projects, so a lot was learned and incorporat
 # Documentation
 
 Installation instructions and documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
+
+# Snapshot versions
+
+Every successful build is published into a [separate Maven repository on Bintray](https://bintray.com/eventsourcing/maven-snapshots) (using a `git describe`
+version), you can find the last snapshot version mentioned in a badge at the top of this file.
+
+Gradle configuration:
+
+```groovy
+repositories {
+    maven {
+        url  "http://dl.bintray.com/eventsourcing/maven-snapshots"
+    }
+}
+```
+
+Maven configuration:
+
+```xml
+<?xml version='1.0' encoding='UTF-8'?>
+<settings xsi:schemaLocation='http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd' xmlns='http://maven.apache.org/SETTINGS/1.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
+<profiles>
+	<profile>
+		<repositories>
+			<repository>
+				<snapshots>
+					<enabled>false</enabled>
+				</snapshots>
+				<id>bintray-eventsourcing-maven-snapshots</id>
+				<name>bintray</name>
+				<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
+			</repository>
+		</repositories>
+		<pluginRepositories>
+			<pluginRepository>
+				<snapshots>
+					<enabled>false</enabled>
+				</snapshots>
+				<id>bintray-eventsourcing-maven-snapshots</id>
+				<name>bintray-plugins</name>
+				<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
+			</pluginRepository>
+		</pluginRepositories>
+		<id>bintray</id>
+	</profile>
+</profiles>
+<activeProfiles>
+	<activeProfile>bintray</activeProfile>
+</activeProfiles>
+</settings>
+```
 
 # Related projects
 
