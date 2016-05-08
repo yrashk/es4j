@@ -5,7 +5,7 @@ Relicensed under MPL 2.0
 
 **Backwards-incompatible changes**
 
-* All type handler fingerprints were changed to become human-readable
+* All type handler fingerprints were changed to become human-readable (#10)
 
 **Bugfixes**
 
