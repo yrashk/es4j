@@ -13,8 +13,9 @@ import java.util.function.Function;
 
 /**
  * Property represents POJO's property name, type and getter/setter.
- *
+ * <p>
  * Normally not created manually but retrieved from {@link Layout}
+ *
  * @param <T>
  */
 @Value
@@ -27,6 +28,7 @@ public class Property<T> {
 
     /**
      * Gets property value from the object
+     *
      * @param object
      * @return property value
      */
@@ -36,6 +38,7 @@ public class Property<T> {
 
     /**
      * Sets property value to the object
+     *
      * @param object
      * @param value
      */

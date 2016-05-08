@@ -52,16 +52,19 @@ public abstract class HashIndexTest<HashIndex extends AttributeIndex> {
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
         Set<String> distinctModels = setOf(MODEL_INDEX.getDistinctKeys(noQueryOptions()));
-        assertEquals(distinctModels, setOf("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius", "Taurus"));
+        assertEquals(distinctModels,
+                     setOf("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius",
+                           "Taurus"));
         for (String model : distinctModels) {
             assertEquals(MODEL_INDEX.getCountForKey(model, noQueryOptions()), Integer.valueOf(2));
         }
     }
 
     @Test
-    public void getCountOfDistinctKeys(){
+    public void getCountOfDistinctKeys() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
+                Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -70,40 +73,45 @@ public abstract class HashIndexTest<HashIndex extends AttributeIndex> {
     }
 
     @Test
-    public void getStatisticsForDistinctKeys(){
+    public void getStatisticsForDistinctKeys() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
+                Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
-        Set<KeyStatistics<String>> keyStatistics = setOf(MANUFACTURER_INDEX.getStatisticsForDistinctKeys(noQueryOptions()));
+        Set<KeyStatistics<String>> keyStatistics = setOf(
+                MANUFACTURER_INDEX.getStatisticsForDistinctKeys(noQueryOptions()));
         assertEquals(keyStatistics, setOf(
                 new KeyStatistics<>("Ford", 6),
                 new KeyStatistics<>("Honda", 6),
                 new KeyStatistics<>("Toyota", 6),
                 new KeyStatistics<>("BMW", 2)
-                )
-                );
+                     )
+        );
     }
 
     @Test
     public void retrieveEqual() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
+                Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(10));
 
         ResultSet<Car> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
-        assertTrue(StreamSupport.stream(cars.spliterator(), false).allMatch(car -> car.getManufacturer().contentEquals("Honda")));
+        assertTrue(StreamSupport.stream(cars.spliterator(), false)
+                                .allMatch(car -> car.getManufacturer().contentEquals("Honda")));
     }
 
     @Test
     public void retrieveHas() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
+                Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         Set<Car> coll = CarFactory.createCollectionOfCars(10);
@@ -117,7 +125,8 @@ public abstract class HashIndexTest<HashIndex extends AttributeIndex> {
     @Test
     public void indexExistingData() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MANUFACTURER);
+        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
+                Car.MANUFACTURER);
 
         collection.addAll(CarFactory.createCollectionOfCars(10));
 
@@ -125,6 +134,7 @@ public abstract class HashIndexTest<HashIndex extends AttributeIndex> {
 
         ResultSet<Car> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
-        assertTrue(StreamSupport.stream(cars.spliterator(), false).allMatch(car -> car.getManufacturer().contentEquals("Honda")));
+        assertTrue(StreamSupport.stream(cars.spliterator(), false)
+                                .allMatch(car -> car.getManufacturer().contentEquals("Honda")));
     }
 }

@@ -32,7 +32,9 @@ import static org.testng.Assert.assertEquals;
 public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex & SortedKeyStatisticsIndex> {
 
     public abstract <A extends Comparable<A>, O> NavigableIndex onAttribute(Attribute<O, A> attribute);
-    public abstract <A extends Comparable<A>, O> Index<O> withQuantizerOnAttribute(Quantizer<A> quantizer, Attribute<O, A> attribute);
+
+    public abstract <A extends Comparable<A>, O> Index<O> withQuantizerOnAttribute(Quantizer<A> quantizer,
+                                                                                   Attribute<O, A> attribute);
 
     public static <A> Set<A> setOf(A... values) {
         return new LinkedHashSet<>(Arrays.asList(values));
@@ -55,17 +57,21 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
         Set<String> distinctModels = setOf(MODEL_INDEX.getDistinctKeys(noQueryOptions()));
-        assertEquals(new ArrayList<>(distinctModels), asList("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius", "Taurus"));
+        assertEquals(new ArrayList<>(distinctModels),
+                     asList("Accord", "Avensis", "Civic", "Focus", "Fusion", "Hilux", "Insight", "M6", "Prius",
+                            "Taurus"));
         for (String model : distinctModels) {
             assertEquals(MODEL_INDEX.getCountForKey(model, noQueryOptions()), Integer.valueOf(2));
         }
 
         Set<String> distinctModelsDescending = setOf(MODEL_INDEX.getDistinctKeysDescending(noQueryOptions()));
-        assertEquals(new ArrayList<>(distinctModelsDescending), asList("Taurus", "Prius", "M6", "Insight", "Hilux", "Fusion", "Focus", "Civic", "Avensis", "Accord"));
+        assertEquals(new ArrayList<>(distinctModelsDescending),
+                     asList("Taurus", "Prius", "M6", "Insight", "Hilux", "Fusion", "Focus", "Civic", "Avensis",
+                            "Accord"));
     }
 
     @Test
-    public void getCountOfDistinctKeys(){
+    public void getCountOfDistinctKeys() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
         KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
@@ -76,14 +82,15 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     }
 
     @Test
-    public void getStatisticsForDistinctKeys(){
+    public void getStatisticsForDistinctKeys() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
         KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
-        Set<KeyStatistics<String>> keyStatistics = setOf(MANUFACTURER_INDEX.getStatisticsForDistinctKeys(noQueryOptions()));
+        Set<KeyStatistics<String>> keyStatistics = setOf(
+                MANUFACTURER_INDEX.getStatisticsForDistinctKeys(noQueryOptions()));
         assertEquals(keyStatistics, setOf(
                 new KeyStatistics<>("Ford", 6),
                 new KeyStatistics<>("Honda", 6),
@@ -94,14 +101,15 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     }
 
     @Test
-    public void getStatisticsForDistinctKeysDescending(){
+    public void getStatisticsForDistinctKeysDescending() {
         IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
         SortedKeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
 
-        Set<KeyStatistics<String>> keyStatistics = setOf(MANUFACTURER_INDEX.getStatisticsForDistinctKeysDescending(noQueryOptions()));
+        Set<KeyStatistics<String>> keyStatistics = setOf(
+                MANUFACTURER_INDEX.getStatisticsForDistinctKeysDescending(noQueryOptions()));
         assertEquals(keyStatistics, setOf(
                 new KeyStatistics<>("Toyota", 6),
                 new KeyStatistics<>("Honda", 6),

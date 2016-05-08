@@ -40,6 +40,7 @@ public class CascadingIndexEngineTest {
     }
 
     private static class MyEntity extends Entity {}
+
     private static SimpleAttribute<MyEntity, UUID> INDEX = new SimpleAttribute<MyEntity, UUID>("idx") {
         @Override
         public UUID getValue(MyEntity object, QueryOptions queryOptions) {

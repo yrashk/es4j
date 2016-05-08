@@ -49,6 +49,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     /**
      * Creates a new instance of HybridTimestamp with the same data
+     *
      * @return a new object instance
      */
     public HybridTimestamp clone() {
@@ -67,6 +68,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     /**
      * Compares two NTP timestamps (non-numerically)
+     *
      * @param time1
      * @param time2
      * @return 0 if equal, less than 0 if time1 &lt; time2, more than 0 if time1 &gt; time2
@@ -90,6 +92,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     /**
      * Updates timestamp for local or send events
+     *
      * @return updated timestamp
      */
     @LayoutIgnore
@@ -106,6 +109,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     /**
      * Updates timestamp for a received event
+     *
      * @param ts Object that implements Timestamped interface
      * @return updated timestamp
      */
@@ -116,7 +120,8 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     /**
      * Updates timestamp for a received event
-     * @param eventLogicalTime Received event logical time
+     *
+     * @param eventLogicalTime    Received event logical time
      * @param eventLogicalCounter Received event logical counter
      * @return updated timestamp
      */
@@ -154,7 +159,8 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
         String logical = TimeStamp.getNtpTime(logicalTime).toUTCString();
         TimeStamp timeStamp = new TimeStamp(timestamp());
         String ntpValue = timeStamp.toUTCString();
-        return "<[logical: " + logical + "@" + logicalCounter + "] NTP:" + ntpValue + "/" + timeStamp.toString() + "/" + timestamp() + ">";
+        return "<[logical: " + logical + "@" + logicalCounter + "] NTP:" + ntpValue + "/" + timeStamp
+                .toString() + "/" + timestamp() + ">";
     }
 
     public byte[] getByteArray() {

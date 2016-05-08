@@ -60,7 +60,7 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
 
         @Override
         public boolean contains(Object o, QueryOptions queryOptions) {
-            return journal.get(((EntityHandle<T>)o).uuid()).isPresent();
+            return journal.get(((EntityHandle<T>) o).uuid()).isPresent();
         }
 
         @Override

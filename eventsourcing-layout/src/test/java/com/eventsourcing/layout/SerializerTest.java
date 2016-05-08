@@ -84,7 +84,9 @@ public class SerializerTest {
         @Getter @Setter
         private UUID uuid;
 
-        public enum E { A, B };
+        public enum E {A, B}
+
+        ;
         @Getter @Setter
         private E e;
 
@@ -321,7 +323,8 @@ public class SerializerTest {
         TestBean deserialized = new TestBean();
         deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(deserialized.getValue().value(), ""); // it is an empty string because we don't preserve String nullity
+        assertEquals(deserialized.getValue().value(),
+                     ""); // it is an empty string because we don't preserve String nullity
     }
 
 

@@ -12,6 +12,7 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 /**
  * An extension of {@link com.googlecode.cqengine.attribute.SimpleAttribute} that hides
  * the unnecessary complexity of using {@link EntityHandle}
+ *
  * @param <O>
  * @param <A>
  */

@@ -27,13 +27,14 @@ public interface Repository extends Service {
 
     /**
      * Creates a default Repository.
-     *
+     * <p>
      * Default setup:
-     *
+     * <p>
      * <ul>
-     *     <li>Default {@link NTPServerTimeProvider} is set with {@link #setPhysicalTimeProvider(PhysicalTimeProvider)}</li>
-     *     <li>Default {@link MemoryLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
+     * <li>Default {@link NTPServerTimeProvider} is set with {@link #setPhysicalTimeProvider(PhysicalTimeProvider)}</li>
+     * <li>Default {@link MemoryLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
      * </ul>
+     *
      * @return
      */
     static Repository create() throws Exception {
@@ -47,7 +48,7 @@ public interface Repository extends Service {
 
     /**
      * Sets journal to be used in this repository
-     *
+     * <p>
      * Should be done before invoking {@link #startAsync()}
      *
      * @param journal
@@ -57,7 +58,7 @@ public interface Repository extends Service {
 
     /**
      * Sets index engine to be used in this repository
-     *
+     * <p>
      * Should be done before invoking {@link #startAsync()}
      *
      * @param indexEngine
@@ -88,24 +89,28 @@ public interface Repository extends Service {
 
     /**
      * Adds a command set provider. Will fetch a command set upon initialization
+     *
      * @param provider
      */
     void addCommandSetProvider(CommandSetProvider provider);
 
     /**
      * Removes a command set provider
+     *
      * @param provider
      */
     void removeCommandSetProvider(CommandSetProvider provider);
 
     /**
      * Adds an event set provider. Will fetch an event set upon initialization
+     *
      * @param provider
      */
     void addEventSetProvider(EventSetProvider provider);
 
     /**
      * Removes an event set provider
+     *
      * @param provider
      */
     void removeEventSetProvider(EventSetProvider provider);
@@ -130,11 +135,11 @@ public interface Repository extends Service {
      * Publishes command asynchronously
      *
      * @param command
-     * @param <T> Command class
-     * @param <C> Result class
+     * @param <T>     Command class
+     * @param <C>     Result class
      * @return {@link CompletableFuture} with command's result
      */
-    <T extends Command<C>, C>  CompletableFuture<C> publish(T command);
+    <T extends Command<C>, C> CompletableFuture<C> publish(T command);
 
     /**
      * Shortcut method for accessing index retrieval (see {@link #query(Class, Query, QueryOptions)} with
@@ -151,9 +156,9 @@ public interface Repository extends Service {
 
     /**
      * Shortcut method for accessing index querying.
-     *
+     * <p>
      * <p>Example:</p>
-     *
+     * <p>
      * {@code
      * repository.query(UserCreated.class, equal(UserCreated.EMAIL, email), noQueryOptions())
      * }
@@ -164,7 +169,8 @@ public interface Repository extends Service {
      * @param <E>
      * @return
      */
-    default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query, QueryOptions queryOptions) {
+    default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query,
+                                                                QueryOptions queryOptions) {
         return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
     }
 }

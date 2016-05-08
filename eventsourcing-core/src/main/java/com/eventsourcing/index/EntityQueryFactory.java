@@ -47,12 +47,15 @@ public class EntityQueryFactory {
 
 
         @Override
-        protected boolean matchesSimpleAttribute(com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, O> attribute, EntityHandle<O> object, QueryOptions queryOptions) {
+        protected boolean matchesSimpleAttribute(
+                com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, O> attribute, EntityHandle<O> object,
+                QueryOptions queryOptions) {
             return true;
         }
 
         @Override
-        protected boolean matchesNonSimpleAttribute(Attribute<EntityHandle<O>, O> attribute, EntityHandle<O> object, QueryOptions queryOptions) {
+        protected boolean matchesNonSimpleAttribute(Attribute<EntityHandle<O>, O> attribute, EntityHandle<O> object,
+                                                    QueryOptions queryOptions) {
             return true;
         }
 
@@ -77,8 +80,8 @@ public class EntityQueryFactory {
 
     /**
      * Creates a query which matches all objects in the collection.
-     *
-     *
+     * <p>
+     * <p>
      * This is equivalent to a literal boolean 'true'.
      *
      * @param <O> The type of the objects in the collection

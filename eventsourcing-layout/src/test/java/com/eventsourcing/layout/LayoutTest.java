@@ -22,6 +22,7 @@ public class LayoutTest {
 
     private interface InterfaceTest {
         String getTest();
+
         void setTest(String test);
     }
 
@@ -47,7 +48,7 @@ public class LayoutTest {
         private String privateGetterAndSetter;
         @SuppressWarnings("unused")
         private String noGetterOrSetter;
-        @Getter(onMethod=@__({@LayoutIgnore})) @Setter
+        @Getter(onMethod = @__({@LayoutIgnore})) @Setter
         private String ignored;
 
         @Override @LayoutIgnore
@@ -73,7 +74,8 @@ public class LayoutTest {
         // Properties without both a getter and a setter should be ignored
         assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("noGetterOrSetter")));
         // Accessible properties should not be ignored
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
+        assertTrue(
+                properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
     }
 
     @Accessors(fluent = true)
@@ -96,7 +98,8 @@ public class LayoutTest {
         // Properties without both a getter and a setter should be ignored
         assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("noGetterOrSetter")));
         // Accessible properties should not be ignored
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
+        assertTrue(
+                properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
     }
 
     private static class ReadonlyTest {
@@ -114,7 +117,9 @@ public class LayoutTest {
         List<Property<ReadonlyTest>> properties = layout.getProperties();
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter")));
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getterAndSetter")));
-        Property<ReadonlyTest> getter = properties.stream().filter(property -> property.getName().contentEquals("getter")).findFirst().get();
+        Property<ReadonlyTest> getter = properties.stream()
+                                                  .filter(property -> property.getName().contentEquals("getter"))
+                                                  .findFirst().get();
         getter.set(new ReadonlyTest(), "hello");
     }
 
@@ -134,7 +139,9 @@ public class LayoutTest {
         List<Property<ConstructorTest>> properties = layout.getProperties();
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter1")));
         assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter2")));
-        Property<ConstructorTest> getter = properties.stream().filter(property -> property.getName().contentEquals("getter1")).findFirst().get();
+        Property<ConstructorTest> getter = properties.stream()
+                                                     .filter(property -> property.getName().contentEquals("getter1"))
+                                                     .findFirst().get();
         getter.set(new ConstructorTest("test1", "test2"), "hello");
     }
 
@@ -145,6 +152,7 @@ public class LayoutTest {
         private String getter2;
 
         public MismatchedConstructorsTest(String a, int b) {}
+
         public MismatchedConstructorsTest(int a, String b) {}
     }
 
@@ -185,7 +193,7 @@ public class LayoutTest {
 
         properties.get(0).set(namingTest, 1);
         assertEquals(1, namingTest.getFirst());
-        assertEquals((Integer)namingTest.getFirst(), properties.get(0).get(namingTest));
+        assertEquals((Integer) namingTest.getFirst(), properties.get(0).get(namingTest));
 
         properties.get(1).set(namingTest, "value");
         assertEquals("value", namingTest.getSecond());
@@ -193,7 +201,7 @@ public class LayoutTest {
 
         properties.get(2).set(namingTest, true);
         assertEquals(true, namingTest.isThird());
-        assertEquals((Boolean)namingTest.isThird(), properties.get(2).get(namingTest));
+        assertEquals((Boolean) namingTest.isThird(), properties.get(2).get(namingTest));
 
     }
 

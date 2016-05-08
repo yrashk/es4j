@@ -66,6 +66,7 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     public static class TestEvent extends Event {}
+
     public static class AnotherTestEvent extends Event {}
 
     @EqualsAndHashCode(callSuper = false)
@@ -117,17 +118,18 @@ public abstract class JournalTest<T extends Journal> {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
 
-        assertEquals(1, journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
-            @Override
-            public void onEvent(Event event) {
-                onEvent.incrementAndGet();
-            }
+        assertEquals(1,
+                     journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
+                         @Override
+                         public void onEvent(Event event) {
+                             onEvent.incrementAndGet();
+                         }
 
-            @Override
-            public void onCommit() {
-                onCommit.set(true);
-            }
-        }));
+                         @Override
+                         public void onCommit() {
+                             onCommit.set(true);
+                         }
+                     }));
 
         assertEquals(onEvent.get(), 1);
         assertTrue(onCommit.get());
@@ -141,12 +143,13 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
 
         try {
-            assertEquals(1, journal.journal((Command<?>) new ExceptionalTestCommand().timestamp(timestamp), new Journal.Listener() {
-                @Override
-                public void onAbort(Throwable throwable) {
-                    onAbort.set(true);
-                }
-            }));
+            assertEquals(1, journal.journal((Command<?>) new ExceptionalTestCommand().timestamp(timestamp),
+                                            new Journal.Listener() {
+                                                @Override
+                                                public void onAbort(Throwable throwable) {
+                                                    onAbort.set(true);
+                                                }
+                                            }));
         } catch (Exception e) {
             assertTrue(e instanceof IllegalStateException);
         }

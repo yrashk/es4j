@@ -43,7 +43,7 @@ public class OrderTest extends EventsourcingTest {
         Order.Item item = repository.publish(new AddProductToOrder(order.id(), product.id(), 10)).get();
         assertFalse(order.items().isEmpty());
         assertEquals(order.items().get(0).id(), item.id());
-        assertEquals(order.items().get(0).product().id(),product.id());
+        assertEquals(order.items().get(0).product().id(), product.id());
         assertEquals(order.items().get(0).quantity(), 10);
         Order.Item item1 = repository.publish(new AddProductToOrder(order.id(), product.id(), 10)).get();
         assertEquals(order.items().size(), 2);

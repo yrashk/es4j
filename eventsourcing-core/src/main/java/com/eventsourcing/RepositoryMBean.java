@@ -7,6 +7,8 @@ package com.eventsourcing;
 
 public interface RepositoryMBean {
     boolean isRunning();
+
     String[] getInstalledCommands();
+
     String[] getInstalledEvents();
 }

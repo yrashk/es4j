@@ -19,18 +19,18 @@ import java.util.stream.Collectors;
 
 /**
  * Cascading index engine allows to combine multiple engines behind a singular {@link IndexEngine} interface.
- *
+ * <p>
  * The order of index engines is important is evaluated "left to right", i.e. those added earlier will be given a higher
  * priority. The way cascading works is if an index engine in the list does not support a specific type of index,
  * next one in the list will be tried, until the list is exhausted.
- *
+ * <p>
  * In an OSGi environment, <code>indexEngine</code> property must be configured to ensure intended ordering. This property
  * should have a comma-delimited list of fully qualified class names for index engines to be used. It can list index engines
  * that are not available through references. They will be ignored.
  */
 @Slf4j
 @Component(property = {"indexEngines=", "type=CascadingIndexEngine"}, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine {
+public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
 
     private List<IndexEngine> indexEngines = new ArrayList<>();
     private String[] indexEngineNames;
@@ -38,11 +38,12 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
     public CascadingIndexEngine() {
     }
 
-    public CascadingIndexEngine(IndexEngine ...indexEngines) {
+    public CascadingIndexEngine(IndexEngine... indexEngines) {
         this.indexEngines = Arrays.asList(indexEngines);
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC, target = "(!(service.pid=CascadingIndexEngine))")
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC,
+               target = "(!(service.pid=CascadingIndexEngine))")
     public void addIndexEngine(IndexEngine indexEngine) {
         indexEngines.add(indexEngine);
         sortIndexEngines();
@@ -52,10 +53,11 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
         if (indexEngineNames != null) {
             indexEngines =
                     Arrays.asList(indexEngineNames).stream().
-                            map(name -> indexEngines.stream().filter(e -> e.getClass().getName().contentEquals(name)).findFirst()).
-                            filter(Optional::isPresent).
-                            map(Optional::get).
-                            collect(Collectors.toList());
+                            map(name -> indexEngines.stream().filter(e -> e.getClass().getName().contentEquals(name))
+                                                    .findFirst()).
+                                  filter(Optional::isPresent).
+                                  map(Optional::get).
+                                  collect(Collectors.toList());
         }
     }
 
@@ -85,7 +87,8 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
     }
 
     @Override
-    public <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features) throws IndexNotSupported {
+    public <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features)
+            throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {
                 return engine.getIndexOnAttribute(attribute, features);
@@ -96,7 +99,8 @@ public class CascadingIndexEngine  extends CQIndexEngine implements IndexEngine 
     }
 
     @Override
-    public <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features) throws IndexNotSupported {
+    public <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features)
+            throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {
                 return engine.getIndexOnAttributes(attributes, features);

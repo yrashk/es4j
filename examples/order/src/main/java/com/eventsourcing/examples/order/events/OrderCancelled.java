@@ -28,7 +28,8 @@ public class OrderCancelled extends Event {
     private UUID id;
 
     @Index({EQ})
-    public static final SimpleAttribute<OrderCancelled, UUID> REFERENCE_ID = new SimpleAttribute<OrderCancelled, UUID>("referenceId") {
+    public static final SimpleAttribute<OrderCancelled, UUID> REFERENCE_ID = new SimpleAttribute<OrderCancelled, UUID>(
+            "referenceId") {
         public UUID getValue(OrderCancelled orderCancelled, QueryOptions queryOptions) {
             return orderCancelled.id();
         }

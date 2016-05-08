@@ -8,22 +8,22 @@ package com.eventsourcing;
 /**
  * Protocol is a convention interface for implementing so called
  * Domain Protocols.
- *
+ * <p>
  * The idea behind protocols is to re-use "polymorphic" events to
  * perform common operations on various types of entities.
- *
+ * <p>
  * Consider, for example, that we have models called Product, Widget
  * and Company. All of these models have a name.
- *
+ * <p>
  * Instead of assigning name or renaming each of these models in individual
  * command/event pairs (RenameProduct/ProductRenamed, RenameWidget/WidgetRenamed,
  * RenameCompany/CompanyRemained) and having similar yet different name retrieval methods
  * in the respective model, the following approach is used:
- *
+ * <p>
  * There is only one command/event pair (Rename/NameChanged) that takes and stores a "polymorphic"
  * reference to any model (its UUID) and a new name. Now, since renaming any supported model
  * is done the same way, we can implement a common protocol for name retrieval:
- *
+ * <p>
  * <pre>
  * <code>
  *
@@ -43,13 +43,13 @@ package com.eventsourcing;
  *
  * </code>
  * </pre>
- *
- *
+ * <p>
+ * <p>
  * The above protocol implements a {@code name()} function that retrieves the last {@code NameChange} for the particular
  * model referenced by its UUID ({@code id()}).
- *
+ * <p>
  * Now, all we have to do is to make every model implement this interface:
- *
+ * <p>
  * <pre>
  * <code>
  *

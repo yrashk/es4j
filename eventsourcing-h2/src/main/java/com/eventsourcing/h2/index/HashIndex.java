@@ -24,7 +24,6 @@ import org.h2.mvstore.Cursor;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -36,53 +35,53 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
 
     /**
      * Map record structure:
-     *
+     * <p>
      * <table>
-     *     <tr>
-     *         <th colspan="2">Key</th>
-     *         <th>Value</th>
-     *     </tr>
-     *     <tbody>
-     *         <tr>
-     *           <td>hash(attribute value)</td>
-     *           <td>hash(object value)</td>
-     *           <td>true</td>
-     *         </tr>
-     *     </tbody>
+     * <tr>
+     * <th colspan="2">Key</th>
+     * <th>Value</th>
+     * </tr>
+     * <tbody>
+     * <tr>
+     * <td>hash(attribute value)</td>
+     * <td>hash(object value)</td>
+     * <td>true</td>
+     * </tr>
+     * </tbody>
      * </table>
      */
     private final MVMap<byte[], Boolean> map;
     /**
      * Map record structure:
-     *
+     * <p>
      * <table>
-     *     <tr>
-     *         <th>Key</th>
-     *         <th>Value</th>
-     *     </tr>
-     *     <tbody>
-     *         <tr>
-     *           <td>hash(attribute value)</td>
-     *           <td>attribute value</td>
-     *         </tr>
-     *     </tbody>
+     * <tr>
+     * <th>Key</th>
+     * <th>Value</th>
+     * </tr>
+     * <tbody>
+     * <tr>
+     * <td>hash(attribute value)</td>
+     * <td>attribute value</td>
+     * </tr>
+     * </tbody>
      * </table>
      */
     private final MVMap<byte[], byte[]> attrHashMap;
     /**
      * Map record structure:
-     *
+     * <p>
      * <table>
-     *     <tr>
-     *         <th>Key</th>
-     *         <th>Value</th>
-     *     </tr>
-     *     <tbody>
-     *         <tr>
-     *           <td>hash(object value)</td>
-     *           <td>object value</td>
-     *         </tr>
-     *     </tbody>
+     * <tr>
+     * <th>Key</th>
+     * <th>Value</th>
+     * </tr>
+     * <tbody>
+     * <tr>
+     * <td>hash(object value)</td>
+     * <td>object value</td>
+     * </tr>
+     * </tbody>
      * </table>
      */
     private final MVMap<byte[], byte[]> objHashMap;
@@ -90,7 +89,7 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
     /**
      * Protected constructor, called by subclasses.
      *
-     * @param attribute        The attribute on which the index will be built
+     * @param attribute The attribute on which the index will be built
      */
     protected HashIndex(MVStore store, Attribute<O, A> attribute, HashFunction hashFunction) {
         super(attribute, new HashSet<Class<? extends Query>>() {{
@@ -107,7 +106,9 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
     public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
         return onAttribute(store, attribute, Hashing.sha1());
     }
-    public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute, HashFunction hashFunction) {
+
+    public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
+                                                     HashFunction hashFunction) {
         return new HashIndex<>(store, attribute, hashFunction);
     }
 
@@ -169,6 +170,7 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
             return attributeDeserializer.deserialize(ByteBuffer.wrap(attrHashMap.get(cursor.next())));
         }
     }
+
     class Iterable implements CloseableIterable<A> {
 
         private final Cursor<byte[], byte[]> cursor;
@@ -335,7 +337,7 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
 
                 }
             };
-        }  else if (queryClass.equals(Has.class)) {
+        } else if (queryClass.equals(Has.class)) {
             final Has<O, A> has = (Has<O, A>) query;
             byte[] from = map.firstKey();
 

@@ -35,20 +35,20 @@ import java.util.stream.Collectors;
 
 /**
  * Layout is a snapshot of a POJO for the purpose of versioning, serialization and deserialization.
- *
+ * <p>
  * Class name, property names and property types are used to deterministically calculate POJO's hash (used for versioning).
- *
+ * <p>
  * <h1>Property qualification</h1>
- *
+ * <p>
  * Only certain properties will be included into the layout. Here's the definitive list of criteria:
- *
+ * <p>
  * <ul>
- *     <li>Has a getter (fluent or JavaBean style)</li>
- *     <li>Has a setter (fluent or JavaBean style), or a matching constructor for all properties</li>
- *     <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
- *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
+ * <li>Has a getter (fluent or JavaBean style)</li>
+ * <li>Has a setter (fluent or JavaBean style), or a matching constructor for all properties</li>
+ * <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
+ * <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
  * </ul>
- *
+ * <p>
  * Inherited properties from superclasses will also be included.
  *
  * @param <T> Bean's class
@@ -92,25 +92,30 @@ public class Layout<T> {
      * @param klass Bean's class
      * @throws IntrospectionException
      */
-    public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
+    public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
+                                         TypeHandler.TypeHandlerException {
         this(klass, false);
     }
 
     /**
      * Creates POJO's class layout
      *
-     * @param klass Bean's class
+     * @param klass         Bean's class
      * @param allowReadonly Allow readonly layouts (no setters required)
      * @throws IntrospectionException
      */
-    public Layout(Class<T> klass, boolean allowReadonly) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
+    public Layout(Class<T> klass, boolean allowReadonly)
+            throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
+                   TypeHandler.TypeHandlerException {
         this(klass, allowReadonly, true);
     }
 
     // This version of the constructor is only meant to be used in tests to
     // build layouts in slightly different ways to facilitate creation of various
     // scenarios
-    Layout(Class<T> klass, boolean allowReadonly, boolean hashClassName) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException, TypeHandler.TypeHandlerException {
+    Layout(Class<T> klass, boolean allowReadonly, boolean hashClassName)
+            throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
+                   TypeHandler.TypeHandlerException {
         this.klass = klass;
         MethodHandles.Lookup lookup = MethodHandles.lookup();
 
@@ -132,7 +137,8 @@ public class Layout<T> {
             boolean beanGetter = member.getParameterCount() == 0 &&
                     !(resolvedType == ResolvedPrimitiveType.voidType()) &&
                     (member.getName().matches("^get[A-Z][A-za-z_0-9]*") ||
-                     (resolvedType.isPrimitive() && resolvedType.getErasedType() == Boolean.TYPE && member.getName().matches("^is[A-Z][A-za-z_0-9]*")));
+                            (resolvedType.isPrimitive() && resolvedType.getErasedType() == Boolean.TYPE && member
+                                    .getName().matches("^is[A-Z][A-za-z_0-9]*")));
 
             // Getter (fluent)
             boolean getter = member.getParameterCount() == 0 &&
@@ -171,7 +177,7 @@ public class Layout<T> {
 
         List<RawConstructor> matchingConstructors = klassType.getConstructors().stream().
                 filter(constructor -> constructor.getRawMember().getParameterCount() == numberOfGetters).
-                collect(Collectors.toList());
+                                                                     collect(Collectors.toList());
 
         for (ResolvedMethod method : getterMembers) {
             String propertyName = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
@@ -184,7 +190,9 @@ public class Layout<T> {
                             member.getName().contentEquals("set" + capitalizedPropertyName)).findFirst();
 
             final int finalGetterIndex = getterIndex;
-            Predicate<RawConstructor> matchingConstructorPredicate = constructor -> constructor.getRawMember().getGenericParameterTypes()[finalGetterIndex].equals(getter.getGenericReturnType());
+            Predicate<RawConstructor> matchingConstructorPredicate = constructor -> constructor.getRawMember()
+                                                                                               .getGenericParameterTypes()[finalGetterIndex]
+                    .equals(getter.getGenericReturnType());
 
             boolean hasAMatchingConstructor = matchingConstructors.stream().anyMatch(matchingConstructorPredicate);
 
@@ -197,22 +205,24 @@ public class Layout<T> {
                     MethodHandle setterHandler = lookup.unreflect(setter);
 
                     Property<T> property = new Property<>(propertyName,
-                            method.getReturnType(),
-                            TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
-                            new BiConsumer<T, Object>() {
-                                @Override
-                                @SneakyThrows
-                                public void accept(T t, Object o) {
-                                    setterHandler.invoke(t, o);
-                                }
-                            },
-                            new Function<T, Object>() {
-                                @Override
-                                @SneakyThrows
-                                public Object apply(T t) {
-                                    return getterHandler.invoke(t);
-                                }
-                            });
+                                                          method.getReturnType(),
+                                                          TypeHandler.<T>lookup(method.getReturnType(),
+                                                                                method.getRawMember()
+                                                                                      .getAnnotatedReturnType()),
+                                                          new BiConsumer<T, Object>() {
+                                                              @Override
+                                                              @SneakyThrows
+                                                              public void accept(T t, Object o) {
+                                                                  setterHandler.invoke(t, o);
+                                                              }
+                                                          },
+                                                          new Function<T, Object>() {
+                                                              @Override
+                                                              @SneakyThrows
+                                                              public Object apply(T t) {
+                                                                  return getterHandler.invoke(t);
+                                                              }
+                                                          });
                     props.add(property);
                 } else {
                     readOnly = !hasAMatchingConstructor;
@@ -221,30 +231,36 @@ public class Layout<T> {
                     if (hasAMatchingConstructor) {
                         Optional<RawConstructor> matchingConstructor = matchingConstructors.stream().
                                 filter(matchingConstructorPredicate).
-                                filter(constructor -> setConstructor(constructor.getRawMember())).
-                                findFirst();
+                                                                                                   filter(constructor -> setConstructor(
+                                                                                                           constructor
+                                                                                                                   .getRawMember()))
+                                                                                           .
+                                                                                                   findFirst();
                         if (!matchingConstructor.isPresent()) {
-                            throw new IllegalArgumentException("getter " + getter.getName() + " doesn't have a matching argument in a common constructor");
+                            throw new IllegalArgumentException("getter " + getter
+                                    .getName() + " doesn't have a matching argument in a common constructor");
                         }
                     }
 
                     Property<T> property = new Property<>(propertyName,
-                            method.getReturnType(),
-                            TypeHandler.<T>lookup(method.getReturnType(), method.getRawMember().getAnnotatedReturnType()),
-                            new BiConsumer<T, Object>() {
-                                @Override
-                                @SneakyThrows
-                                public void accept(T t, Object o) {
-                                    throw new IllegalAccessError();
-                                }
-                            },
-                            new Function<T, Object>() {
-                                @Override
-                                @SneakyThrows
-                                public Object apply(T t) {
-                                    return getterHandler.invoke(t);
-                                }
-                            });
+                                                          method.getReturnType(),
+                                                          TypeHandler.<T>lookup(method.getReturnType(),
+                                                                                method.getRawMember()
+                                                                                      .getAnnotatedReturnType()),
+                                                          new BiConsumer<T, Object>() {
+                                                              @Override
+                                                              @SneakyThrows
+                                                              public void accept(T t, Object o) {
+                                                                  throw new IllegalAccessError();
+                                                              }
+                                                          },
+                                                          new Function<T, Object>() {
+                                                              @Override
+                                                              @SneakyThrows
+                                                              public Object apply(T t) {
+                                                                  return getterHandler.invoke(t);
+                                                              }
+                                                          });
                     props.add(property);
                 }
             }
@@ -254,7 +270,7 @@ public class Layout<T> {
         // Sort properties lexicographically (by default, they seem to be sorted anyway,
         // however, no such guarantee was found in the documentation upon brief inspection)
         properties = props.stream().
-            sorted((x, y) -> x.getName().compareTo(y.getName())).collect(Collectors.toList());
+                sorted((x, y) -> x.getName().compareTo(y.getName())).collect(Collectors.toList());
 
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
@@ -263,7 +279,8 @@ public class Layout<T> {
         // when POJOs have indistinguishable layouts, and therefore it is impossible to
         // guarantee that we'd pick the right class
         if (hashClassName) {
-            String name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class).value() : klass.getName();
+            String name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class)
+                                                                             .value() : klass.getName();
             digest.update(name.getBytes());
         }
 
@@ -321,7 +338,8 @@ public class Layout<T> {
     }
 
     public String toString() {
-        StringBuilder builder = new StringBuilder().append(klass.getName() + " " + BaseEncoding.base16().encode(hash)).append("\n");
+        StringBuilder builder = new StringBuilder().append(klass.getName() + " " + BaseEncoding.base16().encode(hash))
+                                                   .append("\n");
         for (Property<T> property : properties) {
             builder.append("    ").append(property.toString()).append("\n");
         }

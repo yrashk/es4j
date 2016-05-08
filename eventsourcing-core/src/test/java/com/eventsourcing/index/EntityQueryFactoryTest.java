@@ -23,8 +23,10 @@ public class EntityQueryFactoryTest {
     @BeforeMethod
     public void setUp() throws Exception {
         repository = Repository.create();
-        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
-        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
+        repository.addCommandSetProvider(
+                new PackageCommandSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
+        repository.addEventSetProvider(
+                new PackageEventSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
         repository.setJournal(new MemoryJournal());
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
@@ -42,7 +44,8 @@ public class EntityQueryFactoryTest {
 
     @Test @SneakyThrows
     public void all() {
-        ResultSet<EntityHandle<TestCommand>> resultSet = repository.query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
+        ResultSet<EntityHandle<TestCommand>> resultSet = repository
+                .query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
         assertTrue(resultSet.isEmpty());
         repository.publish(new TestCommand()).get();
         resultSet = repository.query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));

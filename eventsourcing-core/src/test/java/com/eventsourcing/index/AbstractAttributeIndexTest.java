@@ -84,8 +84,9 @@ public class AbstractAttributeIndexTest {
             }
         };
 
-        AttributeIndex<List<String>, EntityHandle<Car>> index = new AttributeIndex<>(FEATURES_LIST, new HashSet<Class<? extends Query>>() {{
-        }});
+        AttributeIndex<List<String>, EntityHandle<Car>> index = new AttributeIndex<>(FEATURES_LIST,
+                                                                                     new HashSet<Class<? extends Query>>() {{
+                                                                                     }});
 
         List<String> list = Arrays.asList("Hello");
         ByteBuffer buffer = ByteBuffer.allocate(index.attributeSerializer.size(list));

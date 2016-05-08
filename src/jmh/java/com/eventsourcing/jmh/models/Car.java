@@ -389,6 +389,7 @@ import java.util.UUID;
 @ToString
 public class Car extends Entity {
     public enum Color {RED, GREEN, BLUE, BLACK, WHITE}
+
     @Getter @Setter
     int carId;
     @Getter @Setter
@@ -409,7 +410,8 @@ public class Car extends Entity {
     public Car() {
     }
 
-    public Car(int carId, String manufacturer, String model, Color color, int doors, double price, List<String> features) {
+    public Car(int carId, String manufacturer, String model, Color color, int doors, double price,
+               List<String> features) {
         this.carId = carId;
         this.manufacturer = manufacturer;
         this.model = model;

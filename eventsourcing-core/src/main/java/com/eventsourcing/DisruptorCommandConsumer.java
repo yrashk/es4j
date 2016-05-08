@@ -55,6 +55,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         public void setCommandClass(Class<Command> klass) {
             this.commandClass = klass;
         }
+
         public Command getCommand() {
             return commands.computeIfAbsent(commandClass, new ClassCommandFunction());
         }
@@ -87,13 +88,15 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
 
         @Override @SuppressWarnings("unchecked")
         public void onEvent(Event event) {
-            IndexedCollection<EntityHandle<Event>> coll = indexEngine.getIndexedCollection((Class<Event>) event.getClass());
+            IndexedCollection<EntityHandle<Event>> coll = indexEngine
+                    .getIndexedCollection((Class<Event>) event.getClass());
             coll.add(new EntityHandle<>(journal, event.uuid()));
         }
 
         @Override @SuppressWarnings("unchecked")
         public void onCommit() {
-            IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine.getIndexedCollection((Class<Command<?>>) command.getClass());
+            IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine
+                    .getIndexedCollection((Class<Command<?>>) command.getClass());
             coll.add(new EntityHandle<>(journal, command.uuid()));
         }
 
@@ -157,8 +160,10 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     }
 
     @SneakyThrows
-    public DisruptorCommandConsumer(Iterable<Class<? extends Command>> commandClasses, PhysicalTimeProvider timeProvider,
-                                    Repository repository, Journal journal, IndexEngine indexEngine, LockProvider lockProvider) {
+    public DisruptorCommandConsumer(Iterable<Class<? extends Command>> commandClasses,
+                                    PhysicalTimeProvider timeProvider,
+                                    Repository repository, Journal journal, IndexEngine indexEngine,
+                                    LockProvider lockProvider) {
         this.commandClasses = commandClasses;
         this.timeProvider = timeProvider;
         this.repository = repository;
@@ -193,7 +198,8 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         }
     }
 
-    private <T, C extends Command<T>> void translate(CommandEvent event, long sequence, C command, CompletableFuture<T> completed) {
+    private <T, C extends Command<T>> void translate(CommandEvent event, long sequence, C command,
+                                                     CompletableFuture<T> completed) {
         event.setCommandClass((Class<Command>) command.getClass());
         event.commands.put(command.getClass(), command);
         event.completed = completed;
@@ -211,12 +217,14 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     protected void doStart() {
         log.info("Starting command consumer");
 
-        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("eventsourcing-%d").setDaemon(true).build();
+        ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("eventsourcing-%d").setDaemon(true)
+                                                                .build();
 
         disruptor = new Disruptor<>(() -> new CommandEvent(commandClasses), RING_BUFFER_SIZE, threadFactory);
         disruptor.setDefaultExceptionHandler(new CommandEventExceptionHandler());
 
-        disruptor.handleEventsWith(this::timestamp).thenHandleEventsWithWorkerPool(this::journal).thenHandleEventsWithWorkerPool(this::complete);
+        disruptor.handleEventsWith(this::timestamp).thenHandleEventsWithWorkerPool(this::journal)
+                 .thenHandleEventsWithWorkerPool(this::complete);
 
         ringBuffer = disruptor.start();
 

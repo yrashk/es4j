@@ -13,6 +13,7 @@ import java.util.UUID;
 
 /**
  * EntityHandle is a "lazy loading" handle for {@link Entity}
+ *
  * @param <T>
  */
 public class EntityHandle<T extends Entity> {
@@ -29,6 +30,7 @@ public class EntityHandle<T extends Entity> {
      * Returns an optional value of the referenced entity (empty if an entity specified by a given
      * UUID can't be found). When the entity is expected to be found, {@link #get()}
      * should be used instead
+     *
      * @return
      */
     public Optional<T> getOptional() {
@@ -37,6 +39,7 @@ public class EntityHandle<T extends Entity> {
 
     /**
      * Returns the referenced entity
+     *
      * @return
      * @throws java.util.NoSuchElementException if the entity wasn't found
      */

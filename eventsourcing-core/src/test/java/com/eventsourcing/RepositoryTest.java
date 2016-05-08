@@ -50,7 +50,8 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @BeforeClass
     public void setUpEnv() throws Exception {
-        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
+        repository
+                .addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         journal = createJournal();
         repository.setJournal(journal);
@@ -130,7 +131,8 @@ public abstract class RepositoryTest<T extends Repository> {
         TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
         assertNotNull(test.timestamp());
 
-        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
+                .getIndexedCollection(RepositoryTestCommand.class);
         RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get();
         assertNotNull(test1.timestamp());
 
@@ -146,7 +148,8 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
 
-        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine.getIndexedCollection(RepositoryTestCommand.class);
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
+                .getIndexedCollection(RepositoryTestCommand.class);
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
         assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());
 
@@ -214,7 +217,9 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(o instanceof IllegalStateException);
         Optional<Entity> commandLookup = journal.get(command.uuid());
         assertTrue(commandLookup.isPresent());
-        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository.query(CommandTerminatedExceptionally.class, equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
+        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
+                .query(CommandTerminatedExceptionally.class,
+                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
         assertEquals(resultSet.size(), 1);
         EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
         assertEquals(result.get().className(), IllegalStateException.class.getName());
@@ -237,11 +242,12 @@ public abstract class RepositoryTest<T extends Repository> {
         public Stream<Event> events(Repository repository) {
             return Stream.concat(Stream.of(
                     (TestEvent) new TestEvent().string("test").uuid(eventUUID)),
-                    Stream.generate((Supplier<Event>) () -> {
-                        throw new IllegalStateException();
-                    }));
+                                 Stream.generate((Supplier<Event>) () -> {
+                                     throw new IllegalStateException();
+                                 }));
         }
     }
+
     @Test
     @SneakyThrows
     public void streamExceptionIndexing() {
@@ -252,7 +258,9 @@ public abstract class RepositoryTest<T extends Repository> {
         CompletableFuture<Void> future = repository.publish(command);
         while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
         assertTrue(future.isCompletedExceptionally());
-        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository.query(CommandTerminatedExceptionally.class, equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
+        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
+                .query(CommandTerminatedExceptionally.class,
+                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
         assertEquals(resultSet.size(), 1);
         EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
         assertEquals(result.get().className(), IllegalStateException.class.getName());
@@ -324,6 +332,7 @@ public abstract class RepositoryTest<T extends Repository> {
     public static class TestOptionalCommand extends Command<Void> {
         @Getter @Setter
         private Optional<String> optional;
+
         @Override
         public Stream<Event> events(Repository repository) {
             return Stream.of(new TestOptionalEvent());
@@ -338,15 +347,18 @@ public abstract class RepositoryTest<T extends Repository> {
         };
 
     }
+
     @Test @SneakyThrows
     public void goesThroughLayoutSerialization() {
         TestOptionalCommand command = new TestOptionalCommand();
         repository.publish(command).get();
 
-        TestOptionalCommand test = repository.query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get();
+        TestOptionalCommand test = repository
+                .query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get();
         assertFalse(test.optional().isPresent());
 
-        TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class)).uniqueResult().get();
+        TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class))
+                                                        .uniqueResult().get();
         assertFalse(testOptionalEvent.optional().isPresent());
     }
 

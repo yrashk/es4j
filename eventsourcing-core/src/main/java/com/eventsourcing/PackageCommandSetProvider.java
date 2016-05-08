@@ -34,11 +34,12 @@ public class PackageCommandSetProvider implements CommandSetProvider {
 
     @Override
     public Set<Class<? extends Command>> getCommands() {
-        Configuration configuration = ConfigurationBuilder.build((Object[])packages).addClassLoaders(classLoaders);
+        Configuration configuration = ConfigurationBuilder.build((Object[]) packages).addClassLoaders(classLoaders);
         Reflections reflections = new Reflections(configuration);
         Predicate<Class<? extends Entity>> classPredicate = klass ->
                 Modifier.isPublic(klass.getModifiers()) &&
-                        (!klass.isMemberClass() || (klass.isMemberClass() && Modifier.isStatic(klass.getModifiers()))) &&
+                        (!klass.isMemberClass() || (klass.isMemberClass() && Modifier
+                                .isStatic(klass.getModifiers()))) &&
                         !Modifier.isAbstract(klass.getModifiers());
         return reflections.getSubTypesOf(Command.class).stream().filter(classPredicate).collect(Collectors.toSet());
     }

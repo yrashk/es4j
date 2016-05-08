@@ -35,28 +35,32 @@ public class ProductAddedToOrder extends Event {
     private int quantity;
 
     @Index({EQ, UNIQUE})
-    public static final SimpleAttribute<ProductAddedToOrder, UUID> ID = new SimpleAttribute<ProductAddedToOrder, UUID>("id") {
+    public static final SimpleAttribute<ProductAddedToOrder, UUID> ID = new SimpleAttribute<ProductAddedToOrder, UUID>(
+            "id") {
         public UUID getValue(ProductAddedToOrder productAddedToOrder, QueryOptions queryOptions) {
             return productAddedToOrder.uuid();
         }
     };
 
     @Index({EQ})
-    public static final SimpleAttribute<ProductAddedToOrder, UUID> ORDER_ID = new SimpleAttribute<ProductAddedToOrder, UUID>("orderId") {
+    public static final SimpleAttribute<ProductAddedToOrder, UUID> ORDER_ID = new SimpleAttribute<ProductAddedToOrder, UUID>(
+            "orderId") {
         public UUID getValue(ProductAddedToOrder productAddedToOrder, QueryOptions queryOptions) {
             return productAddedToOrder.orderId();
         }
     };
 
     @Index({EQ})
-    public static final SimpleAttribute<ProductAddedToOrder, UUID> PRODUCT_ID = new SimpleAttribute<ProductAddedToOrder, UUID>("productId") {
+    public static final SimpleAttribute<ProductAddedToOrder, UUID> PRODUCT_ID = new SimpleAttribute<ProductAddedToOrder, UUID>(
+            "productId") {
         public UUID getValue(ProductAddedToOrder productAddedToOrder, QueryOptions queryOptions) {
             return productAddedToOrder.productId();
         }
     };
 
     @Index({EQ, LT, GT})
-    public static final SimpleAttribute<ProductAddedToOrder, HybridTimestamp> TIMESTAMP = new SimpleAttribute<ProductAddedToOrder, HybridTimestamp>("timestamp") {
+    public static final SimpleAttribute<ProductAddedToOrder, HybridTimestamp> TIMESTAMP = new SimpleAttribute<ProductAddedToOrder, HybridTimestamp>(
+            "timestamp") {
         public HybridTimestamp getValue(ProductAddedToOrder productAddedToOrder, QueryOptions queryOptions) {
             return productAddedToOrder.timestamp();
         }

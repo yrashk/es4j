@@ -31,14 +31,16 @@ public class PriceChanged extends Event {
     private BigDecimal price;
 
     @Index({EQ})
-    public static final SimpleAttribute<PriceChanged, UUID> REFERENCE_ID = new SimpleAttribute<PriceChanged, UUID>("referenceId") {
+    public static final SimpleAttribute<PriceChanged, UUID> REFERENCE_ID = new SimpleAttribute<PriceChanged, UUID>(
+            "referenceId") {
         public UUID getValue(PriceChanged priceChanged, QueryOptions queryOptions) {
             return priceChanged.id();
         }
     };
 
     @Index({EQ, LT, GT})
-    public static final SimpleAttribute<PriceChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<PriceChanged, HybridTimestamp>("timestamp") {
+    public static final SimpleAttribute<PriceChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<PriceChanged, HybridTimestamp>(
+            "timestamp") {
         public HybridTimestamp getValue(PriceChanged priceChanged, QueryOptions queryOptions) {
             return priceChanged.timestamp();
         }

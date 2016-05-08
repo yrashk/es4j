@@ -27,14 +27,13 @@ import java.util.stream.Collectors;
 /**
  * NTPServerTimeProvider is a physical time provider that uses external NTP servers to fetch timestamp
  * periodically (currently hardcoded as 1 minute).
- *
+ * <p>
  * By default, NTP servers are:
- *
+ * <p>
  * "0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org", "localhost"
- *
+ * <p>
  * NTPServerTimeProvider is an EventReducer Service and needs to be started prior
  * to using it as a PhysicalTimeProvider.
- *
  */
 @Component(property = "ntp.servers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org,localhost")
 public class NTPServerTimeProvider extends AbstractScheduledService implements PhysicalTimeProvider {
@@ -64,8 +63,10 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
         String serversList = (String) ctx.getProperties().get("ntp.servers");
         setServers(serversList.split(","));
     }
+
     /**
      * Creates NTPServerTimeProvider with default NTP servers
+     *
      * @throws UnknownHostException Throws UnknownHostException for the first unresolved host, if no hosts were resolvable
      */
     public NTPServerTimeProvider() throws UnknownHostException {
@@ -89,6 +90,7 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
 
     /**
      * Creates NTPServerTimeProvider with a custom list of NTP server addresses
+     *
      * @param ntpServers Array of custom NTP server addresses
      * @throws UnknownHostException Throws UnknownHostException for the first unresolved host, if no hosts were resolvable
      */

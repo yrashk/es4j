@@ -28,7 +28,7 @@ public interface IndexEngine extends Service {
 
     /**
      * Sets journal to be used in this repository
-     *
+     * <p>
      * Should be done before invoking {@link #startAsync()}
      *
      * @param journal
@@ -44,8 +44,9 @@ public interface IndexEngine extends Service {
      */
     void setRepository(Repository repository) throws IllegalStateException;
 
-    @SuppressWarnings("unchecked")
-    <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features) throws IndexNotSupported;
+    @SuppressWarnings("unchecked") <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes,
+                                                                        IndexFeature... features)
+            throws IndexNotSupported;
 
     enum IndexFeature {
         UNIQUE, COMPOUND,
@@ -65,16 +66,15 @@ public interface IndexEngine extends Service {
         QZ
     }
 
-    @Value
-    class IndexCapabilities<T> {
+    @Value class IndexCapabilities<T> {
         private String name;
         private IndexFeature[] features;
         private Function<T, Index> index;
     }
 
-    <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature...features) throws IndexNotSupported;
-    @AllArgsConstructor
-    class IndexNotSupported extends Exception {
+    <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features) throws IndexNotSupported;
+
+    @AllArgsConstructor class IndexNotSupported extends Exception {
         @Getter
         private Attribute[] attribute;
         @Getter
@@ -84,7 +84,8 @@ public interface IndexEngine extends Service {
 
         @Override
         public String getMessage() {
-            return "Index " + Joiner.on(", ").join(features) + " on " + Joiner.on(", ").join(attribute) + " is not supported by " + indexEngine;
+            return "Index " + Joiner.on(", ").join(features) + " on " + Joiner.on(", ")
+                                                                              .join(attribute) + " is not supported by " + indexEngine;
         }
     }
 
@@ -92,6 +93,7 @@ public interface IndexEngine extends Service {
 
     /**
      * Returns all declared ({@link com.eventsourcing.annotations.Index} indices for a class
+     *
      * @param klass
      * @return
      * @throws IndexNotSupported
@@ -101,8 +103,9 @@ public interface IndexEngine extends Service {
         List<Index> indices = new ArrayList<>();
         for (Field field : klass.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers()) &&
-                Modifier.isPublic(field.getModifiers())) {
-                com.eventsourcing.annotations.Index annotation = field.getAnnotation(com.eventsourcing.annotations.Index.class);
+                    Modifier.isPublic(field.getModifiers())) {
+                com.eventsourcing.annotations.Index annotation = field
+                        .getAnnotation(com.eventsourcing.annotations.Index.class);
                 if (annotation != null) {
                     Attribute attr = (Attribute) field.get(null);
                     indices.add(this.getIndexOnAttribute(attr, annotation.value()));

@@ -18,6 +18,5 @@ public interface Lock {
     /**
      * @return true if the lock is locked
      */
-    @SuppressWarnings("unused")
-    boolean isLocked();
+    @SuppressWarnings("unused") boolean isLocked();
 }

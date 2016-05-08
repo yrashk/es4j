@@ -20,7 +20,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
-@Component(configurationPolicy = ConfigurationPolicy.REQUIRE, property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=com.eventsourcing:type=repository"})
+@Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
+           property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=com.eventsourcing:type=repository"})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 
@@ -73,7 +74,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         initialization.forEach(Runnable::run);
         initialization.clear();
 
-        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine, lockProvider);
+        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine,
+                                                       lockProvider);
         commandConsumer.startAsync().awaitRunning();
 
         notifyStarted();
@@ -129,7 +131,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         };
         this.commands.addAll(newCommands);
         if (isRunning()) {
-           // apply immediately
+            // apply immediately
             runnable.run();
             journal.onCommandsAdded(newCommands);
         } else {
