@@ -50,7 +50,7 @@ public class ByteArrayTypeHandler implements TypeHandler {
 
     private byte[] getPrimitiveArray(Object value) {
         if (value instanceof byte[]) {
-            return nullToEmpty((byte[])value);
+            return nullToEmpty((byte[]) value);
         }
         if (value instanceof Byte[]) {
             return nullToEmpty(toPrimitive((Byte[]) value));

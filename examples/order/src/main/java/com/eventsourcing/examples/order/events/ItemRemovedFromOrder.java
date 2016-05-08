@@ -24,7 +24,8 @@ public class ItemRemovedFromOrder extends Event {
     private UUID itemId;
 
     @Index({EQ})
-    public static final SimpleAttribute<ItemRemovedFromOrder, UUID> LINE_ID = new SimpleAttribute<ItemRemovedFromOrder, UUID>("itemId") {
+    public static final SimpleAttribute<ItemRemovedFromOrder, UUID> LINE_ID = new SimpleAttribute<ItemRemovedFromOrder, UUID>(
+            "itemId") {
         public UUID getValue(ItemRemovedFromOrder itemRemovedFromOrder, QueryOptions queryOptions) {
             return itemRemovedFromOrder.itemId();
         }

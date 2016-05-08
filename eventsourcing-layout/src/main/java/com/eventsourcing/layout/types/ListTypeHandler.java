@@ -28,7 +28,7 @@ public class ListTypeHandler implements TypeHandler<List> {
         AnnotatedType arg = parameterizedType.getAnnotatedActualTypeArguments()[0];
         Class<?> klass;
         if (arg.getType() instanceof ParameterizedType) {
-            klass = (Class<?>)((ParameterizedType)(arg.getType())).getRawType();
+            klass = (Class<?>) ((ParameterizedType) (arg.getType())).getRawType();
         } else {
             klass = (Class<?>) arg.getType();
         }

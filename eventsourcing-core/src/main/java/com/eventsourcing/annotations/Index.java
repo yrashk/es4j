@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation informs Eventsourcing that a certain field is a CQEngine index
  * and allows configuring required index features.
- *
+ * <p>
  * <b>Please note</b>: such fields MUST be public and static to be discovered.
  */
 @Target(ElementType.FIELD)

@@ -17,8 +17,9 @@ import java.util.stream.Collectors;
 interface BundleClassScanner {
     default <T> List<Class<? extends T>> findSubTypesOf(Class<?> classInABundle, Class<T> superclass) {
         BundleWiring wiring = FrameworkUtil.getBundle(classInABundle).adapt(BundleWiring.class);
-        Collection<String> names = wiring.listResources("/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/",
-                "*", BundleWiring.LISTRESOURCES_RECURSE);
+        Collection<String> names = wiring
+                .listResources("/" + getClass().getPackage().getName().replaceAll("\\.", "/") + "/",
+                               "*", BundleWiring.LISTRESOURCES_RECURSE);
         return names.stream().map(new Function<String, Class<?>>() {
             @Override @SneakyThrows
             public Class<?> apply(String name) {
@@ -29,6 +30,8 @@ interface BundleClassScanner {
                     return null;
                 }
             }
-        }).filter(c -> c != null).filter(superclass::isAssignableFrom).map((Function<Class<?>, Class<? extends T>>) aClass -> (Class<? extends T>) aClass).collect(Collectors.toList());
+        }).filter(c -> c != null).filter(superclass::isAssignableFrom)
+                    .map((Function<Class<?>, Class<? extends T>>) aClass -> (Class<? extends T>) aClass)
+                    .collect(Collectors.toList());
     }
 }

@@ -67,8 +67,12 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
     @Override
     protected List<IndexCapabilities> getIndexMatrix() {
         return Arrays.asList(
-            new IndexCapabilities<Attribute>("Hash", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ}, attribute -> HashIndex.onAttribute(store, attribute)),
-            new IndexCapabilities<Attribute>("Unique", new IndexFeature[]{IndexFeature.UNIQUE, IndexFeature.EQ, IndexFeature.IN}, attribute -> UniqueIndex.onAttribute(store, attribute))
+                new IndexCapabilities<Attribute>("Hash",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ},
+                                                 attribute -> HashIndex.onAttribute(store, attribute)),
+                new IndexCapabilities<Attribute>("Unique",
+                                                 new IndexFeature[]{IndexFeature.UNIQUE, IndexFeature.EQ, IndexFeature.IN},
+                                                 attribute -> UniqueIndex.onAttribute(store, attribute))
         );
     }
 

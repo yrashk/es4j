@@ -8,7 +8,6 @@ package com.eventsourcing;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -22,6 +21,7 @@ public interface Journal extends Service {
     Listener DEFAULT_LISTENER = new Listener() {};
 
     default void onCommandsAdded(Set<Class<? extends Command>> commands) {}
+
     default void onEventsAdded(Set<Class<? extends Event>> events) {}
 
     /**
@@ -34,7 +34,7 @@ public interface Journal extends Service {
     /**
      * Journal <code>command</code> in repository <code>repository</code>,
      * with a default (no-op) listener ({@link #DEFAULT_LISTENER})
-     *
+     * <p>
      * See more details at {@link #journal(Command, Listener)}
      *
      * @param command
@@ -47,7 +47,7 @@ public interface Journal extends Service {
     /**
      * Journal <code>command</code> in repository <code>repository</code>,
      * with a custom listener.
-     *
+     * <p>
      * Journal implementation should not make events visible to any other
      * readers until all events and the command have been persisted.
      *
@@ -81,13 +81,16 @@ public interface Journal extends Service {
 
     /**
      * Iterate over commands of a specific type (through {@code EntityHandler<T>})
+     *
      * @param klass
      * @param <T>
      * @return iterator
      */
     <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass);
+
     /**
      * Iterate over events of a specific type (through {@code EntityHandler<T>})
+     *
      * @param klass
      * @param <T>
      * @return iterator
@@ -96,7 +99,7 @@ public interface Journal extends Service {
 
     /**
      * Removes everything from the journal.
-     *
+     * <p>
      * <b>Use with caution</b>: the data will be lost irrevocably
      */
     void clear();
@@ -128,6 +131,7 @@ public interface Journal extends Service {
          * persisted into the journal. Note that at this point the event
          * should not be available until the entire journalling operation has
          * been completed and {@link #onCommit()} has been called.
+         *
          * @param event
          */
         default void onEvent(Event event) {}
@@ -141,6 +145,7 @@ public interface Journal extends Service {
 
         /**
          * Called when there was an exception during event generation
+         *
          * @param throwable
          */
         default void onAbort(Throwable throwable) {}

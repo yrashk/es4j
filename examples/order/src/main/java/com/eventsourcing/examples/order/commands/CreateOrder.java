@@ -24,6 +24,7 @@ public class CreateOrder extends Command<Order> {
         this.orderCreated = new OrderCreated();
         return Stream.of(orderCreated);
     }
+
     @Override
     public Order onCompletion() {
         return Order.lookup(repository, orderCreated.uuid()).get();

@@ -18,7 +18,10 @@ import lombok.SneakyThrows;
 import org.osgi.service.component.annotations.Component;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -36,8 +39,8 @@ public class MemoryJournal extends AbstractService implements Journal {
     }
 
     private Map<UUID, Command> commands = new HashMap<>();
-    private Map<UUID, Event>   events = new HashMap<>();
-    private Map<UUID, UUID>    eventCommands = new HashMap<>();
+    private Map<UUID, Event> events = new HashMap<>();
+    private Map<UUID, UUID> eventCommands = new HashMap<>();
 
     @Override
     protected void doStart() {
@@ -57,9 +60,10 @@ public class MemoryJournal extends AbstractService implements Journal {
     // documentation
 
     @Override
-    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
+    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider)
+            throws Exception {
         Map<UUID, Event> events_ = new HashMap<>();
-        Map<UUID, UUID>  eventCommands_ = new HashMap<>();
+        Map<UUID, UUID> eventCommands_ = new HashMap<>();
         EventConsumer eventConsumer = new EventConsumer(events_, eventCommands_, command, listener);
 
         Stream<Event> events;
@@ -93,7 +97,7 @@ public class MemoryJournal extends AbstractService implements Journal {
         this.events.putAll(events_);
         this.eventCommands.putAll(eventCommands_);
 
-        Layout<Command> layout = new Layout<>((Class<Command>)command.getClass());
+        Layout<Command> layout = new Layout<>((Class<Command>) command.getClass());
         Serializer<Command> serializer = new Serializer<>(layout);
         Deserializer<Command> deserializer = new Deserializer<>(layout);
 
@@ -124,19 +128,20 @@ public class MemoryJournal extends AbstractService implements Journal {
     }
 
     @Override
-    public synchronized  <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+    public synchronized <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(commands.values().stream().
                 filter(command -> klass.isAssignableFrom(command.getClass())).
-                map(command -> new EntityHandle<T>(this, command.uuid())).
-                iterator());
+                                                               map(command -> new EntityHandle<T>(this, command.uuid()))
+                                                       .
+                                                               iterator());
     }
 
     @Override
     public synchronized <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(events.values().stream().
                 filter(event -> klass.isAssignableFrom(event.getClass())).
-                map(event -> new EntityHandle<T>(this, event.uuid())).
-                iterator());
+                                                             map(event -> new EntityHandle<T>(this, event.uuid())).
+                                                             iterator());
     }
 
     @Override
@@ -149,21 +154,21 @@ public class MemoryJournal extends AbstractService implements Journal {
     @Override @SuppressWarnings("unchecked")
     public <T extends Entity> long size(Class<T> klass) {
         if (Event.class.isAssignableFrom(klass)) {
-            return Iterators.size(eventIterator((Class<Event>)klass));
+            return Iterators.size(eventIterator((Class<Event>) klass));
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return Iterators.size(commandIterator((Class<Command<?>>)klass));
+            return Iterators.size(commandIterator((Class<Command<?>>) klass));
         }
         return 0;
     }
 
     @Override @SuppressWarnings("unchecked")
-    public <T extends Entity>  boolean isEmpty(Class<T> klass) {
+    public <T extends Entity> boolean isEmpty(Class<T> klass) {
         if (Event.class.isAssignableFrom(klass)) {
-            return !eventIterator((Class<Event>)klass).hasNext();
+            return !eventIterator((Class<Event>) klass).hasNext();
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return !commandIterator((Class<Command<?>>)klass).hasNext();
+            return !commandIterator((Class<Command<?>>) klass).hasNext();
         }
         return true;
     }
@@ -176,10 +181,11 @@ public class MemoryJournal extends AbstractService implements Journal {
         @Getter
         private Map<UUID, Event> events = new HashMap<>();
         @Getter
-        private Map<UUID, UUID>  eventCommands = new HashMap<>();
+        private Map<UUID, UUID> eventCommands = new HashMap<>();
         private final HybridTimestamp ts;
 
-        public EventConsumer(Map<UUID, Event> events, Map<UUID, UUID> eventCommands, Command command, Journal.Listener listener) {
+        public EventConsumer(Map<UUID, Event> events, Map<UUID, UUID> eventCommands, Command command,
+                             Journal.Listener listener) {
             this.events = events;
             this.eventCommands = eventCommands;
             this.command = command;
@@ -193,7 +199,7 @@ public class MemoryJournal extends AbstractService implements Journal {
             ts.update();
             event.timestamp(ts.clone());
 
-            Layout<Event> layout = new Layout<>((Class<Event>)event.getClass());
+            Layout<Event> layout = new Layout<>((Class<Event>) event.getClass());
             Serializer<Event> serializer = new Serializer<>(layout);
             Deserializer<Event> deserializer = new Deserializer<>(layout);
 

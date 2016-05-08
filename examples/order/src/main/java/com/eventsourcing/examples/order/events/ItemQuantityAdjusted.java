@@ -27,7 +27,8 @@ public class ItemQuantityAdjusted extends Event {
     private Integer quantity;
 
     @Index({EQ})
-    public static final SimpleAttribute<ItemQuantityAdjusted, UUID> ITEM_ID = new SimpleAttribute<ItemQuantityAdjusted, UUID>("itemId") {
+    public static final SimpleAttribute<ItemQuantityAdjusted, UUID> ITEM_ID = new SimpleAttribute<ItemQuantityAdjusted, UUID>(
+            "itemId") {
         public UUID getValue(ItemQuantityAdjusted itemQuantityAdjusted, QueryOptions queryOptions) {
             return itemQuantityAdjusted.itemId();
         }

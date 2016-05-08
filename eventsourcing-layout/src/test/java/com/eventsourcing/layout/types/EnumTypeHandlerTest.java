@@ -12,13 +12,16 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class EnumTypeHandlerTest {
 
-    enum A { A, B, C }
-    enum A1 { A, B, C }
-    enum A2 { C, A, B }
+    enum A {A, B, C}
+
+    enum A1 {A, B, C}
+
+    enum A2 {C, A, B}
 
     @Test @SneakyThrows
     public void fingerprintShape() {

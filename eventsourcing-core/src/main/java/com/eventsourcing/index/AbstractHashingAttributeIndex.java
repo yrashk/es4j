@@ -18,11 +18,13 @@ public abstract class AbstractHashingAttributeIndex<A, O> extends AbstractAttrib
 
     /**
      * Protected constructor, called by subclasses.
-     *  @param attribute        The attribute on which the index will be built
+     *
+     * @param attribute        The attribute on which the index will be built
      * @param supportedQueries The set of {@link Query} types which the subclass implementation supports
      * @param hashFunction
      */
-    protected AbstractHashingAttributeIndex(Attribute<O, A> attribute, Set<Class<? extends Query>> supportedQueries, HashFunction hashFunction) {
+    protected AbstractHashingAttributeIndex(Attribute<O, A> attribute, Set<Class<? extends Query>> supportedQueries,
+                                            HashFunction hashFunction) {
         super(attribute, supportedQueries);
         this.hashFunction = hashFunction;
         hashSize = hashFunction.bits() / 8;

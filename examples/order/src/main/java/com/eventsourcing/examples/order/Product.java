@@ -33,7 +33,8 @@ public class Product implements Model, NameProtocol, PriceProtocol {
     }
 
     public static Optional<Product> lookup(Repository repository, UUID id) {
-        try (ResultSet<EntityHandle<ProductCreated>> resultSet = repository.query(ProductCreated.class, equal(ProductCreated.ID, id))) {
+        try (ResultSet<EntityHandle<ProductCreated>> resultSet = repository
+                .query(ProductCreated.class, equal(ProductCreated.ID, id))) {
             if (resultSet.isEmpty()) {
                 return Optional.empty();
             }

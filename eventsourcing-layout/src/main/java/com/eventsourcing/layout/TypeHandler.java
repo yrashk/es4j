@@ -19,6 +19,7 @@ import java.util.UUID;
 
 /**
  * Interface for handling supported type T
+ *
  * @param <T>
  */
 public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer<T>,
@@ -29,32 +30,34 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
     /**
      * Returns unique byte-array "fingerprint" representing type <code>T</code>
      * (used for hashing)
+     *
      * @return fingerprint
      */
     byte[] getFingerprint();
 
     /**
      * Looks up a type handler for supported types
-     *
+     * <p>
      * <h1>Supported types</h1>
-     *
+     * <p>
      * <ul>
-     *     <li><code>Byte/byte</code></li>
-     *     <li><code>Byte[]/byte[]</code></li>
-     *     <li><code>Short/short</code></li>
-     *     <li><code>Integer/int</code></li>
-     *     <li><code>Long/long</code></li>
-     *     <li><code>Float/float</code></li>
-     *     <li><code>Double/double</code></li>
-     *     <li><code>BigDecimal</code></li>
-     *     <li><code>Boolean/boolean</code></li>
-     *     <li><code>Character/char</code></li>
-     *     <li><code>String</code></li>
-     *     <li><code>UUID</code></li>
-     *     <li><code>Enum</code></li>
-     *     <li><code>List&lt;?&gt;</code></li>
-     *     <li><code>Optional&lt;?&gt;</code></li>
+     * <li><code>Byte/byte</code></li>
+     * <li><code>Byte[]/byte[]</code></li>
+     * <li><code>Short/short</code></li>
+     * <li><code>Integer/int</code></li>
+     * <li><code>Long/long</code></li>
+     * <li><code>Float/float</code></li>
+     * <li><code>Double/double</code></li>
+     * <li><code>BigDecimal</code></li>
+     * <li><code>Boolean/boolean</code></li>
+     * <li><code>Character/char</code></li>
+     * <li><code>String</code></li>
+     * <li><code>UUID</code></li>
+     * <li><code>Enum</code></li>
+     * <li><code>List&lt;?&gt;</code></li>
+     * <li><code>Optional&lt;?&gt;</code></li>
      * </ul>
+     *
      * @param type
      * @return
      */
@@ -114,7 +117,8 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
 
 
             if (type.isArray() &&
-                    (type.getArrayElementType().isInstanceOf(Byte.TYPE) || type.getArrayElementType().isInstanceOf(Byte.class))) {
+                    (type.getArrayElementType().isInstanceOf(Byte.TYPE) || type.getArrayElementType()
+                                                                               .isInstanceOf(Byte.class))) {
                 return new ByteArrayTypeHandler(type.getArrayElementType().isPrimitive());
             }
 
@@ -128,8 +132,7 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
         }
     }
 
-    @AllArgsConstructor
-    class TypeHandlerException extends Exception {
+    @AllArgsConstructor class TypeHandlerException extends Exception {
         @Getter
         private Exception exception;
         @Getter
@@ -137,7 +140,8 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
 
         @Override
         public String getMessage() {
-            return "Attempting to resolve type " + resolvedType.toString() + " resulted in " + exception.getClass() + ": " + exception.getMessage();
+            return "Attempting to resolve type " + resolvedType.toString() + " resulted in " + exception
+                    .getClass() + ": " + exception.getMessage();
         }
     }
 }

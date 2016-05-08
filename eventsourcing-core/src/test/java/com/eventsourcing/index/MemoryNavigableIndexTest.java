@@ -18,7 +18,8 @@ public class MemoryNavigableIndexTest extends NavigableIndexTest<NavigableIndex>
     }
 
     @Override
-    public <A extends Comparable<A>, O> Index<O> withQuantizerOnAttribute(Quantizer<A> quantizer, Attribute<O, A> attribute) {
+    public <A extends Comparable<A>, O> Index<O> withQuantizerOnAttribute(Quantizer<A> quantizer,
+                                                                          Attribute<O, A> attribute) {
         return NavigableIndex.withQuantizerOnAttribute(quantizer, attribute);
     }
 

@@ -64,15 +64,26 @@ public class Order {
 
     public List<Item> items() {
         try (ResultSet<EntityHandle<ProductAddedToOrder>> resultSet = repository.query(ProductAddedToOrder.class,
-                and(equal(ProductAddedToOrder.ORDER_ID, id),
-                    not(existsIn(repository.getIndexEngine().getIndexedCollection(ItemRemovedFromOrder.class),
-                            ProductAddedToOrder.ID, ItemRemovedFromOrder.LINE_ID))),
-                queryOptions(orderBy(ascending(ProductAddedToOrder.TIMESTAMP))))) {
+                                                                                       and(equal(
+                                                                                               ProductAddedToOrder.ORDER_ID,
+                                                                                               id),
+                                                                                           not(existsIn(repository
+                                                                                                                .getIndexEngine()
+                                                                                                                .getIndexedCollection(
+                                                                                                                        ItemRemovedFromOrder.class),
+                                                                                                        ProductAddedToOrder.ID,
+                                                                                                        ItemRemovedFromOrder.LINE_ID))),
+                                                                                       queryOptions(orderBy(ascending(
+                                                                                               ProductAddedToOrder.TIMESTAMP))))) {
             Map<UUID, Item> items = StreamSupport.stream(resultSet.spliterator(), false).
                     map(EntityHandle::get).
-                    map(addition -> new Item(addition.uuid(), Product.lookup(repository, addition.productId()).get(), addition.quantity())).
-                    collect(Collectors.toMap(Item::id, Function.identity()));
-            try (ResultSet<EntityHandle<ItemQuantityAdjusted>> adjustments = repository.query(ItemQuantityAdjusted.class, in(ItemQuantityAdjusted.ITEM_ID, items.keySet()))) {
+                                                         map(addition -> new Item(addition.uuid(),
+                                                                                  Product.lookup(repository,
+                                                                                                 addition.productId())
+                                                                                         .get(), addition.quantity())).
+                                                         collect(Collectors.toMap(Item::id, Function.identity()));
+            try (ResultSet<EntityHandle<ItemQuantityAdjusted>> adjustments = repository
+                    .query(ItemQuantityAdjusted.class, in(ItemQuantityAdjusted.ITEM_ID, items.keySet()))) {
                 adjustments.forEach(adj -> {
                     ItemQuantityAdjusted itemQuantityAdjusted = adj.get();
                     items.get(itemQuantityAdjusted.itemId()).quantity(itemQuantityAdjusted.quantity());
@@ -83,7 +94,8 @@ public class Order {
     }
 
     public static Optional<Order> lookup(Repository repository, UUID id) {
-        try (ResultSet<EntityHandle<OrderCreated>> resultSet = repository.query(OrderCreated.class, equal(OrderCreated.ID, id))) {
+        try (ResultSet<EntityHandle<OrderCreated>> resultSet = repository
+                .query(OrderCreated.class, equal(OrderCreated.ID, id))) {
             if (resultSet.isEmpty()) {
                 return Optional.empty();
             }

@@ -413,8 +413,10 @@ public abstract class RepositoryBenchmark {
         lockProvider = new MemoryLockProvider();
         repository.setLockProvider(lockProvider);
 
-        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
-        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
+        repository.addCommandSetProvider(
+                new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
+        repository.addEventSetProvider(
+                new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
 
         repository.startAsync().awaitRunning();
     }

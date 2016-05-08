@@ -30,14 +30,16 @@ public class NameChanged extends Event {
     private String name;
 
     @Index({EQ})
-    public static final SimpleAttribute<NameChanged, UUID> REFERENCE_ID = new SimpleAttribute<NameChanged, UUID>("referenceId") {
+    public static final SimpleAttribute<NameChanged, UUID> REFERENCE_ID = new SimpleAttribute<NameChanged, UUID>(
+            "referenceId") {
         public UUID getValue(NameChanged nameChanged, QueryOptions queryOptions) {
             return nameChanged.id();
         }
     };
 
     @Index({EQ, LT, GT})
-    public static final SimpleAttribute<NameChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<NameChanged, HybridTimestamp>("timestamp") {
+    public static final SimpleAttribute<NameChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<NameChanged, HybridTimestamp>(
+            "timestamp") {
         public HybridTimestamp getValue(NameChanged nameChanged, QueryOptions queryOptions) {
             return nameChanged.timestamp();
         }

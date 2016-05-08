@@ -55,15 +55,18 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         }
 
         // -------------------------- Attributes --------------------------
-        public static final Attribute<Car, Integer> CAR_ID = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, Integer>("carId") {
+        public static final Attribute<Car, Integer> CAR_ID = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, Integer>(
+                "carId") {
             public Integer getValue(Car car, QueryOptions queryOptions) { return car.carId; }
         };
 
-        public static final Attribute<Car, String> NAME = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, String>("name") {
+        public static final Attribute<Car, String> NAME = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, String>(
+                "name") {
             public String getValue(Car car, QueryOptions queryOptions) { return car.name; }
         };
 
-        public static final Attribute<Car, String> DESCRIPTION = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, String>("description") {
+        public static final Attribute<Car, String> DESCRIPTION = new com.googlecode.cqengine.attribute.SimpleAttribute<Car, String>(
+                "description") {
             public String getValue(Car car, QueryOptions queryOptions) { return car.description; }
         };
 
@@ -88,7 +91,8 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
         Query<Car> query = equal(Car.CAR_ID, 2);
         ResultSet<Car> rs = cars.retrieve(query);
-        assertEquals(rs.getRetrievalCost(), index.retrieve(query, noQueryOptions()).getRetrievalCost(), "should prefer unique index over hash index");
+        assertEquals(rs.getRetrievalCost(), index.retrieve(query, noQueryOptions()).getRetrievalCost(),
+                     "should prefer unique index over hash index");
 
         assertEquals(rs.uniqueResult().carId, 2, "should retrieve car 2");
     }

@@ -66,7 +66,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
 
-    @Value @EqualsAndHashCode(callSuper=false)
+    @Value @EqualsAndHashCode(callSuper = false)
     static class TestEvent extends Event {
         private String string;
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
@@ -91,7 +91,8 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     @Test
     @SneakyThrows
     public void test() {
-        Index<EntityHandle<TestEvent>> index = indexEngine.getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
+        Index<EntityHandle<TestEvent>> index = indexEngine
+                .getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         List<Event> events = new ArrayList<>();
         TestCommand command = new TestCommand().string("test");

@@ -12,6 +12,7 @@ public class PackageCommandSetProviderTest {
 
     @Test
     public void test() {
-        new PackageCommandSetProvider(new Package[]{BogusCommand.class.getPackage()}).getCommands().contains(BogusCommand.class);
+        new PackageCommandSetProvider(new Package[]{BogusCommand.class.getPackage()}).getCommands()
+                                                                                     .contains(BogusCommand.class);
     }
 }

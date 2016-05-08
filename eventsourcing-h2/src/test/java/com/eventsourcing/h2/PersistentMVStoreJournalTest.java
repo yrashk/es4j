@@ -75,7 +75,7 @@ public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJ
         @Getter @Setter
         private String value;
     }
-    
+
     @Test
     @SneakyThrows
     public void unrecognizedEntities() {

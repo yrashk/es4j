@@ -64,7 +64,8 @@ public class CommandTerminatedExceptionally extends Event {
                 map(StackTraceElement::new).collect(Collectors.toList());
     }
 
-    public static SimpleAttribute<CommandTerminatedExceptionally, UUID> COMMAND_ID = new SimpleAttribute<CommandTerminatedExceptionally, UUID>("commandId") {
+    public static SimpleAttribute<CommandTerminatedExceptionally, UUID> COMMAND_ID = new SimpleAttribute<CommandTerminatedExceptionally, UUID>(
+            "commandId") {
         @Override
         public UUID getValue(CommandTerminatedExceptionally object, QueryOptions queryOptions) {
             return object.commandId();

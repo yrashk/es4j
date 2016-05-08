@@ -11,7 +11,8 @@ import org.testng.annotations.Test;
 public class PackageEventSetProviderTest {
     @Test
     public void test() {
-        new PackageEventSetProvider(new Package[]{BogusEvent.class.getPackage()}).getEvents().contains(BogusEvent.class);
+        new PackageEventSetProvider(new Package[]{BogusEvent.class.getPackage()}).getEvents()
+                                                                                 .contains(BogusEvent.class);
     }
 
 }

@@ -43,14 +43,30 @@ public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
     @Override
     protected List<IndexCapabilities> getIndexMatrix() {
         return Arrays.asList(
-                new IndexCapabilities<Attribute>("Hash", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ}, HashIndex::onAttribute),
-                new IndexCapabilities<Attribute>("Unique", new IndexFeature[]{IndexFeature.UNIQUE, IndexFeature.EQ, IndexFeature.IN}, UniqueIndex::onAttribute),
-                new IndexCapabilities<Attribute[]>("Compound", new IndexFeature[]{IndexFeature.COMPOUND, IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ}, CompoundIndex::onAttributes),
-                new IndexCapabilities<Attribute>("Navigable", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ, IndexFeature.LT, IndexFeature.GT, IndexFeature.BT}, NavigableIndex::onAttribute),
-                new IndexCapabilities<Attribute>("RadixTree", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.SW}, RadixTreeIndex::onAttribute),
-                new IndexCapabilities<Attribute>("ReversedRadixTree", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.EW}, ReversedRadixTreeIndex::onAttribute),
-                new IndexCapabilities<Attribute>("InvertedRadixTree", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.CI}, InvertedRadixTreeIndex::onAttribute),
-                new IndexCapabilities<Attribute>("SuffixTree", new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.EW, IndexFeature.SC}, SuffixTreeIndex::onAttribute)
+                new IndexCapabilities<Attribute>("Hash",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ},
+                                                 HashIndex::onAttribute),
+                new IndexCapabilities<Attribute>("Unique",
+                                                 new IndexFeature[]{IndexFeature.UNIQUE, IndexFeature.EQ, IndexFeature.IN},
+                                                 UniqueIndex::onAttribute),
+                new IndexCapabilities<Attribute[]>("Compound",
+                                                   new IndexFeature[]{IndexFeature.COMPOUND, IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ},
+                                                   CompoundIndex::onAttributes),
+                new IndexCapabilities<Attribute>("Navigable",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ, IndexFeature.LT, IndexFeature.GT, IndexFeature.BT},
+                                                 NavigableIndex::onAttribute),
+                new IndexCapabilities<Attribute>("RadixTree",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.SW},
+                                                 RadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("ReversedRadixTree",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.EW},
+                                                 ReversedRadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("InvertedRadixTree",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.CI},
+                                                 InvertedRadixTreeIndex::onAttribute),
+                new IndexCapabilities<Attribute>("SuffixTree",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.EW, IndexFeature.SC},
+                                                 SuffixTreeIndex::onAttribute)
         );
 
     }

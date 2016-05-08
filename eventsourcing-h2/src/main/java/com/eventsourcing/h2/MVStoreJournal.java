@@ -42,7 +42,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Component(property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
+@Component(
+        property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
 @Slf4j
 public class MVStoreJournal extends AbstractService implements Journal, JournalMBean {
     private Repository repository;
@@ -119,10 +120,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         getUnrecognizedEntities().forEach(layoutInformation -> {
             String properties = Joiner.on("\n  ").join(layoutInformation.properties().stream().
                     map(propertyInformation ->
-                            propertyInformation.name() + ": " + propertyInformation.type()).
-                    collect(Collectors.toList()));
+                                propertyInformation.name() + ": " + propertyInformation.type()).
+                                                                                collect(Collectors.toList()));
             log.warn("Unrecognized entity {} (hash: {})\nProperties:\n  {}\n",
-                    layoutInformation.className(), BaseEncoding.base16().encode(layoutInformation.hash()), properties);
+                     layoutInformation.className(), BaseEncoding.base16().encode(layoutInformation.hash()), properties);
         });
     }
 
@@ -147,12 +148,16 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     @Override @SneakyThrows
     public TabularData getEntities() {
-        CompositeType propertyType = new CompositeType("Entity Property", "Entity Property", new String[]{"Name", "Type"}, new String[]{"Name", "Type"},
-                new OpenType[]{SimpleType.STRING, SimpleType.STRING});
+        CompositeType propertyType = new CompositeType("Entity Property", "Entity Property",
+                                                       new String[]{"Name", "Type"}, new String[]{"Name", "Type"},
+                                                       new OpenType[]{SimpleType.STRING, SimpleType.STRING});
         TabularType propertyTabular = new TabularType("Property", "Property", propertyType, new String[]{"Name"});
-        CompositeType compositeType = new CompositeType("Entity", "Entity", new String[]{"Name", "Hash", "Recognized", "Properties"}, new String[]{"Name", "Hash", "Recognized", "Properties"},
-                new OpenType[]{SimpleType.STRING, SimpleType.STRING, SimpleType.BOOLEAN, propertyTabular});
-        TabularDataSupport tabular = new TabularDataSupport(new TabularType("Entity", "Journalled entity", compositeType, new String[]{"Name"}));
+        CompositeType compositeType = new CompositeType("Entity", "Entity",
+                                                        new String[]{"Name", "Hash", "Recognized", "Properties"},
+                                                        new String[]{"Name", "Hash", "Recognized", "Properties"},
+                                                        new OpenType[]{SimpleType.STRING, SimpleType.STRING, SimpleType.BOOLEAN, propertyTabular});
+        TabularDataSupport tabular = new TabularDataSupport(
+                new TabularType("Entity", "Journalled entity", compositeType, new String[]{"Name"}));
         layouts.forEach(new BiConsumer<byte[], byte[]>() {
             @Override @SneakyThrows
             public void accept(byte[] hash, byte[] info) {
@@ -167,7 +172,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
                     @Override @SneakyThrows
                     public void accept(PropertyInformation propertyInformation) {
                         propertyTab.put(new CompositeDataSupport(propertyType, new String[]{"Name", "Type"},
-                                new Object[]{propertyInformation.name(), propertyInformation.type()}));
+                                                                 new Object[]{propertyInformation.name(), propertyInformation.type()}));
                     }
                 });
                 entity.put("Properties", propertyTab);
@@ -218,7 +223,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         return journal(command, listener, lockProvider, null);
     }
 
-    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events) throws Exception {
+    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events)
+            throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
@@ -252,7 +258,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             listener.onAbort(e);
 
             try {
-                journal(command, listener, lockProvider, Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
+                journal(command, listener, lockProvider,
+                        Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
             } catch (Exception e1) {
                 throw e1;
             }
@@ -290,7 +297,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey(hash, 1));
-        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0, new EntityFunction<>(hash, layout));
+        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
+                                          new EntityFunction<>(hash, layout));
     }
 
     @Override
@@ -298,7 +306,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.relativeKey(hash, 1));
-        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0, new EntityFunction<>(hash, layout));
+        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
+                                          new EntityFunction<>(hash, layout));
     }
 
     @Override
@@ -316,10 +325,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     @Override @SuppressWarnings("unchecked")
     public <T extends Entity> long size(Class<T> klass) {
         if (Event.class.isAssignableFrom(klass)) {
-            return Iterators.size(eventIterator((Class<Event>)klass));
+            return Iterators.size(eventIterator((Class<Event>) klass));
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return Iterators.size(commandIterator((Class<Command<?>>)klass));
+            return Iterators.size(commandIterator((Class<Command<?>>) klass));
         }
         throw new IllegalArgumentException();
     }
@@ -327,10 +336,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     @Override
     public <T extends Entity> boolean isEmpty(Class<T> klass) {
         if (Event.class.isAssignableFrom(klass)) {
-            return !eventIterator((Class<Event>)klass).hasNext();
+            return !eventIterator((Class<Event>) klass).hasNext();
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return !commandIterator((Class<Command<?>>)klass).hasNext();
+            return !commandIterator((Class<Command<?>>) klass).hasNext();
         }
         throw new IllegalArgumentException();
     }
@@ -373,15 +382,15 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
             List<PropertyInformation> properties = layout.getProperties().stream().
                     map(property -> new PropertyInformation().
-                            name(property.getName()).
-                            type(property.getType().getBriefDescription())).
-                    collect(Collectors.toList());
+                                                                     name(property.getName()).
+                                                                     type(property.getType().getBriefDescription())).
+                                                                 collect(Collectors.toList());
 
             LayoutInformation layoutInformation = new LayoutInformation().
-                    className(aClass.getName()).
-                    hash(hash).
-                    properties(properties);
-            
+                                                                                 className(aClass.getName()).
+                                                                                 hash(hash).
+                                                                                 properties(properties);
+
             layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
         }
 
@@ -394,7 +403,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         private final BiFunction<K, V, R> function;
         private Map.Entry<K, V> entry;
 
-        public EntityHandleIterator(Iterator<Map.Entry<K, V>> iterator, Function<K, Boolean> hasNext, BiFunction<K, V, R>function) {
+        public EntityHandleIterator(Iterator<Map.Entry<K, V>> iterator, Function<K, Boolean> hasNext,
+                                    BiFunction<K, V, R> function) {
             this.iterator = iterator;
             this.hasNext = hasNext;
             this.function = function;

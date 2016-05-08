@@ -18,6 +18,7 @@ public interface Serializer<T> {
     /**
      * If type is of a constant size, should return a non-empty
      * {@link Optional} containing value size in bytes
+     *
      * @return Optional constant size
      */
     default Optional<Integer> constantSize() {
@@ -27,10 +28,11 @@ public interface Serializer<T> {
 
     /**
      * Serializes value of type <code>T</code> to a {@link ByteBuffer}.
-     *
+     * <p>
      * {@link ByteBuffer} should be of a correct size. The size can be obtained
      * from {@link #size(Object)}
-     * @param value value to serialize
+     *
+     * @param value  value to serialize
      * @param buffer ByteBuffer
      */
     void serialize(T value, ByteBuffer buffer);
@@ -45,10 +47,11 @@ public interface Serializer<T> {
 
     /**
      * Serializes a comparable (sortable, etc.) value of type <code>T</code> to a {@link ByteBuffer}.
-     *
+     * <p>
      * {@link ByteBuffer} should be of a correct size. The size can be obtained
      * from {@link #comparableSize(Object)} (Object)}
-     * @param value value to serialize
+     *
+     * @param value  value to serialize
      * @param buffer ByteBuffer
      */
     default void serializeComparable(T value, ByteBuffer buffer) {

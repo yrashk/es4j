@@ -27,15 +27,18 @@ public abstract class CQIndexEngine extends AbstractIndexEngine {
             JournalPersistence<T> tJournalPersistence = null;
 
             if (Event.class.isAssignableFrom(klass))
-                tJournalPersistence = (JournalPersistence<T>) new EventJournalPersistence<>(journal, (Class<Event>) klass);
+                tJournalPersistence = (JournalPersistence<T>) new EventJournalPersistence<>(journal,
+                                                                                            (Class<Event>) klass);
             if (Command.class.isAssignableFrom(klass))
-                tJournalPersistence = (JournalPersistence<T>) new CommandJournalPersistence<>(journal, (Class<Command>) klass);
+                tJournalPersistence = (JournalPersistence<T>) new CommandJournalPersistence<>(journal,
+                                                                                              (Class<Command>) klass);
 
             if (tJournalPersistence == null) {
                 throw new IllegalArgumentException();
             }
 
-            ConcurrentIndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(tJournalPersistence);
+            ConcurrentIndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(
+                    tJournalPersistence);
             indexedCollections.put(klass.getName(), indexedCollection);
             return indexedCollection;
         } else {

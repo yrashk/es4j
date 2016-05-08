@@ -13,9 +13,6 @@ import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-import java.util.Iterator;
-import java.util.Set;
-
 public class EventJournalPersistence<T extends Event> extends JournalPersistence<T> {
 
     public EventJournalPersistence(Journal journal, Class<T> klass) {

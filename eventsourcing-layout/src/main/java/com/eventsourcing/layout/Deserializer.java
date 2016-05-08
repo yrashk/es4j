@@ -12,6 +12,7 @@ import java.util.function.Function;
 
 /**
  * Layout deserializer
+ *
  * @param <T>
  */
 public class Deserializer<T> implements com.eventsourcing.layout.core.Deserializer<T> {
@@ -34,6 +35,7 @@ public class Deserializer<T> implements com.eventsourcing.layout.core.Deserializ
 
     /**
      * Deserialize value of type <code>T</code> from a {@link ByteBuffer}
+     *
      * @param object object with {@link #layout} layout
      * @param buffer {@link ByteBuffer}
      */
@@ -47,7 +49,8 @@ public class Deserializer<T> implements com.eventsourcing.layout.core.Deserializ
     @SneakyThrows
     public T deserialize(ByteBuffer buffer) {
         if (layout.getConstructor() != null) {
-            return (T) layout.getConstructor().newInstance(layout.getProperties().stream().map(new PropertyFunction<>(buffer)).toArray());
+            return (T) layout.getConstructor().newInstance(
+                    layout.getProperties().stream().map(new PropertyFunction<>(buffer)).toArray());
         } else {
             T value = layout.getLayoutClass().newInstance();
             deserialize(value, buffer);

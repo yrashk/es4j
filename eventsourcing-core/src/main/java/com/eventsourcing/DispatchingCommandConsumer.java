@@ -26,10 +26,13 @@ public class DispatchingCommandConsumer extends AbstractService implements Comma
     private List<CommandConsumer> consumers;
     private ServiceManager serviceManager;
 
-    public DispatchingCommandConsumer(Set<Class<? extends Command>> commands, PhysicalTimeProvider timeProvider, RepositoryImpl repository, Journal journal, IndexEngine indexEngine, LockProvider lockProvider) {
+    public DispatchingCommandConsumer(Set<Class<? extends Command>> commands, PhysicalTimeProvider timeProvider,
+                                      RepositoryImpl repository, Journal journal, IndexEngine indexEngine,
+                                      LockProvider lockProvider) {
         consumers = new LinkedList<>();
         for (int i = 0; i < ForkJoinPool.getCommonPoolParallelism(); i++) {
-            consumers.add(new DisruptorCommandConsumer(commands, timeProvider, repository, journal, indexEngine, lockProvider));
+            consumers.add(new DisruptorCommandConsumer(commands, timeProvider, repository, journal, indexEngine,
+                                                       lockProvider));
         }
     }
 
@@ -49,7 +52,8 @@ public class DispatchingCommandConsumer extends AbstractService implements Comma
     @Override
     public <T, C extends Command<T>> CompletableFuture<T> publish(C command) {
         UUID uuid = command.uuid();
-        HashCode hashCode = HashCode.fromBytes(Bytes.concat(Longs.toByteArray(uuid.getMostSignificantBits()), Longs.toByteArray(uuid.getLeastSignificantBits())));
+        HashCode hashCode = HashCode.fromBytes(Bytes.concat(Longs.toByteArray(uuid.getMostSignificantBits()),
+                                                            Longs.toByteArray(uuid.getLeastSignificantBits())));
         int bucket = Hashing.consistentHash(hashCode, consumers.size());
         return consumers.get(bucket).publish(command);
     }

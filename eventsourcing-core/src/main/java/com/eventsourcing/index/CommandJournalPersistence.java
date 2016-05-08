@@ -13,9 +13,6 @@ import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-import java.util.Iterator;
-import java.util.Set;
-
 public class CommandJournalPersistence<T extends Command<?>> extends JournalPersistence<T> {
     public CommandJournalPersistence(Journal journal, Class<T> klass) {
         super(journal, klass);

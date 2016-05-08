@@ -32,10 +32,10 @@ public class NTPServerTimeProviderTest {
     public static Iterator<Object[]> delays() {
         return IntStream.generate(() -> new Random().nextInt(3000)).
                 limit(ForkJoinPool.getCommonPoolParallelism() * 10).
-                boxed().
-                map(i -> new Object[]{i}).
-                collect(Collectors.toList()).
-                iterator();
+                                boxed().
+                                map(i -> new Object[]{i}).
+                                collect(Collectors.toList()).
+                                iterator();
     }
 
     private NTPServerTimeProvider provider;
@@ -61,7 +61,8 @@ public class NTPServerTimeProviderTest {
         // Verify that seconds passed were calculated properly
         // since the last time NTP timestamp was fetched. Measuring fractions
         // is pointless as there's a gap between sleeping and requesting the timestamp.
-        assertEquals("Delay=" + delay + " time_diff=" + (ts2.getTime() - ts1.getTime()), seconds, (ts2.getTime() - ts1.getTime()) / 1000);
+        assertEquals("Delay=" + delay + " time_diff=" + (ts2.getTime() - ts1.getTime()), seconds,
+                     (ts2.getTime() - ts1.getTime()) / 1000);
     }
 
 }

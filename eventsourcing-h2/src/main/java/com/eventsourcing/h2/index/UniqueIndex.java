@@ -26,7 +26,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
 
 public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
 
@@ -37,19 +36,19 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
 
     /**
      * Map record structure:
-     *
+     * <p>
      * <table>
-     *     <tr>
-     *         <th>Key</th>
-     *         <th colspan="2">Value</th>
-     *     </tr>
-     *     <tbody>
-     *         <tr>
-     *           <td>hash(attribute value)</td>
-     *           <td>attribute value</td>
-     *           <td>object value</td>
-     *         </tr>
-     *     </tbody>
+     * <tr>
+     * <th>Key</th>
+     * <th colspan="2">Value</th>
+     * </tr>
+     * <tbody>
+     * <tr>
+     * <td>hash(attribute value)</td>
+     * <td>attribute value</td>
+     * <td>object value</td>
+     * </tr>
+     * </tbody>
      * </table>
      */
     private final MVMap<byte[], byte[]> map;
@@ -66,7 +65,9 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
         return onAttribute(store, attribute, Hashing.sha1());
     }
-    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute, HashFunction hashFunction) {
+
+    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
+                                                       HashFunction hashFunction) {
         return new UniqueIndex<>(store, attribute, hashFunction);
     }
 
@@ -93,13 +94,15 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
                 public Iterator<O> iterator() {
                     return new UnmodifiableIterator<O>() {
                         boolean hasNext = (obj != null);
+
                         @Override
                         public boolean hasNext() {
                             return this.hasNext;
                         }
+
                         @Override
                         public O next() {
-                            this.hasNext=false;
+                            this.hasNext = false;
                             return obj;
                         }
                     };
@@ -182,8 +185,8 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
         byte[] attrHash = hashFunction.hashBytes(serializedAttribute.array()).asBytes();
 
         return new Entry(attrHash,
-                Bytes.concat(serializedAttribute.array(), serializedObject.array()),
-                serializedAttribute.array(), attrHash);
+                         Bytes.concat(serializedAttribute.array(), serializedObject.array()),
+                         serializedAttribute.array(), attrHash);
     }
 
     @Value
@@ -226,7 +229,8 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
                                     + attribute.getAttributeName() +
                                     "', potentially causing inconsistencies between indexes. " +
                                     "UniqueIndex should not be used with attributes which do not uniquely identify objects. " +
-                                    "Problematic attribute value: '" + decodeVal(map.get(entry.getKey())).getAttr() + "', " +
+                                    "Problematic attribute value: '" + decodeVal(map.get(entry.getKey()))
+                                    .getAttr() + "', " +
                                     "problematic duplicate object: " + object);
                 }
                 map.put(entry.getKey(), entry.getValue());

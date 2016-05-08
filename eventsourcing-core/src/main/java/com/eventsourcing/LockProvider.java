@@ -16,12 +16,13 @@ public interface LockProvider extends Service {
 
     /**
      * Instantiates a new lock and locks it.
+     *
      * @param lock
      * @return new lock
      */
     Lock lock(Object lock);
 
-    default <T>T withLock(Object lock, Supplier<T> supplier) {
+    default <T> T withLock(Object lock, Supplier<T> supplier) {
         Lock l = lock(lock);
         T t = supplier.get();
         l.unlock();
