@@ -5,7 +5,7 @@ Relicensed under MPL 2.0
 
 **Backwards-incompatible changes**
 
-* All type handler fingerprints were changed to become human-readable (#10)
+* All type handler fingerprints were changed to become human-readable ([#10](https://github.com/eventsourcing/es4j/issues/10))
 
 **Bugfixes**
 
