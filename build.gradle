@@ -75,7 +75,7 @@ subprojects {
             repo = 'maven'
             name = project.name
             userOrg = 'eventsourcing'
-            licenses = ['Apache-2.0']
+            licenses = ['MPL-2.0']
             vcsUrl = 'https://github.com/eventsourcing/es4j'
             version {
                 name = project.version
