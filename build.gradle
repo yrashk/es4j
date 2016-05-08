@@ -46,7 +46,7 @@ subprojects {
     apply plugin: 'maven-publish'
 
     license {
-        header rootProject.file('LICENSE')
+        header rootProject.file('LICENSE-HEADER')
     }
 
     jar {
