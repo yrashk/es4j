@@ -1,3 +1,8 @@
+0.2.7
+=====
+
+Relicensed under MPL 2.0
+
 0.2.6
 =====
 
