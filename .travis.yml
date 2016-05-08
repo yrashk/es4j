@@ -10,6 +10,7 @@ script:
   - ./gradlew check
   - ./gradlew publishToMavenLocal
   - cd examples/order && ./gradlew check
+after_success:
   - cd ../.. && ./gradlew -Psnapshot=true :eventsourcing-core:bintrayUpload :eventsourcing-layout:bintrayUpload :eventsourcing-hlc:bintrayUpload :eventsourcing-h2:bintrayUpload
 env:
   global:
