@@ -14,6 +14,7 @@ plugins {
     id 'me.champeau.gradle.jmh' version '0.3.0'
     id "com.jfrog.bintray" version "1.6"
     id 'net.researchgate.release' version '2.3.4'
+    id 'com.palantir.git-version' version '0.5.1'
 }
 
 apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
@@ -61,7 +62,7 @@ subprojects {
                 from components.java
                 groupId 'com.eventsourcing'
                 artifactId project.name
-                version project.version
+                version rootProject.hasProperty('snapshot') ? gitVersion() : project.version
             }
         }
     }
@@ -72,13 +73,13 @@ subprojects {
         publications = ['MyPublication']
         publish = true
         pkg {
-            repo = 'maven'
+            repo = !rootProject.hasProperty('snapshot') ? 'maven' : 'maven-snapshots'
             name = project.name
             userOrg = 'eventsourcing'
             licenses = ['MPL-2.0']
             vcsUrl = 'https://github.com/eventsourcing/es4j'
             version {
-                name = project.version
+                name = !rootProject.hasProperty('snapshot') ? project.version : gitVersion()
             }
         }
     }
