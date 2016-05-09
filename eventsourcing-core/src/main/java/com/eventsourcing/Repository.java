@@ -116,6 +116,18 @@ public interface Repository extends Service {
     void removeEventSetProvider(EventSetProvider provider);
 
     /**
+     * Adds an entity subscriber
+     * @param subscriber
+     */
+    void addEntitySubscriber(EntitySubscriber subscriber);
+
+    /**
+     * Removes an entity subscriber
+     * @param subscriber
+     */
+    void removeEntitySubscriber(EntitySubscriber subscriber);
+
+    /**
      * Returns a set of commands discovered or configured
      * with this repository
      *
