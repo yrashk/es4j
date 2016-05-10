@@ -5,27 +5,14 @@
  */
 package com.eventsourcing;
 
-import lombok.Getter;
-import lombok.experimental.Accessors;
-
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * EntityHandle is a "lazy loading" handle for {@link Entity}
  *
  * @param <T>
  */
-public class EntityHandle<T extends Entity> {
-    @Getter @Accessors(fluent = true)
-    private final UUID uuid;
-    private final Journal journal;
-
-    public EntityHandle(Journal journal, UUID uuid) {
-        this.journal = journal;
-        this.uuid = uuid;
-    }
-
+public interface EntityHandle<T extends Entity> {
     /**
      * Returns an optional value of the referenced entity (empty if an entity specified by a given
      * UUID can't be found). When the entity is expected to be found, {@link #get()}
@@ -33,9 +20,7 @@ public class EntityHandle<T extends Entity> {
      *
      * @return
      */
-    public Optional<T> getOptional() {
-        return journal.get(uuid);
-    }
+    Optional<T> getOptional();
 
     /**
      * Returns the referenced entity
@@ -43,7 +28,9 @@ public class EntityHandle<T extends Entity> {
      * @return
      * @throws java.util.NoSuchElementException if the entity wasn't found
      */
-    public T get() {
+    default T get() {
         return getOptional().get();
     }
+
+    java.util.UUID uuid();
 }

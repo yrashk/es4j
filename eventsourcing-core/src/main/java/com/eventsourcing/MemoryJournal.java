@@ -129,19 +129,16 @@ public class MemoryJournal extends AbstractService implements Journal {
 
     @Override
     public synchronized <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
-        return new CloseableWrappingIterator<>(commands.values().stream().
-                filter(command -> klass.isAssignableFrom(command.getClass())).
-                                                               map(command -> new EntityHandle<T>(this, command.uuid()))
-                                                       .
-                                                               iterator());
+        return new CloseableWrappingIterator<>(commands.values().stream()
+                .filter(command -> klass.isAssignableFrom(command.getClass()))
+                .map(command -> (EntityHandle<T>) new JournalEntityHandle<T>(this, command.uuid())).iterator());
     }
 
     @Override
     public synchronized <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
-        return new CloseableWrappingIterator<>(events.values().stream().
-                filter(event -> klass.isAssignableFrom(event.getClass())).
-                                                             map(event -> new EntityHandle<T>(this, event.uuid())).
-                                                             iterator());
+        return new CloseableWrappingIterator<>(events.values().stream()
+                 .filter(event -> klass.isAssignableFrom(event.getClass()))
+                 .map(event -> (EntityHandle<T>) new JournalEntityHandle<T>(this, event.uuid())).iterator());
     }
 
     @Override

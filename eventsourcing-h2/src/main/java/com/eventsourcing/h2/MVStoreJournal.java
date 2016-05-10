@@ -449,7 +449,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         public EntityHandle<T> apply(byte[] bytes, Boolean aBoolean) {
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             UUID uuid = new UUID(buffer.getLong(hash.length), buffer.getLong(hash.length + 8));
-            return new EntityHandle<>(MVStoreJournal.this, uuid);
+            return new JournalEntityHandle<>(MVStoreJournal.this, uuid);
         }
     }
 
