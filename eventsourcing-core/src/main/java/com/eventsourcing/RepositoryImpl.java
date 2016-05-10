@@ -39,6 +39,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     private LockProvider lockProvider;
     private CommandConsumer commandConsumer;
 
+    private List<EntitySubscriber> entitySubscribers = new ArrayList<>();
+
     @Activate
     protected void activate(ComponentContext ctx) {
         if (!isRunning()) {
@@ -147,6 +149,17 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
     @Override
+    public void addEntitySubscriber(EntitySubscriber subscriber) {
+        entitySubscribers.add(subscriber);
+    }
+
+    @Override
+    public void removeEntitySubscriber(EntitySubscriber subscriber) {
+        entitySubscribers.remove(subscriber);
+    }
+
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC)
+    @Override
     public void addEventSetProvider(EventSetProvider provider) {
         final Set<Class<? extends Event>> newEvents = provider.getEvents();
         Runnable runnable = () -> {
@@ -190,7 +203,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
 
     @Override
     public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
-        return this.commandConsumer.publish(command);
+        return this.commandConsumer.publish(command, entitySubscribers);
     }
 
 

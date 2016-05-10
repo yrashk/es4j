@@ -7,8 +7,13 @@ package com.eventsourcing;
 
 import com.google.common.util.concurrent.Service;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 public interface CommandConsumer extends Service {
-    <T, C extends Command<T>> CompletableFuture<T> publish(C command);
+    default <T, C extends Command<T>> CompletableFuture<T> publish(C command) {
+        return publish(command, Collections.emptyList());
+    }
+    <T, C extends Command<T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers);
 }

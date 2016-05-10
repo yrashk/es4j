@@ -247,11 +247,11 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             txHashCommands.put(hashBuffer.array(), true);
             txCommandHashes.put(command.uuid(), commandLayout.getHash());
 
-            listener.onCommit();
-
             tx.prepare();
             tx.commit();
 
+            listener.onCommit();
+            
             return count;
         } catch (Exception e) {
             tx.rollback();

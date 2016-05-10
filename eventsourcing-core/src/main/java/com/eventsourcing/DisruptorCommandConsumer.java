@@ -15,16 +15,17 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.cqengine.IndexedCollection;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 @Slf4j
 public class DisruptorCommandConsumer extends AbstractService implements CommandConsumer {
@@ -40,6 +41,8 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     private final Map<Class<? extends Command>, Deserializer> deserializers = new HashMap<>();
 
     private static class CommandEvent {
+        @Getter @Setter
+        Collection<EntitySubscriber> entitySubscribers = new ArrayList<>();
         Map<Class<? extends Command>, Command> commands = new HashMap<>();
         TrackingLockProvider lockProvider;
         CompletableFuture completed;
@@ -76,14 +79,19 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     private HybridTimestamp timestamp;
 
     private static class JournalListener implements Journal.Listener {
+        private final CommandEvent disruptorEvent;
         private final IndexEngine indexEngine;
         private final Journal journal;
         private final Command<?> command;
-
-        private JournalListener(IndexEngine indexEngine, Journal journal, Command<?> command) {
+        
+        private final Map<EntitySubscriber, Set<UUID>> subscriptions = new HashMap<>();
+        
+        private JournalListener(CommandEvent event, IndexEngine indexEngine, Journal journal, Command<?> command) {
+            this.disruptorEvent = event;
             this.indexEngine = indexEngine;
             this.journal = journal;
             this.command = command;
+            disruptorEvent.getEntitySubscribers().forEach(s -> subscriptions.put(s, new HashSet<>()));
         }
 
         @Override @SuppressWarnings("unchecked")
@@ -91,13 +99,25 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
             IndexedCollection<EntityHandle<Event>> coll = indexEngine
                     .getIndexedCollection((Class<Event>) event.getClass());
             coll.add(new EntityHandle<>(journal, event.uuid()));
+            disruptorEvent.getEntitySubscribers().stream()
+                    .filter(s -> s.matches(event))
+                    .forEach(s -> subscriptions.get(s).add(event.uuid()));
         }
 
         @Override @SuppressWarnings("unchecked")
         public void onCommit() {
             IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine
                     .getIndexedCollection((Class<Command<?>>) command.getClass());
-            coll.add(new EntityHandle<>(journal, command.uuid()));
+            EntityHandle<Command<?>> commandHandle = new EntityHandle<>(journal, command.uuid());
+            coll.add(commandHandle);
+            subscriptions.entrySet().stream()
+                    .forEach(entry -> entry.getKey()
+                                           .accept(entry.getValue()
+                                                        .stream()
+                                                        .map(uuid -> new EntityHandle<>(journal, uuid))));
+            disruptorEvent.getEntitySubscribers().stream()
+                    .filter(s -> s.matches(command))
+                    .forEach(s -> s.accept(Stream.of(commandHandle)));
         }
 
         @Override
@@ -188,7 +208,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         Command command = event.getCommand();
         event.lockProvider = new TrackingLockProvider(this.lockProvider);
         event.lockProvider.startAsync().awaitRunning();
-        journal.journal(command, new JournalListener(indexEngine, journal, command), event.lockProvider);
+        journal.journal(command, new JournalListener(event, indexEngine, journal, command), event.lockProvider);
     }
 
     private void complete(CommandEvent event) throws Exception {
@@ -199,16 +219,18 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     }
 
     private <T, C extends Command<T>> void translate(CommandEvent event, long sequence, C command,
+                                                     Collection<EntitySubscriber> subscribers,
                                                      CompletableFuture<T> completed) {
+        event.setEntitySubscribers(subscribers);
         event.setCommandClass((Class<Command>) command.getClass());
         event.commands.put(command.getClass(), command);
         event.completed = completed;
     }
 
     @Override
-    public <T, C extends Command<T>> CompletableFuture<T> publish(C command) {
+    public <T, C extends Command<T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        ringBuffer.publishEvent(this::translate, command, future);
+        ringBuffer.publishEvent(this::translate, command, subscribers, future);
         return future;
     }
 

@@ -29,6 +29,7 @@ import org.testng.annotations.Test;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -121,6 +122,26 @@ public abstract class RepositoryTest<T extends Repository> {
     @SneakyThrows
     public void basicPublish() {
         assertEquals("hello, world", repository.publish(new RepositoryTestCommand()).get());
+    }
+
+    @Test
+    @SneakyThrows
+    public void subscribe() {
+        final AtomicBoolean gotEvent = new AtomicBoolean();
+        final AtomicBoolean gotCommand = new AtomicBoolean();
+        repository.addEntitySubscriber(new ClassEntitySubscriber<TestEvent>(TestEvent.class) {
+            @Override public void onEntity(EntityHandle<TestEvent> entity) {
+                gotEvent.set(journal.get(entity.uuid()).isPresent());
+            }
+        });
+        repository.addEntitySubscriber(new ClassEntitySubscriber<RepositoryTestCommand>(RepositoryTestCommand.class) {
+            @Override public void onEntity(EntityHandle<RepositoryTestCommand> entity) {
+                gotCommand.set(journal.get(entity.uuid()).isPresent());
+            }
+        });
+        repository.publish(new RepositoryTestCommand()).get();
+        assertTrue(gotEvent.get());
+        assertTrue(gotCommand.get());
     }
 
     @Test

@@ -14,10 +14,7 @@ import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ServiceManager;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 
@@ -50,7 +47,7 @@ public class DispatchingCommandConsumer extends AbstractService implements Comma
     }
 
     @Override
-    public <T, C extends Command<T>> CompletableFuture<T> publish(C command) {
+    public <T, C extends Command<T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers) {
         UUID uuid = command.uuid();
         HashCode hashCode = HashCode.fromBytes(Bytes.concat(Longs.toByteArray(uuid.getMostSignificantBits()),
                                                             Longs.toByteArray(uuid.getLeastSignificantBits())));
