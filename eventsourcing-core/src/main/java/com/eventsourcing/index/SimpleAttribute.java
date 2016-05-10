@@ -7,11 +7,12 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.JournalEntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
 /**
  * An extension of {@link com.googlecode.cqengine.attribute.SimpleAttribute} that hides
- * the unnecessary complexity of using {@link EntityHandle}
+ * the unnecessary complexity of using {@link JournalEntityHandle}
  *
  * @param <O>
  * @param <A>

@@ -98,7 +98,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         public void onEvent(Event event) {
             IndexedCollection<EntityHandle<Event>> coll = indexEngine
                     .getIndexedCollection((Class<Event>) event.getClass());
-            coll.add(new EntityHandle<>(journal, event.uuid()));
+            coll.add(new JournalEntityHandle<>(journal, event.uuid()));
             disruptorEvent.getEntitySubscribers().stream()
                     .filter(s -> s.matches(event))
                     .forEach(s -> subscriptions.get(s).add(event.uuid()));
@@ -108,13 +108,13 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         public void onCommit() {
             IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine
                     .getIndexedCollection((Class<Command<?>>) command.getClass());
-            EntityHandle<Command<?>> commandHandle = new EntityHandle<>(journal, command.uuid());
+            EntityHandle<Command<?>> commandHandle = new JournalEntityHandle<>(journal, command.uuid());
             coll.add(commandHandle);
             subscriptions.entrySet().stream()
                     .forEach(entry -> entry.getKey()
                                            .accept(entry.getValue()
                                                         .stream()
-                                                        .map(uuid -> new EntityHandle<>(journal, uuid))));
+                                                        .map(uuid -> new JournalEntityHandle<>(journal, uuid))));
             disruptorEvent.getEntitySubscribers().stream()
                     .filter(s -> s.matches(command))
                     .forEach(s -> s.accept(Stream.of(commandHandle)));
