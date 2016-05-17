@@ -1,4 +1,4 @@
-Our goal is to encourage frictionless contributions to the project. In order to achieve that, we use ZeroMQ's [C4.1 process](C41.md) with some [pending] caveats. Please read it, it will answer a lot of questions. Our goal is to merge pull requests as quickly as possible and make new stable releases regularly.
+Our goal is to encourage frictionless contributions to the project. In order to achieve that, we use ZeroMQ's [C4 process](C4.md). Please read it, it will answer a lot of questions. Our goal is to merge pull requests as quickly as possible and make new stable releases regularly.
 
 It is highly recommended to watch [Pieter Hintjens' talk on building open source communities](https://www.youtube.com/watch?v=uzxcILudFWM) as well as read his [book
 on the same matter](https://www.gitbook.com/book/hintjens/social-architecture/details). 
