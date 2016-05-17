@@ -93,6 +93,6 @@ Maven configuration:
 # Contributing
 
 Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or
-ask a question. We use ZeroMQ's [C4.1 process](C41.md) with some [pending] caveats.
+ask a question. We use ZeroMQ's [C4 process](C4.md).
 
 For more details, please refer to [CONTRIBUTING](CONTRIBUTING.md)
