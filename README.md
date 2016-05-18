@@ -93,6 +93,6 @@ Maven configuration:
 # Contributing
 
 Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or
-ask a question. We use ZeroMQ's [C4 process](http://rfc.unprotocols.org/1/).
+ask a question. We use Unprotocols [C4 process](http://rfc.unprotocols.org/1/).
 
 For more details, please refer to [CONTRIBUTING](CONTRIBUTING.md)
