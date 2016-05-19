@@ -1,3 +1,15 @@
+0.3.0
+=====
+
+**Backwards-incompatible changes**
+
+* EntityHandle is now an interface
+
+**Features**
+
+* New EntitySubscriber interface to subscribe to subsets of
+  journaled entities.
+
 0.2.7
 =====
 
