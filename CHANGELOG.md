@@ -3,12 +3,12 @@
 
 **Backwards-incompatible changes**
 
-* EntityHandle is now an interface
+* EntityHandle is now an interface ([#23](https://github.com/eventsourcing/es4j/pull/23))
 
 **Features**
 
 * New EntitySubscriber interface to subscribe to subsets of
-  journaled entities.
+  journaled entities. ([#22](https://github.com/eventsourcing/es4j/pull/22))
 
 0.2.7
 =====
