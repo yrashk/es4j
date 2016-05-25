@@ -10,9 +10,6 @@ Instead of mutating data in a database, it stores all changes
 to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation
 for deep analytics, data recovery, audit trails and other associated benefits.
 
-*This is an early version. That said, it's a rewrite of another
-library that has been used in real projects, so a lot was learned and incorporated in this incarnation.*
-
 ## Key benefits
 
 * Flexibility of data aggregation and representation
