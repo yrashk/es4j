@@ -74,11 +74,6 @@ public class SerializerTest {
         private Boolean oBoolean;
 
         @Getter @Setter
-        private char pChar;
-        @Getter @Setter
-        private Character oChar;
-
-        @Getter @Setter
         private String str;
 
         @Getter @Setter
@@ -238,22 +233,6 @@ public class SerializerTest {
 
         assertEquals(deserialized.isPBoolean(), true);
         assertEquals(deserialized.getOBoolean(), (Boolean) false);
-    }
-
-    @Test
-    public void charSerialization() {
-        TestBean test = new TestBean();
-        test.setPChar(Character.MIN_VALUE);
-        test.setOChar(Character.MAX_VALUE);
-
-        ByteBuffer buffer = serializer.serialize(test);
-
-        buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
-
-        assertEquals(deserialized.getPChar(), Character.MIN_VALUE);
-        assertEquals(deserialized.getOChar(), (Character) Character.MAX_VALUE);
     }
 
     @Test

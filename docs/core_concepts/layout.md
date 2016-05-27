@@ -65,7 +65,6 @@ to be improved.
 * Double/double
 * BigDecimal
 * Boolean/boolean
-* Character/char
 * java.lang.String
 * java.util.UUID
 * Enum (Java enumerations)
