@@ -10,6 +10,7 @@ import com.eventsourcing.layout.types.*;
 import com.fasterxml.classmate.ResolvedType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.AnnotatedType;
 import java.math.BigDecimal;
@@ -50,7 +51,6 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
      * <li><code>Double/double</code></li>
      * <li><code>BigDecimal</code></li>
      * <li><code>Boolean/boolean</code></li>
-     * <li><code>Character/char</code></li>
      * <li><code>String</code></li>
      * <li><code>UUID</code></li>
      * <li><code>Enum</code></li>
@@ -96,7 +96,7 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
             }
 
             if (type.isInstanceOf(Character.TYPE) || type.isInstanceOf(Character.class)) {
-                return new CharacterTypeHandler();
+                throw new RuntimeException("Character type is not supported in RFC1/ELF");
             }
 
             if (type.isInstanceOf(String.class)) {
