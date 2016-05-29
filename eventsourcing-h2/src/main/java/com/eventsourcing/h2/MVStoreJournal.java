@@ -11,6 +11,8 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
@@ -27,6 +29,7 @@ import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.db.TransactionStore;
 import org.h2.mvstore.db.TransactionStore.TransactionMap;
+import org.h2.mvstore.type.ObjectDataType;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
@@ -35,6 +38,7 @@ import org.osgi.service.component.annotations.Deactivate;
 import javax.management.openmbean.*;
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -50,10 +54,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
     private MVStore store;
-    private TransactionMap<UUID, byte[]> commandPayloads;
+    private TransactionMap<UUID, ByteBuffer> commandPayloads;
     private TransactionMap<UUID, byte[]> commandHashes;
     private TransactionMap<byte[], Boolean> hashCommands;
-    private TransactionMap<UUID, byte[]> eventPayloads;
+    private TransactionMap<UUID, ByteBuffer> eventPayloads;
     private TransactionMap<UUID, UUID> eventCommands;
     private TransactionMap<byte[], Boolean> hashEvents;
     private TransactionMap<UUID, byte[]> eventHashes;
@@ -63,6 +67,17 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private TransactionStore transactionStore;
     TransactionStore.Transaction readTx;
 
+    private int MINIMUM_BYTE_BUFFER_SIZE = 1024*1024;
+    private ByteBuffer standardByteBuffer = ByteBuffer.allocate(MINIMUM_BYTE_BUFFER_SIZE);
+    private LoadingCache<Integer, ByteBuffer> byteBuffers = Caffeine.newBuilder()
+            .expireAfterAccess(10, TimeUnit.MINUTES)
+            .build(size -> {
+                if (size <= MINIMUM_BYTE_BUFFER_SIZE) {
+                    return standardByteBuffer;
+                } else {
+                    return ByteBuffer.allocate(size);
+                }
+            });
 
     public MVStoreJournal(MVStore store) {
         this();
@@ -191,10 +206,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         transactionStore.init();
 
         readTx = transactionStore.begin();
-        commandPayloads = readTx.openMap("commandPayloads");
+        commandPayloads = readTx.openMap("commandPayloads", new ObjectDataType(), new ByteBufferDataType());
         commandHashes = readTx.openMap("commandHashes");
         hashCommands = readTx.openMap("hashCommands");
-        eventPayloads = readTx.openMap("eventPayloads");
+        eventPayloads = readTx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
         eventCommands = readTx.openMap("eventCommands");
         eventHashes = readTx.openMap("eventHashes");
         hashEvents = readTx.openMap("hashEvents");
@@ -223,29 +238,32 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         return journal(command, listener, lockProvider, null);
     }
 
+    private ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
+
     private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events)
             throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
 
-            ByteBuffer buffer = new Serializer<>(commandLayout).serialize(command);
-
-            ByteBuffer hashBuffer = ByteBuffer.allocate(16 + commandLayout.getHash().length);
+            hashBuffer.rewind();
             hashBuffer.put(commandLayout.getHash());
             hashBuffer.putLong(command.uuid().getMostSignificantBits());
             hashBuffer.putLong(command.uuid().getLeastSignificantBits());
 
-            TransactionMap<UUID, byte[]> txCommandPayloads = tx.openMap("commandPayloads");
+            TransactionMap<UUID, ByteBuffer> txCommandPayloads = tx.openMap("commandPayloads", new ObjectDataType(),
+                                                                            new ByteBufferDataType());
             TransactionMap<byte[], Boolean> txHashCommands = tx.openMap("hashCommands");
             TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
 
             Stream<Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
             long count = actualEvents.peek(new EventConsumer(tx, command, listener)).count();
 
-            txCommandPayloads.put(command.uuid(), buffer.array());
-            txHashCommands.put(hashBuffer.array(), true);
-            txCommandHashes.put(command.uuid(), commandLayout.getHash());
+            ByteBuffer buffer = new Serializer<>(commandLayout).serialize(command);
+            buffer.rewind();
+            txCommandPayloads.tryPut(command.uuid(), buffer);
+            txHashCommands.tryPut(hashBuffer.array(), true);
+            txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
 
             tx.prepare();
             tx.commit();
@@ -273,19 +291,19 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     @SneakyThrows @SuppressWarnings("unchecked")
     public <T extends Entity> Optional<T> get(UUID uuid) {
         if (commandPayloads.containsKey(uuid)) {
-            byte[] payload = commandPayloads.get(uuid);
+            ByteBuffer payload = commandPayloads.get(uuid);
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
             Layout<Command<?>> layout = layoutsByHash.get(encodedHash);
             Command command = (Command) layout.getLayoutClass().newInstance().uuid(uuid);
-            new Deserializer<>(layout).deserialize(command, ByteBuffer.wrap(payload));
+            new Deserializer<>(layout).deserialize(command, payload);
             return Optional.of((T) command);
         }
         if (eventPayloads.containsKey(uuid)) {
-            byte[] payload = eventPayloads.get(uuid);
+            ByteBuffer payload = eventPayloads.get(uuid);
             String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
             Layout<Event> layout = layoutsByHash.get(encodedHash);
             Event event = (Event) layout.getLayoutClass().newInstance().uuid(uuid);
-            new Deserializer<>(layout).deserialize(event, ByteBuffer.wrap(payload));
+            new Deserializer<>(layout).deserialize(event, payload);
             return Optional.of((T) event);
         }
         return Optional.empty();
@@ -296,7 +314,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     public <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
-        Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey(hash, 1));
+        Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey
+                (hash, 1));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
                                           new EntityFunction<>(hash, layout));
     }
@@ -462,19 +481,22 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         private final TransactionMap<UUID, UUID> txEventCommands;
         private final TransactionMap<UUID, byte[]> txEventHashes;
         private final TransactionMap<byte[], Boolean> txHashEvents;
-        private final TransactionMap<UUID, byte[]> txEventPayloads;
+        private final TransactionMap<UUID, ByteBuffer> txEventPayloads;
 
         public EventConsumer(TransactionStore.Transaction tx, Command<?> command, Journal.Listener listener) {
             this.tx = tx;
             this.command = command;
             this.listener = listener;
             this.ts = command.timestamp().clone();
-            txEventPayloads = tx.openMap("eventPayloads");
+            txEventPayloads = tx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
             txHashEvents = tx.openMap("hashEvents");
             txEventHashes = tx.openMap("eventHashes");
             txEventCommands = tx.openMap("eventCommands");
             txCommandEvents = tx.openMap("commandEvents");
         }
+
+        private ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
+        private ByteBuffer commandEventBuf = ByteBuffer.allocate(32);
 
         @Override
         @SneakyThrows
@@ -484,25 +506,33 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
             Layout layout = layoutsByClass.get(event.getClass().getName());
 
-            ByteBuffer buffer1 = new Serializer<>(layout).serialize(event);
+            Serializer serializer = new Serializer<>(layout);
+            int size = serializer.size(event);
 
-            ByteBuffer hashBuffer1 = ByteBuffer.allocate(16 + layout.getHash().length);
-            hashBuffer1.put(layout.getHash());
-            hashBuffer1.putLong(event.uuid().getMostSignificantBits());
-            hashBuffer1.putLong(event.uuid().getLeastSignificantBits());
+            ByteBuffer payloadBuffer = byteBuffers.get(size);
+            payloadBuffer.clear();
+            payloadBuffer.limit(size);
+            serializer.serialize(event, payloadBuffer);
+            payloadBuffer.position(0);
 
-            ByteBuffer commandEventBuf = ByteBuffer.allocate(16 * 2);
+            txEventPayloads.tryPut(event.uuid(), payloadBuffer);
+
+            hashBuffer.rewind();
+            hashBuffer.put(layout.getHash());
+            hashBuffer.putLong(event.uuid().getMostSignificantBits());
+            hashBuffer.putLong(event.uuid().getLeastSignificantBits());
+
+            commandEventBuf.rewind();
             commandEventBuf.putLong(command.uuid().getMostSignificantBits());
             commandEventBuf.putLong(command.uuid().getLeastSignificantBits());
             commandEventBuf.putLong(event.uuid().getMostSignificantBits());
             commandEventBuf.putLong(event.uuid().getLeastSignificantBits());
 
 
-            txEventPayloads.put(event.uuid(), buffer1.array());
-            txHashEvents.put(hashBuffer1.array(), true);
-            txEventHashes.put(event.uuid(), layout.getHash());
-            txEventCommands.put(event.uuid(), command.uuid());
-            txCommandEvents.put(commandEventBuf.array(), layout.getHash());
+            txHashEvents.tryPut(hashBuffer.array(), true);
+            txEventHashes.tryPut(event.uuid(), layout.getHash());
+            txEventCommands.tryPut(event.uuid(), command.uuid());
+            txCommandEvents.tryPut(commandEventBuf.array(), layout.getHash());
 
             listener.onEvent(event);
         }
