@@ -28,6 +28,10 @@ for deep analytics, data recovery, audit trails and other associated benefits.
 * Causality-preserving [Hybrid Logical Clocks](http://www.cse.buffalo.edu/tech-reports/2014-04.pdf)
 * Locking synchronization primitive
 
+# Presentation
+
+You can find our current slide deck at https://eventsourcing.com/presentation
+
 # Documentation
 
 Installation instructions and documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
