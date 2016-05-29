@@ -5,7 +5,7 @@ dependencies {
     testCompile project(':eventsourcing-core').sourceSets.test.output
 
     // H2 database
-    compile 'com.h2database:h2:1.4.191'
+    compile 'com.h2database:h2:1.4.192'
 
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
