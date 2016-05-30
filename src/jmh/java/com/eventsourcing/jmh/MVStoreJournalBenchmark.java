@@ -15,7 +15,6 @@ import java.io.File;
 public class MVStoreJournalBenchmark extends JournalBenchmark {
 
     @Override protected Journal createJournal() {
-        System.out.println("createJ");
         new File("benchmark_journal.db").delete();
         return new MVStoreJournal(MVStore.open("nio:benchmark_journal.db"));
     }
