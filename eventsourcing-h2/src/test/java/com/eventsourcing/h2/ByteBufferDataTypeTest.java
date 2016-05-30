@@ -44,7 +44,7 @@ public class ByteBufferDataTypeTest {
         rb.rewind();
         ByteBuffer b1 = (ByteBuffer) byteBufferDataType.read(rb);
         assertEquals(b1.limit(), 49);
-        assertEquals(rb.getInt(), 100);
+        assertEquals(b1.getInt(), 100);
 
         rb.rewind();
 
