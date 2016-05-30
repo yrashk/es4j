@@ -376,19 +376,23 @@
 package com.eventsourcing.jmh;
 
 import com.eventsourcing.*;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.index.MemoryIndexEngine;
+import lombok.SneakyThrows;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.ExecutionException;
 
 @State(Scope.Benchmark)
-public abstract class RepositoryBenchmark {
-
+public abstract class JournalBenchmark {
     private Repository repository;
     private Journal journal;
+
     private IndexEngine indexEngine;
     private MemoryLockProvider lockProvider;
+    private HybridTimestamp timestamp;
 
     @Setup
     public void setup() throws Exception {
@@ -401,21 +405,23 @@ public abstract class RepositoryBenchmark {
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
 
-        indexEngine = createIndex();
+        indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
 
         lockProvider = new MemoryLockProvider();
         repository.setLockProvider(lockProvider);
 
         repository.addCommandSetProvider(
-                new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
+                new PackageCommandSetProvider(new Package[]{JournalBenchmark.class.getPackage()}));
         repository.addEventSetProvider(
-                new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
+                new PackageEventSetProvider(new Package[]{JournalBenchmark.class.getPackage()}));
 
         repository.startAsync().awaitRunning();
-    }
 
-    protected abstract IndexEngine createIndex();
+        timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
+    }
 
     protected abstract Journal createJournal();
 
@@ -427,8 +433,9 @@ public abstract class RepositoryBenchmark {
 
     @Benchmark
     @BenchmarkMode(Mode.All)
+    @SneakyThrows
     public void basicPublish() throws ExecutionException, InterruptedException {
-        repository.publish(new TestCommand()).get();
+        journal.journal((Command<?>) new TestCommand().timestamp(timestamp));
     }
 
 

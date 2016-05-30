@@ -375,61 +375,34 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.*;
-import com.eventsourcing.hlc.NTPServerTimeProvider;
-import com.eventsourcing.index.IndexEngine;
-import org.openjdk.jmh.annotations.*;
+import com.eventsourcing.Event;
+import com.eventsourcing.annotations.Index;
+import com.eventsourcing.index.SimpleAttribute;
+import com.googlecode.cqengine.query.option.QueryOptions;
 
-import java.util.concurrent.ExecutionException;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
-@State(Scope.Benchmark)
-public abstract class RepositoryBenchmark {
+public class TestEvent extends Event {
+    private String string;
 
-    private Repository repository;
-    private Journal journal;
-    private IndexEngine indexEngine;
-    private MemoryLockProvider lockProvider;
+    @Index({EQ})
+    public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>("attr") {
+        @Override
+        public String getValue(TestEvent object, QueryOptions queryOptions) {
+            return object.string();
+        }
+    };
 
-    @Setup
-    public void setup() throws Exception {
-        repository = Repository.create();
-
-        journal = createJournal();
-
-        repository.setJournal(journal);
-
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
-        repository.setPhysicalTimeProvider(timeProvider);
-
-        indexEngine = createIndex();
-        repository.setIndexEngine(indexEngine);
-
-        lockProvider = new MemoryLockProvider();
-        repository.setLockProvider(lockProvider);
-
-        repository.addCommandSetProvider(
-                new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
-        repository.addEventSetProvider(
-                new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
-
-        repository.startAsync().awaitRunning();
+    public String toString() {
+        return "RepositoryBenchmark.TestEvent(string=" + this.string + ")";
     }
 
-    protected abstract IndexEngine createIndex();
-
-    protected abstract Journal createJournal();
-
-    @TearDown
-    public void teardown() {
-        repository.stopAsync().awaitTerminated();
+    public String string() {
+        return this.string;
     }
 
-
-    @Benchmark
-    @BenchmarkMode(Mode.All)
-    public void basicPublish() throws ExecutionException, InterruptedException {
-        repository.publish(new TestCommand()).get();
+    public TestEvent string(String string) {
+        this.string = string;
+        return this;
     }
-
-
 }

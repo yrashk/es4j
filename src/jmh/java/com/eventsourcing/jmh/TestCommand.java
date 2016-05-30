@@ -375,61 +375,20 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.*;
-import com.eventsourcing.hlc.NTPServerTimeProvider;
-import com.eventsourcing.index.IndexEngine;
-import org.openjdk.jmh.annotations.*;
+import com.eventsourcing.Command;
+import com.eventsourcing.Event;
+import com.eventsourcing.Repository;
 
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
-@State(Scope.Benchmark)
-public abstract class RepositoryBenchmark {
-
-    private Repository repository;
-    private Journal journal;
-    private IndexEngine indexEngine;
-    private MemoryLockProvider lockProvider;
-
-    @Setup
-    public void setup() throws Exception {
-        repository = Repository.create();
-
-        journal = createJournal();
-
-        repository.setJournal(journal);
-
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
-        repository.setPhysicalTimeProvider(timeProvider);
-
-        indexEngine = createIndex();
-        repository.setIndexEngine(indexEngine);
-
-        lockProvider = new MemoryLockProvider();
-        repository.setLockProvider(lockProvider);
-
-        repository.addCommandSetProvider(
-                new PackageCommandSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
-        repository.addEventSetProvider(
-                new PackageEventSetProvider(new Package[]{RepositoryBenchmark.class.getPackage()}));
-
-        repository.startAsync().awaitRunning();
+public class TestCommand extends Command<String> {
+    @Override
+    public Stream<Event> events(Repository repository) {
+        return Stream.of(new TestEvent().string("test"));
     }
 
-    protected abstract IndexEngine createIndex();
-
-    protected abstract Journal createJournal();
-
-    @TearDown
-    public void teardown() {
-        repository.stopAsync().awaitTerminated();
+    @Override
+    public String onCompletion() {
+        return "hello, world";
     }
-
-
-    @Benchmark
-    @BenchmarkMode(Mode.All)
-    public void basicPublish() throws ExecutionException, InterruptedException {
-        repository.publish(new TestCommand()).get();
-    }
-
-
 }

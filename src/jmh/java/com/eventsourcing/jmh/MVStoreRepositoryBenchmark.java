@@ -386,13 +386,13 @@ import java.io.File;
 public class MVStoreRepositoryBenchmark extends RepositoryBenchmark {
 
     protected IndexEngine createIndex() {
-        new File("benchmark_index.db").delete();
-        return new MVStoreIndexEngine(MVStore.open("nio:benchmark_index.db"));
+        new File("benchmark_repo_index.db").delete();
+        return new MVStoreIndexEngine(MVStore.open("nio:benchmark_repo_index.db"));
     }
 
     protected Journal createJournal() {
-        new File("benchmark_journal.db").delete();
-        return new MVStoreJournal(MVStore.open("nio:benchmark_journal.db"));
+        new File("benchmark_repo_journal.db").delete();
+        return new MVStoreJournal(MVStore.open("nio:benchmark_repo_journal.db"));
     }
 
 }
