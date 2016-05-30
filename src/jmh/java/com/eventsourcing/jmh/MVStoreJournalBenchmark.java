@@ -6,19 +6,17 @@
 package com.eventsourcing.jmh;
 
 import com.eventsourcing.Journal;
-import com.eventsourcing.h2.MVStoreIndexEngine;
 import com.eventsourcing.h2.MVStoreJournal;
 import com.eventsourcing.index.IndexEngine;
 import org.h2.mvstore.MVStore;
 
-public class MVStoreMemoryRepositoryBenchmark extends RepositoryBenchmark {
+import java.io.File;
 
-    protected IndexEngine createIndex() {
-        return new MVStoreIndexEngine(MVStore.open(null));
+public class MVStoreJournalBenchmark extends JournalBenchmark {
+
+    @Override protected Journal createJournal() {
+        System.out.println("createJ");
+        new File("benchmark_journal.db").delete();
+        return new MVStoreJournal(MVStore.open("nio:benchmark_journal.db"));
     }
-
-    protected Journal createJournal() {
-        return new MVStoreJournal(MVStore.open(null));
-    }
-
 }
