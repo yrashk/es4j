@@ -41,7 +41,9 @@ public class ByteBufferDataType implements DataType {
 
     @Override public Object read(ByteBuffer buff) {
         int sz = buff.getInt();
-        return buff.slice().limit(sz);
+        byte dst[] = new byte[sz];
+        buff.get(dst, 0, sz);
+        return ByteBuffer.wrap(dst);
     }
 
     @Override public void read(ByteBuffer buff, Object[] obj, int len, boolean key) {
