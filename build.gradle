@@ -27,6 +27,11 @@ release {
 
 allprojects {
     apply plugin: 'idea'
+    apply plugin: 'license'
+
+    license {
+        header rootProject.file('LICENSE-HEADER')
+    }
 
     repositories {
         jcenter()
@@ -39,16 +44,11 @@ subprojects {
 
     apply plugin: 'java'
     apply plugin: 'osgi'
-    apply plugin: 'license'
     apply plugin: 'java-library-distribution'
     apply plugin: 'biz.aQute.bnd.builder'
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
-
-    license {
-        header rootProject.file('LICENSE-HEADER')
-    }
 
     jar {
         manifest {
