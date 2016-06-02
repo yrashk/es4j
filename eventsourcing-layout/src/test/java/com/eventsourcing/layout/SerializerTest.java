@@ -99,6 +99,8 @@ public class SerializerTest {
         @Getter @Setter
         private BigDecimal bigDecimal;
 
+        @Getter @Setter
+        private Date date;
     }
 
     @BeforeClass
@@ -369,5 +371,20 @@ public class SerializerTest {
         deserializer.deserialize(deserialized, buffer);
 
         assertEquals(deserialized.getBigDecimal(), new BigDecimal(PI));
+    }
+
+    @Test
+    public void dateSerialization() {
+        TestBean test = new TestBean();
+        Date date = new Date();
+        test.setDate(date);
+
+        ByteBuffer buffer = serializer.serialize(test);
+
+        buffer.rewind();
+        TestBean deserialized = new TestBean();
+        deserializer.deserialize(deserialized, buffer);
+
+        assertEquals(deserialized.getDate(), date);
     }
 }

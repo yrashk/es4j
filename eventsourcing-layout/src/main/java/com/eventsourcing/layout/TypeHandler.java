@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.AnnotatedType;
 import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,6 +56,7 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
      * <li><code>Boolean/boolean</code></li>
      * <li><code>String</code></li>
      * <li><code>UUID</code></li>
+     * <li><code>java.util.Date</code></li>
      * <li><code>Enum</code></li>
      * <li><code>List&lt;?&gt;</code></li>
      * <li><code>Optional&lt;?&gt;</code></li>
@@ -107,6 +109,10 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
 
             if (type.isInstanceOf(UUID.class)) {
                 return new UUIDTypeHandler();
+            }
+
+            if (type.isInstanceOf(Date.class)) {
+                return new DateHandler();
             }
 
             if (type.isInstanceOf(List.class)) {
