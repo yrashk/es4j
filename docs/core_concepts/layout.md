@@ -67,6 +67,7 @@ to be improved.
 * Boolean/boolean
 * java.lang.String
 * java.util.UUID
+* java.util.Date
 * Enum (Java enumerations)
 * List<?> (Java lists)
 * Optional<?>
