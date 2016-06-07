@@ -18,13 +18,14 @@ import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
 import java.util.Date;
+import java.util.Optional;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 import static com.googlecode.cqengine.query.QueryFactory.threshold;
 
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface DeletedProtocol extends Protocol {
-    default Date deletedAt() {
+    default Optional<Deleted> deleted() {
         try (ResultSet<EntityHandle<Deleted>> resultSet =
                      getRepository().query(Deleted.class,
                                            and(equal(Deleted.REFERENCE_ID, id()),
@@ -34,13 +35,9 @@ public interface DeletedProtocol extends Protocol {
                                            queryOptions(orderBy(descending(Deleted.TIMESTAMP)),
                                                         applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
             if (resultSet.isEmpty()) {
-                return null;
+                return Optional.empty();
             }
-            return new Date(resultSet.iterator().next().get().timestamp().timestamp());
+            return Optional.of(resultSet.iterator().next().get());
         }
-    }
-
-    default boolean isDeleted() {
-        return deletedAt() != null;
     }
 }
