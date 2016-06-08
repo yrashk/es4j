@@ -87,12 +87,10 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Test @SneakyThrows
     public void deletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
-        assertFalse(model.isDeleted());
-        assertNull(model.deletedAt());
+        assertFalse(model.deleted().isPresent());
         Delete delete = new Delete().id(model.id());
         repository.publish(delete).get();
-        assertTrue(model.isDeleted());
-        assertNotNull(model.deletedAt());
+        assertTrue(model.deleted().isPresent());
     }
 
     @Test @SneakyThrows
@@ -102,8 +100,7 @@ public class DeletedProtocolTest extends RepositoryTest {
         repository.publish(delete).get();
         Undelete undelete = new Undelete().id(delete.eventId);
         repository.publish(undelete).get();
-        assertFalse(model.isDeleted());
-        assertNull(model.deletedAt());
+        assertFalse(model.deleted().isPresent());
     }
 
 }
