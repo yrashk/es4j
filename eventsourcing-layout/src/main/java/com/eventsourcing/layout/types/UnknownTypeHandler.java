@@ -32,7 +32,7 @@ public class UnknownTypeHandler implements TypeHandler {
 
     @Override
     public byte[] getFingerprint() {
-        return "Unknown".getBytes();
+        return layout.getHash();
     }
 
     @Override @SneakyThrows
