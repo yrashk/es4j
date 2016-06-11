@@ -5,10 +5,7 @@
 
 # Eventsourcing for Java
 
-Instead of mutating data in a database, it stores all changes
-(events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability
-to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation
-for deep analytics, data recovery, audit trails and other associated benefits.
+Instead of mutating data in a database, it stores all changes (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation for deep analytics, data recovery, audit trails and other associated benefits.
 
 ## Key benefits
 
@@ -93,7 +90,6 @@ Maven configuration:
 
 # Contributing
 
-Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or
-ask a question. We use Unprotocols [C4 process](http://rfc.unprotocols.org/1/).
+Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or ask a question. We use Unprotocols [C4 process](http://rfc.unprotocols.org/1/).
 
 For more details, please refer to [CONTRIBUTING](CONTRIBUTING.md)
