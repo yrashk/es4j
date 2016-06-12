@@ -13,11 +13,11 @@ import com.eventsourcing.cep.events.NameChanged;
 import com.googlecode.cqengine.query.option.EngineThresholds;
 import com.googlecode.cqengine.resultset.ResultSet;
 import org.unprotocols.coss.RFC;
-import org.unprotocols.coss.Raw;
+import org.unprotocols.coss.Draft;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
-@Raw @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
+@Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface NameProtocol extends Protocol {
     default String name() {
         try (ResultSet<EntityHandle<NameChanged>> resultSet =
