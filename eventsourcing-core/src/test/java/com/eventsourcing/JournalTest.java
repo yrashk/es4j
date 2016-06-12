@@ -11,6 +11,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,14 +21,13 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static org.testng.Assert.*;
 
@@ -212,6 +212,39 @@ public abstract class JournalTest<T extends Journal> {
         assertFalse(eventIterator.hasNext());
 
         assertFalse(journal.eventIterator(AnotherTestEvent.class).hasNext());
+    }
+
+    @EqualsAndHashCode(callSuper = false)
+    public static class EventsCommand extends Command<Void> {
+
+        public EventsCommand() {
+        }
+
+        @Override
+        public Stream<Event> events(Repository repository) throws Exception {
+            return Stream.of(new TestEvent(), new AnotherTestEvent());
+        }
+    }
+    @Test
+    @SneakyThrows
+    public void journalCommandEventsIterating() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+        EventsCommand command = new EventsCommand();
+        journal.journal((Command<?>) command.timestamp(timestamp));
+
+        CloseableIterator<EntityHandle<Event>> iterator = journal
+                .commandEventsIterator(command.uuid());
+
+        List<EntityHandle<Event>> events = StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.IMMUTABLE), false)
+                .collect(Collectors.toList());
+
+        assertEquals(events.size(), 2);
+
+        assertTrue(events.stream().anyMatch(h -> h.get() instanceof TestEvent));
+        assertTrue(events.stream().anyMatch(h -> h.get() instanceof AnotherTestEvent));
+
     }
 
 }

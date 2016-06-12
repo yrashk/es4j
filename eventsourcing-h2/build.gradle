@@ -10,7 +10,4 @@ dependencies {
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
 
-    // Caching
-    compile 'com.github.ben-manes.caffeine:caffeine:2.3.0'
-
 }

@@ -13,8 +13,6 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
@@ -40,7 +38,6 @@ import org.osgi.service.component.annotations.Deactivate;
 import javax.management.openmbean.*;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -68,18 +65,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private MVMap<byte[], byte[]> layouts;
     private TransactionStore transactionStore;
     TransactionStore.Transaction readTx;
-
-    private int MINIMUM_BYTE_BUFFER_SIZE = 1024*1024;
-    private ByteBuffer standardByteBuffer = ByteBuffer.allocate(MINIMUM_BYTE_BUFFER_SIZE);
-    private LoadingCache<Integer, ByteBuffer> byteBuffers = Caffeine.newBuilder()
-            .expireAfterAccess(10, TimeUnit.MINUTES)
-            .build(size -> {
-                if (size <= MINIMUM_BYTE_BUFFER_SIZE) {
-                    return standardByteBuffer;
-                } else {
-                    return ByteBuffer.allocate(size);
-                }
-            });
 
     public MVStoreJournal(MVStore store) {
         this();
@@ -259,7 +244,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
 
             Stream<Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
-            long count = actualEvents.peek(new EventConsumer(tx, command, listener)).count();
+            EventConsumer eventConsumer = new EventConsumer(tx, command, listener);
+            long count = actualEvents.peek(eventConsumer).count();
 
             ByteBuffer buffer = new Serializer<>(commandLayout).serialize(command);
             buffer.rewind();
@@ -294,6 +280,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     public <T extends Entity> Optional<T> get(UUID uuid) {
         if (commandPayloads.containsKey(uuid)) {
             ByteBuffer payload = commandPayloads.get(uuid);
+            payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
             Layout<Command<?>> layout = layoutsByHash.get(encodedHash);
             Command command = (Command) layout.getLayoutClass().newInstance().uuid(uuid);
@@ -302,6 +289,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         }
         if (eventPayloads.containsKey(uuid)) {
             ByteBuffer payload = eventPayloads.get(uuid);
+            payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
             Layout<Event> layout = layoutsByHash.get(encodedHash);
             Event event = (Event) layout.getLayoutClass().newInstance().uuid(uuid);
@@ -319,7 +307,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey
                 (hash, 1));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
-                                          new EntityFunction<>(hash, layout));
+                                          new EntityFunction<>(hash));
     }
 
     @Override
@@ -328,7 +316,26 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.relativeKey(hash, 1));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
-                                          new EntityFunction<>(hash, layout));
+                                          new EntityFunction<>(hash));
+    }
+
+    @Override public <T extends Event> CloseableIterator<EntityHandle<T>> commandEventsIterator(UUID uuid) {
+        ByteBuffer prefixBuffer = ByteBuffer.allocate(16);
+        prefixBuffer.putLong(uuid.getMostSignificantBits());
+        prefixBuffer.putLong(uuid.getLeastSignificantBits());
+        byte[] prefix = prefixBuffer.array();
+        byte[] from = commandEvents.higherKey(prefix);
+        if (from == null) {
+            return new CloseableWrappingIterator<>(new LinkedList<EntityHandle<T>>().iterator());
+        }
+        Iterator<Map.Entry<byte[], byte[]>> iterator = commandEvents.entryIterator(from);
+        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, prefix) == 0,
+                                          (bytes, value) -> {
+                                              ByteBuffer buffer = ByteBuffer.wrap(bytes);
+                                              UUID entityUuid = new UUID(buffer.getLong(16), buffer.getLong(16+8));
+                                              return new JournalEntityHandle<>(MVStoreJournal.this, entityUuid);
+                                          });
+
     }
 
     @Override
@@ -457,17 +464,15 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         }
     }
 
-    private class EntityFunction<T extends Entity> implements BiFunction<byte[], Boolean, EntityHandle<T>> {
+    private class EntityFunction<T extends Entity, V> implements BiFunction<byte[], V, EntityHandle<T>> {
         private final byte[] hash;
-        private final Layout layout;
 
-        public EntityFunction(byte[] hash, Layout layout) {
+        public EntityFunction(byte[] hash) {
             this.hash = hash;
-            this.layout = layout;
         }
 
         @Override
-        public EntityHandle<T> apply(byte[] bytes, Boolean aBoolean) {
+        public EntityHandle<T> apply(byte[] bytes, V value) {
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             UUID uuid = new UUID(buffer.getLong(hash.length), buffer.getLong(hash.length + 8));
             return new JournalEntityHandle<>(MVStoreJournal.this, uuid);
@@ -497,9 +502,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             txCommandEvents = tx.openMap("commandEvents");
         }
 
-        private ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
-        private ByteBuffer commandEventBuf = ByteBuffer.allocate(32);
-
         @Override
         @SneakyThrows
         public void accept(Event event) {
@@ -511,13 +513,14 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             Serializer serializer = new Serializer<>(layout);
             int size = serializer.size(event);
 
-            ByteBuffer payloadBuffer = byteBuffers.get(size);
-            payloadBuffer.clear();
-            payloadBuffer.limit(size);
+            ByteBuffer payloadBuffer = ByteBuffer.allocate(size);
             serializer.serialize(event, payloadBuffer);
-            payloadBuffer.position(0);
+            payloadBuffer.rewind();
 
             txEventPayloads.tryPut(event.uuid(), payloadBuffer);
+
+            ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
+            ByteBuffer commandEventBuf = ByteBuffer.allocate(32);
 
             hashBuffer.rewind();
             hashBuffer.put(layout.getHash());
