@@ -7,16 +7,14 @@
  */
 package com.eventsourcing.hlc;
 
-import com.eventsourcing.layout.Deserializer;
-import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.Serializer;
-import com.eventsourcing.layout.TypeHandler;
+import com.eventsourcing.layout.*;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.SneakyThrows;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -61,21 +59,24 @@ public class HybridTimestampTest {
         timestamp.update();
         timestamp.update();
         assertTrue(timestamp.getLogicalCounter() > 0);
-        byte[] ts = timestamp.getByteArray();
-        HybridTimestamp timestamp1 = new HybridTimestamp(physicalTimeProvider, ts);
-        assertEquals(timestamp1.getByteArray(), ts);
+        HybridTimestamp timestamp1 = new HybridTimestamp(physicalTimeProvider, timestamp.getLogicalTime(),
+                                                         timestamp.getLogicalCounter());
         assertEquals(timestamp1.getLogicalCounter(), timestamp.getLogicalCounter());
     }
 
     @Test @SneakyThrows
     public void layout() {
+        Layout<HybridTimestamp> layout = new Layout<>(HybridTimestamp.class);
+        List<Property<HybridTimestamp>> properties = layout.getProperties();
+        assertEquals(properties.size(), 2);
+        assertTrue(properties.stream().anyMatch(p -> p.getName().contentEquals("logicalTime")));
+        assertTrue(properties.stream().anyMatch(p -> p.getName().contentEquals("logicalCounter")));
+
         HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
         timestamp.update();
 
-        Layout<HybridTimestamp> layout = new Layout<>(HybridTimestamp.class);
         Serializer<HybridTimestamp> serializer = new Serializer<>(layout);
         Deserializer<HybridTimestamp> deserializer = new Deserializer<>(layout);
-        assertEquals(serializer.size(timestamp), 16 + TypeHandler.SIZE_TAG_LENGTH);
 
         ByteBuffer buffer = serializer.serialize(timestamp);
         buffer.rewind();
