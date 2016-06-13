@@ -17,7 +17,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.RFC;
-import org.unprotocols.coss.Raw;
+import org.unprotocols.coss.Draft;
 
 import java.util.UUID;
 
@@ -25,7 +25,7 @@ import java.util.UUID;
  * This event signifies deletion of a referenced instance.
  */
 @Accessors(fluent = true)
-@Raw @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
+@Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#Deleted")
 public class Deleted extends Event {
     @Getter @Setter
