@@ -8,22 +8,23 @@
 package com.eventsourcing.hlc;
 
 import com.eventsourcing.layout.LayoutIgnore;
+import com.eventsourcing.layout.LayoutName;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.net.ntp.TimeStamp;
-
-import java.nio.ByteBuffer;
 
 /**
  * HybridTimestamp implements <a href="http://www.cse.buffalo.edu/tech-reports/2014-04.pdf">Hybrid Logical Clock</a>,
  * currently heavily inspired by a corresponding <a href="https://github.com/tschottdorf/hlc-rs">Rust library</a>.
  */
+@LayoutName("rfc.eventsourcing.com/spec:6/HLC/#Timestamp")
 public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     private final PhysicalTimeProvider physicalTimeProvider;
 
-    @Getter
+    @Getter @Setter
     long logicalTime = 0;
-    @Getter
+    @Getter @Setter
     long logicalCounter = 0;
 
     public HybridTimestamp() {
@@ -42,11 +43,6 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
         this.physicalTimeProvider = physicalTimeProvider;
         this.logicalTime = logicalTime;
         this.logicalCounter = logicalCounter;
-    }
-
-    public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider, byte[] byteArray) {
-        this.physicalTimeProvider = physicalTimeProvider;
-        setByteArray(byteArray);
     }
 
     /**
@@ -163,19 +159,6 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
         String ntpValue = timeStamp.toUTCString();
         return "<[logical: " + logical + "@" + logicalCounter + "] NTP:" + ntpValue + "/" + timeStamp
                 .toString() + "/" + timestamp() + ">";
-    }
-
-    public byte[] getByteArray() {
-        ByteBuffer buf = ByteBuffer.allocate(16);
-        buf.putLong(logicalTime);
-        buf.putLong(logicalCounter);
-        return buf.array();
-    }
-
-    public void setByteArray(byte[] byteArray) {
-        ByteBuffer buffer = ByteBuffer.wrap(byteArray);
-        this.logicalTime = buffer.getLong();
-        this.logicalCounter = buffer.getLong();
     }
 
 }
