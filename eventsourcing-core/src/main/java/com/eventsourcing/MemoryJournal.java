@@ -20,11 +20,9 @@ import lombok.SneakyThrows;
 import org.osgi.service.component.annotations.Component;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -42,7 +40,7 @@ public class MemoryJournal extends AbstractService implements Journal {
 
     private Map<UUID, Command> commands = new HashMap<>();
     private Map<UUID, Event> events = new HashMap<>();
-    private Map<UUID, UUID> eventCommands = new HashMap<>();
+    private Map<UUID, Set<UUID>> eventCommands = new HashMap<>();
 
     @Override
     protected void doStart() {
@@ -65,8 +63,8 @@ public class MemoryJournal extends AbstractService implements Journal {
     public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider)
             throws Exception {
         Map<UUID, Event> events_ = new HashMap<>();
-        Map<UUID, UUID> eventCommands_ = new HashMap<>();
-        EventConsumer eventConsumer = new EventConsumer(events_, eventCommands_, command, listener);
+        Set<Event> eventCommands_ = new HashSet<>();
+        EventConsumer eventConsumer = new EventConsumer(events_, command, listener);
 
         Stream<Event> events;
         Exception exception = null;
@@ -82,22 +80,21 @@ public class MemoryJournal extends AbstractService implements Journal {
 
         try {
             count = events.peek(eventConsumer).count();
+            events_ = eventConsumer.getEvents();
+            eventCommands_ = new HashSet<>(events_.values());
         } catch (Exception e) {
-            events_.clear();
-            eventCommands_.clear();
             listener.onAbort(e);
             exception = e;
             try {
                 count = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer).count();
             } catch (Exception e1) {
                 events_.clear();
-                eventCommands_.clear();
                 exception = e1;
             }
         }
 
         this.events.putAll(events_);
-        this.eventCommands.putAll(eventCommands_);
+        this.eventCommands.put(command.uuid(), eventCommands_.stream().map(Entity::uuid).collect(Collectors.toSet()));
 
         Layout<Command> layout = new Layout<>((Class<Command>) command.getClass());
         Serializer<Command> serializer = new Serializer<>(layout);
@@ -143,6 +140,11 @@ public class MemoryJournal extends AbstractService implements Journal {
                  .map(event -> (EntityHandle<T>) new JournalEntityHandle<T>(this, event.uuid())).iterator());
     }
 
+    @Override public <T extends Event> CloseableIterator<EntityHandle<T>> commandEventsIterator(UUID uuid) {
+        return new CloseableWrappingIterator<>(eventCommands.get(uuid).stream()
+                 .map(uuid_ -> (EntityHandle<T>) new JournalEntityHandle<T>(this, uuid_)).iterator());
+    }
+
     @Override
     public synchronized void clear() {
         events.clear();
@@ -179,14 +181,11 @@ public class MemoryJournal extends AbstractService implements Journal {
 
         @Getter
         private Map<UUID, Event> events = new HashMap<>();
-        @Getter
-        private Map<UUID, UUID> eventCommands = new HashMap<>();
         private final HybridTimestamp ts;
 
-        public EventConsumer(Map<UUID, Event> events, Map<UUID, UUID> eventCommands, Command command,
+        public EventConsumer(Map<UUID, Event> events, Command command,
                              Journal.Listener listener) {
             this.events = events;
-            this.eventCommands = eventCommands;
             this.command = command;
             this.listener = listener;
             ts = command.timestamp().clone();
@@ -207,7 +206,6 @@ public class MemoryJournal extends AbstractService implements Journal {
             deserializer.deserialize(event, buffer);
 
             events.put(event.uuid(), event);
-            eventCommands.put(event.uuid(), command.uuid());
             listener.onEvent(event);
         }
     }
