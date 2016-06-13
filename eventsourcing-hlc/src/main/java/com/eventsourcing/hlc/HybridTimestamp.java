@@ -161,4 +161,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
                 .toString() + "/" + timestamp() + ">";
     }
 
+    @Override public boolean equals(Object obj) {
+        return obj instanceof HybridTimestamp && compareTo((HybridTimestamp) obj) == 0;
+    }
 }

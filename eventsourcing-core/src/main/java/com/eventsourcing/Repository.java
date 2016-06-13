@@ -49,6 +49,11 @@ public interface Repository extends Service {
     }
 
     /**
+     * @return currently used journal
+     */
+    Journal getJournal();
+
+    /**
      * Sets journal to be used in this repository
      * <p>
      * Should be done before invoking {@link #startAsync()}

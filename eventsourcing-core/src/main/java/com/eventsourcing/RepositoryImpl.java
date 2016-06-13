@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 
+    @Getter
     private Journal journal;
 
     @Getter

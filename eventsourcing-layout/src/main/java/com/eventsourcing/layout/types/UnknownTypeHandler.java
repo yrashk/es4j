@@ -11,6 +11,7 @@ import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
 import com.eventsourcing.layout.TypeHandler;
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.nio.ByteBuffer;
@@ -18,6 +19,7 @@ import java.nio.ByteBuffer;
 public class UnknownTypeHandler implements TypeHandler {
 
     private final Class klass;
+    @Getter
     private final Layout layout;
     private final Serializer serializer;
     private final Deserializer deserializer;

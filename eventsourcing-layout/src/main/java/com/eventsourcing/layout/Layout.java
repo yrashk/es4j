@@ -26,10 +26,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -72,6 +69,8 @@ public class Layout<T> {
 
     @Getter
     private Constructor constructor;
+    @Getter
+    private String name;
 
     protected boolean setConstructor(Constructor constructor) {
         if (this.constructor == null || this.constructor.equals(constructor)) {
@@ -277,12 +276,13 @@ public class Layout<T> {
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
 
+        name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class)
+                                                                  .value() : klass.getName();
+
         // It is important to include class name into the hash as there could be situations
         // when POJOs have indistinguishable layouts, and therefore it is impossible to
         // guarantee that we'd pick the right class
         if (hashClassName) {
-            String name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class)
-                                                                             .value() : klass.getName();
             digest.update(name.getBytes());
         }
 
@@ -310,6 +310,10 @@ public class Layout<T> {
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Layout && Arrays.equals(getHash(), ((Layout) obj).getHash());
+    }
+
+    @Override public int hashCode() {
+        return Base64.getEncoder().encodeToString(hash).hashCode();
     }
 
     private static class LayoutAnnotationConfiguration extends AnnotationConfiguration {

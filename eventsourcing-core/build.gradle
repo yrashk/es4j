@@ -11,6 +11,9 @@ dependencies {
     // Fast message processing
     compile 'com.lmax:disruptor:3.3.4'
 
+    // YAML
+    compile 'org.yaml:snakeyaml:1.17'
+
     // Indexing
     compile 'com.googlecode.cqengine:cqengine:2.6.0'
 
