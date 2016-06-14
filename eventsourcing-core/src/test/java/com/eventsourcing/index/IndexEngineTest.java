@@ -8,6 +8,7 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.*;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.Index;
@@ -68,9 +69,18 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
 
-    @Value @EqualsAndHashCode(callSuper = false)
-    static class TestEvent extends Event {
+    @EqualsAndHashCode(callSuper = false)
+    public static class TestEvent extends Event {
+        @Getter @Setter
         private String string;
+
+        public TestEvent() {
+        }
+
+        public TestEvent(String string) {
+            this.string = string;
+        }
+
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
             @Override
             public String getValue(TestEvent object, QueryOptions queryOptions) {
@@ -80,7 +90,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
     @Accessors(fluent = true)
-    static class TestCommand extends Command<Void> {
+    public static class TestCommand extends Command<Void> {
         @Getter @Setter
         private String string;
 
@@ -93,11 +103,13 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     @Test
     @SneakyThrows
     public void test() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
         Index<EntityHandle<TestEvent>> index = indexEngine
                 .getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         List<Event> events = new ArrayList<>();
-        TestCommand command = new TestCommand().string("test");
+        TestCommand command = (TestCommand) new TestCommand().string("test").timestamp(timestamp);
         journal.journal(command, new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
