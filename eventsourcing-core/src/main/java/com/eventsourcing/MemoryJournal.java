@@ -83,6 +83,7 @@ public class MemoryJournal extends AbstractService implements Journal {
             events_ = eventConsumer.getEvents();
             eventCommands_ = new HashSet<>(events_.values());
         } catch (Exception e) {
+            events_.clear();
             listener.onAbort(e);
             exception = e;
             try {
