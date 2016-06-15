@@ -190,8 +190,16 @@ public abstract class JournalTest<T extends Journal> {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         List<Event> events = new ArrayList<>();
-        TestCommand command = new TestCommand(true);
-        journal.journal((Command<?>) command.timestamp(timestamp), new Journal.Listener() {
+        TestCommand command1 = new TestCommand(true);
+        TestCommand command2 = new TestCommand(true);
+        journal.journal((Command<?>) command1.timestamp(timestamp), new Journal.Listener() {
+            @Override
+            public void onEvent(Event event) {
+                events.add(event);
+            }
+        });
+
+        journal.journal((Command<?>) command2.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
@@ -199,19 +207,23 @@ public abstract class JournalTest<T extends Journal> {
         });
 
         Iterator<EntityHandle<TestCommand>> commandIterator = journal.commandIterator(TestCommand.class);
-        assertTrue(commandIterator.hasNext());
-        assertEquals(commandIterator.next().uuid(), command.uuid());
-        assertFalse(commandIterator.hasNext());
 
-        assertEquals(events.size(), 1);
-        Event event = events.get(0);
+        List<EntityHandle<TestCommand>> commands = StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(commandIterator, Spliterator.IMMUTABLE), false)
+                .collect(Collectors.toList());
+
+        assertEquals(commands.size(), 2);
+        assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command1.uuid())));
+        assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command2.uuid())));
+
+        assertEquals(events.size(), 2);
 
         Iterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);
-        assertTrue(eventIterator.hasNext());
-        assertEquals(eventIterator.next().uuid(), event.uuid());
-        assertFalse(eventIterator.hasNext());
-
-        assertFalse(journal.eventIterator(AnotherTestEvent.class).hasNext());
+        List<UUID> iteratedEvents = StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(eventIterator, Spliterator.IMMUTABLE), false)
+                .map(EntityHandle::uuid)
+                .collect(Collectors.toList());
+        assertTrue(iteratedEvents.containsAll(events.stream().map(Event::uuid).collect(Collectors.toList())));
     }
 
     @EqualsAndHashCode(callSuper = false)
