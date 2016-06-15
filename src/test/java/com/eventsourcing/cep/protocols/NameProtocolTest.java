@@ -12,6 +12,7 @@ import com.eventsourcing.Event;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
 import com.eventsourcing.cep.events.NameChanged;
+import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -39,7 +40,7 @@ public class NameProtocolTest extends RepositoryTest {
 
         @Override
         public Stream<Event> events(Repository repository) throws Exception {
-            return Stream.of(new NameChanged().reference(id).name(name));
+            return Stream.of((Event) new NameChanged().reference(id).name(name).timestamp(timestamp()));
         }
 
         @Override
@@ -64,13 +65,24 @@ public class NameProtocolTest extends RepositoryTest {
 
     }
 
-    @Test(invocationCount = 20)
+    @Test
     @SneakyThrows
     public void renaming() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
         TestModel model = new TestModel(repository, UUID.randomUUID());
+
         Rename rename = new Rename().id(model.id()).name("Name #1");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #1");
+
+        Rename renameBefore = (Rename) new Rename().id(model.id()).name("Name #0").timestamp(timestamp);
+        assertTrue(renameBefore.timestamp().compareTo(rename.timestamp()) < 0);
+        repository.publish(renameBefore).get();
+        assertEquals(model.name(), "Name #1"); // earlier change shouldn't affect the name
+
+
         rename = new Rename().id(model.id()).name("Name #2");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #2");

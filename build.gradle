@@ -64,11 +64,11 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.7'
 
     compile 'org.projectlombok:lombok:1.16.8'
-    testCompile 'org.testng:testng:6.9.10'
 
-    compile 'com.eventsourcing:eventsourcing-core:0.3.0'
+    compile 'com.eventsourcing:eventsourcing-core:0.3.2'
     compile 'org.unprotocols:coss:1.0.0'
 
+    testCompile 'org.testng:testng:6.9.10'
 }
 
 test.useTestNG()
