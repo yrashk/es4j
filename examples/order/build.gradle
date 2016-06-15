@@ -8,6 +8,10 @@ apply plugin: 'idea'
 repositories {
     jcenter()
     mavenLocal()
+    maven {
+        url  "http://dl.bintray.com/eventsourcing/maven"
+    }
+
 }
 
 idea {
