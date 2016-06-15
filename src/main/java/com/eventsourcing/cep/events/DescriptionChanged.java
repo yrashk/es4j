@@ -16,10 +16,12 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Draft;
+import org.unprotocols.coss.RFC;
 
 import java.util.UUID;
+
+import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 /**
  * This event signifies a description change for a referenced instance.
@@ -49,7 +51,7 @@ public class DescriptionChanged extends Event {
         }
     };
 
-    @Index
+    @Index({LT, GT, EQ})
     public static SimpleAttribute<DescriptionChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<DescriptionChanged, HybridTimestamp>
             ("timestamp") {
         @Override public HybridTimestamp getValue(DescriptionChanged descriptionChanged, QueryOptions queryOptions) {

@@ -8,6 +8,7 @@
 package com.eventsourcing.cep.protocols;
 
 import com.eventsourcing.*;
+import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -17,6 +18,7 @@ public abstract class RepositoryTest {
     private final Package[] packages;
     protected Repository repository;
     protected MemoryLockProvider lockProvider;
+    protected NTPServerTimeProvider timeProvider;
 
     public RepositoryTest(Package ...packages) {
         this.packages = packages;
@@ -25,7 +27,9 @@ public abstract class RepositoryTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
+        timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository = Repository.create();
+        repository.setPhysicalTimeProvider(timeProvider);
         repository.setJournal(new MemoryJournal());
         repository.setIndexEngine(new MemoryIndexEngine());
         lockProvider = new MemoryLockProvider();

@@ -12,6 +12,8 @@ import com.eventsourcing.Event;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
 import com.eventsourcing.cep.events.DescriptionChanged;
+import com.eventsourcing.cep.events.NameChanged;
+import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -22,6 +24,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class DescriptionProtocolTest extends RepositoryTest {
 
@@ -39,7 +42,8 @@ public class DescriptionProtocolTest extends RepositoryTest {
 
         @Override
         public Stream<Event> events(Repository repository) throws Exception {
-            return Stream.of(new DescriptionChanged().reference(id).description(description));
+            return Stream.of((Event)new DescriptionChanged().reference(id).description(description).timestamp(timestamp
+                                                                                                                   ()));
         }
 
         @Override
@@ -64,13 +68,25 @@ public class DescriptionProtocolTest extends RepositoryTest {
 
     }
 
-    @Test(invocationCount = 20)
+    @Test
     @SneakyThrows
     public void changingDescription() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
         TestModel model = new TestModel(repository, UUID.randomUUID());
+
         ChangeDescription changeDescription = new ChangeDescription().id(model.id()).description("Description #1");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #1");
+
+        ChangeDescription changeBefore = (ChangeDescription) new ChangeDescription().id(model.id()).description("Description #0")
+                                                                                    .timestamp(timestamp);
+        assertTrue(changeBefore.timestamp().compareTo(changeDescription.timestamp()) < 0);
+        repository.publish(changeBefore).get();
+        assertEquals(model.description(), "Description #1"); // earlier change shouldn't affect the description
+
+
         changeDescription = new ChangeDescription().id(model.id()).description("Description #2");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #2");

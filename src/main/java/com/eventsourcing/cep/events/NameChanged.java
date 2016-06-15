@@ -12,14 +12,19 @@ import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutName;
+import com.google.common.primitives.UnsignedLongs;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
-import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Draft;
+import org.unprotocols.coss.RFC;
 
 import java.util.UUID;
+
+import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.GT;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
 
 /**
  * This event signifies the name change for a referenced instance.
@@ -49,7 +54,7 @@ public class NameChanged extends Event {
         }
     };
 
-    @Index
+    @Index({LT, GT, EQ})
     public static SimpleAttribute<NameChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<NameChanged, HybridTimestamp>
             ("timestamp") {
         @Override public HybridTimestamp getValue(NameChanged nameChanged, QueryOptions queryOptions) {
