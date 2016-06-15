@@ -195,8 +195,12 @@ public class MemoryJournal extends AbstractService implements Journal {
         @Override
         @SneakyThrows
         public synchronized void accept(Event event) {
-            ts.update();
-            event.timestamp(ts.clone());
+            if (event.timestamp() == null) {
+                ts.update();
+                event.timestamp(ts.clone());
+            } else {
+                ts.update(event.timestamp().clone());
+            }
 
             Layout<Event> layout = new Layout<>((Class<Event>) event.getClass());
             Serializer<Event> serializer = new Serializer<>(layout);

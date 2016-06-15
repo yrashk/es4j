@@ -29,7 +29,6 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -197,6 +196,54 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(test1.timestamp().compareTo(test2.timestamp()) < 0);
         assertTrue(repository.getTimestamp().compareTo(test1.timestamp()) > 0);
         assertTrue(repository.getTimestamp().compareTo(test2.timestamp()) > 0);
+    }
+
+    @ToString
+    public static class TimestampingEventCommand extends Command<String> {
+
+        private HybridTimestamp timestamp;
+
+        public TimestampingEventCommand() {
+        }
+
+        public TimestampingEventCommand(HybridTimestamp timestamp) {
+            this.timestamp = timestamp;
+        }
+
+        @Override
+        public Stream<Event> events(Repository repository) {
+            return Stream.of((Event)new TestEvent().string("test").timestamp(timestamp),
+                             new TestEvent().string("followup")
+                             );
+        }
+
+        @Override
+        public String onCompletion() {
+            return "hello, world";
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void eventTimestamping() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+        TimestampingEventCommand command = new TimestampingEventCommand(timestamp);
+
+        repository.publish(command).get();
+
+        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine
+                .getIndexedCollection(TestEvent.class);
+
+        TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
+
+        assertTrue(test.timestamp().compareTo(command.timestamp()) < 0);
+        assertTrue(repository.getTimestamp().compareTo(test.timestamp()) > 0);
+
+        TestEvent followup = coll.retrieve(equal(TestEvent.ATTR, "followup")).uniqueResult().get();
+        assertTrue(test.timestamp().compareTo(followup.timestamp()) < 0);
+
+        assertTrue(repository.getTimestamp().compareTo(followup.timestamp()) > 0);
     }
 
     @Test
