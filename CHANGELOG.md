@@ -1,3 +1,48 @@
+WIP
+===
+
+**Features**
+
+* [Core] Added an API to iterate over command's events ([#46](https://github.com/eventsourcing/es4j/pull/46))
+* [Core] If a command has a timestamp prior to publishing, they timestamp will not be overriden and repository's timestamp will be updated ([#55](https://github.com/eventsourcing/es4j/pull/55))
+* [Core] `Repository#getTimestamp()` was added ([#55](https://github.com/eventsourcing/es4j/pull/55))
+
+**Bugfixes**
+
+* [HLC] HybridTimestamp now follows the layout prescribed in RFC6/HLC ([#47](https://github.com/eventsourcing/es4j/pull/47))
+* [H2] Current H2 version doesn't export org.h2.mvstore.db in OSGi, making es4j undeployable in OSGi. Own build with a fix is used now ([#49](https://github.com/eventsourcing/es4j/pull/49))
+* [Core] CascadingIndexEngine's self-referencing in OSGi was fixed ([#50](https://github.com/eventsourcing/es4j/pull/50))
+* [Core] MemoryJournal still recorded normal events even when the command terminated exceptionally ([#51](https://github.com/eventsourcing/es4j/pull/51))
+* [H2] MVStoreJournal command hash keys were wrongfully overwritten ([#54](https://github.com/eventsourcing/es4j/pull/54))
+* Outstanding failing tests were fixed ([#52](https://github.com/eventsourcing/es4j/pull/52), [#53](https://github.com/eventsourcing/es4j/pull/53))
+
+
+0.3.1
+=====
+
+**Backwards-incompatible changes**
+
+* [Layout] Character type removed as RFC1/ELF no longer defines it ([#30](https://github.com/eventsourcing/es4j/pull/30))
+
+**Bugfixes**
+
+* [Layout] UnknownTypeHandler was losing layout type information, according to RFC1/ELF, it should be kept ([#42](https://github.com/eventsourcing/es4j/pull/42))
+
+**Features**
+
+* [Layout] Added support for RFC1/ELF's Timestamp ([#41](https://github.com/eventsourcing/es4j/pull/41))
+
+**Improvements**
+
+* [H2] Slightly faster MVStoreJournal by avoiding extra reads (`tryPut` vs `put`) ([#32](https://github.com/eventsourcing/es4j/pull/32))
+
+**Upgrades**
+
+* cqengine 2.6.0 ([#29](https://github.com/eventsourcing/es4j/pull/29))
+* h2 1.4.192 ([#33](https://github.com/eventsourcing/es4j/pull/33))
+
+
+
 0.3.0
 =====
 
