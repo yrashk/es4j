@@ -502,8 +502,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         @Override
         @SneakyThrows
         public void accept(Event event) {
-            ts.update();
-            event.timestamp(ts.clone());
+
+            if (event.timestamp() == null) {
+                ts.update();
+                event.timestamp(ts.clone());
+            } else {
+                ts.update(event.timestamp().clone());
+            }
 
             Layout layout = layoutsByClass.get(event.getClass().getName());
 

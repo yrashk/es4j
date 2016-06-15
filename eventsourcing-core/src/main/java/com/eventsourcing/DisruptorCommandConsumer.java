@@ -86,15 +86,20 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         private final IndexEngine indexEngine;
         private final Journal journal;
         private final Command<?> command;
-        
+        private final HybridTimestamp timestamp;
+        private HybridTimestamp lastTimestamp;
+
         private final Map<EntitySubscriber, Set<UUID>> subscriptions = new HashMap<>();
         
-        private JournalListener(CommandEvent event, IndexEngine indexEngine, Journal journal, Command<?> command) {
+        private JournalListener(CommandEvent event, IndexEngine indexEngine, Journal journal, Command<?> command,
+                                HybridTimestamp timestamp) {
             this.disruptorEvent = event;
             this.indexEngine = indexEngine;
             this.journal = journal;
             this.command = command;
+            this.timestamp = timestamp;
             disruptorEvent.getEntitySubscribers().forEach(s -> subscriptions.put(s, new HashSet<>()));
+            lastTimestamp = command.timestamp().clone();
         }
 
         @Override @SuppressWarnings("unchecked")
@@ -102,6 +107,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
             IndexedCollection<EntityHandle<Event>> coll = indexEngine
                     .getIndexedCollection((Class<Event>) event.getClass());
             coll.add(new JournalEntityHandle<>(journal, event.uuid()));
+            lastTimestamp = event.timestamp().clone();
             disruptorEvent.getEntitySubscribers().stream()
                     .filter(s -> s.matches(event))
                     .forEach(s -> subscriptions.get(s).add(event.uuid()));
@@ -121,6 +127,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
             disruptorEvent.getEntitySubscribers().stream()
                     .filter(s -> s.matches(command))
                     .forEach(s -> s.accept(Stream.of(commandHandle)));
+            timestamp.update(lastTimestamp);
         }
 
         @Override
@@ -215,7 +222,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
         Command command = event.getCommand();
         event.lockProvider = new TrackingLockProvider(this.lockProvider);
         event.lockProvider.startAsync().awaitRunning();
-        journal.journal(command, new JournalListener(event, indexEngine, journal, command), event.lockProvider);
+        journal.journal(command, new JournalListener(event, indexEngine, journal, command, timestamp), event.lockProvider);
     }
 
     private void complete(CommandEvent event) throws Exception {
