@@ -11,6 +11,7 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
@@ -28,6 +29,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -46,6 +48,7 @@ public abstract class RepositoryTest<T extends Repository> {
     private Journal journal;
     private MemoryIndexEngine indexEngine;
     private MemoryLockProvider lockProvider;
+    private NTPServerTimeProvider timeProvider;
 
     public RepositoryTest(T repository) {
         this.repository = repository;
@@ -58,7 +61,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         journal = createJournal();
         repository.setJournal(journal);
-        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
+        timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
@@ -95,9 +98,20 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @ToString
     public static class RepositoryTestCommand extends Command<String> {
+
+        @Getter @Setter
+        private String value = "test";
+
+        public RepositoryTestCommand(String value) {
+            this.value = value;
+        }
+
+        public RepositoryTestCommand() {
+        }
+
         @Override
         public Stream<Event> events(Repository repository) {
-            return Stream.of(new TestEvent().string("test"));
+            return Stream.of(new TestEvent().string(value));
         }
 
         @Override
@@ -106,10 +120,11 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC})
-        public static SimpleAttribute<RepositoryTestCommand, String> ATTR = new SimpleAttribute<RepositoryTestCommand, String>() {
+        public static SimpleAttribute<RepositoryTestCommand, String> ATTR = new
+                SimpleAttribute<RepositoryTestCommand, String>("index") {
             @Override
             public String getValue(RepositoryTestCommand object, QueryOptions queryOptions) {
-                return "test";
+                return object.value;
             }
         };
 
@@ -160,6 +175,28 @@ public abstract class RepositoryTest<T extends Repository> {
         assertNotNull(test1.timestamp());
 
         assertTrue(test.timestamp().compareTo(test1.timestamp()) > 0);
+    }
+
+    @Test
+    @SneakyThrows
+    public void commandTimestamping() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+        RepositoryTestCommand command1 = (RepositoryTestCommand) new RepositoryTestCommand("forced").timestamp
+                (timestamp);
+        RepositoryTestCommand command2 = new RepositoryTestCommand();
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
+                .getIndexedCollection(RepositoryTestCommand.class);
+
+        repository.publish(command2).get();
+        repository.publish(command1).get();
+
+        RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "forced")).uniqueResult().get();
+        RepositoryTestCommand test2 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get();
+
+        assertTrue(test1.timestamp().compareTo(test2.timestamp()) < 0);
+        assertTrue(repository.getTimestamp().compareTo(test1.timestamp()) > 0);
+        assertTrue(repository.getTimestamp().compareTo(test2.timestamp()) > 0);
     }
 
     @Test

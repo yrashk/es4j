@@ -78,6 +78,7 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     private RingBuffer<CommandEvent> ringBuffer;
     private Disruptor<CommandEvent> disruptor;
 
+    @Getter
     private HybridTimestamp timestamp;
 
     private static class JournalListener implements Journal.Listener {
@@ -201,9 +202,13 @@ public class DisruptorCommandConsumer extends AbstractService implements Command
     }
 
     private void timestamp(CommandEvent event, long sequence, boolean endOfBatch) throws Exception {
-        timestamp.update();
         Command command = event.getCommand();
-        command.timestamp(timestamp.clone());
+        if (command.timestamp() == null) {
+            timestamp.update();
+            command.timestamp(timestamp.clone());
+        } else {
+            timestamp.update(timestamp.clone());
+        }
     }
 
     private void journal(CommandEvent event) throws Exception {

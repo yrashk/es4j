@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.google.common.util.concurrent.AbstractService;
@@ -206,6 +207,10 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Override
     public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
         return this.commandConsumer.publish(command, entitySubscribers);
+    }
+
+    @Override public HybridTimestamp getTimestamp() {
+        return commandConsumer.getTimestamp();
     }
 
 

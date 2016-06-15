@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.google.common.hash.HashCode;
@@ -55,6 +56,10 @@ public class DispatchingCommandConsumer extends AbstractService implements Comma
                                                             Longs.toByteArray(uuid.getLeastSignificantBits())));
         int bucket = Hashing.consistentHash(hashCode, consumers.size());
         return consumers.get(bucket).publish(command);
+    }
+
+    @Override public HybridTimestamp getTimestamp() {
+        return consumers.get(0).getTimestamp();
     }
 
 }
