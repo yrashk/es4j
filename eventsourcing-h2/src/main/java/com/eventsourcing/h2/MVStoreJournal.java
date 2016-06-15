@@ -225,15 +225,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         return journal(command, listener, lockProvider, null);
     }
 
-    private ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
-
     private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events)
             throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
             Layout commandLayout = layoutsByClass.get(command.getClass().getName());
 
-            hashBuffer.rewind();
+            ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
             hashBuffer.put(commandLayout.getHash());
             hashBuffer.putLong(command.uuid().getMostSignificantBits());
             hashBuffer.putLong(command.uuid().getLeastSignificantBits());
@@ -304,8 +302,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     public <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
-        Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.relativeKey
-                (hash, 1));
+        Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.higherKey(hash));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
                                           new EntityFunction<>(hash));
     }
@@ -314,7 +311,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
-        Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.relativeKey(hash, 1));
+        Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.higherKey(hash));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
                                           new EntityFunction<>(hash));
     }
