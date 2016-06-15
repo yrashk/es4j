@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.google.common.util.concurrent.Service;
 
 import java.util.Collection;
@@ -18,4 +19,6 @@ public interface CommandConsumer extends Service {
         return publish(command, Collections.emptyList());
     }
     <T, C extends Command<T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers);
+
+    HybridTimestamp getTimestamp();
 }

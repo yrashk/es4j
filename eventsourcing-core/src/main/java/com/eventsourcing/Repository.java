@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -187,4 +188,9 @@ public interface Repository extends Service {
                                                                 QueryOptions queryOptions) {
         return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
     }
+
+    /**
+     * @return Repository's current timestamp
+     */
+    HybridTimestamp getTimestamp();
 }
