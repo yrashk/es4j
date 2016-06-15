@@ -7,6 +7,9 @@
  */
 package com.eventsourcing;
 
+import org.testng.annotations.Test;
+
+@Test
 public class MemoryJournalTest extends JournalTest<MemoryJournal> {
 
     public MemoryJournalTest() {

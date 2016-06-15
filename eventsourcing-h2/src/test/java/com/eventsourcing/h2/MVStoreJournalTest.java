@@ -10,8 +10,10 @@ package com.eventsourcing.h2;
 import com.eventsourcing.JournalTest;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVStore;
+import org.testng.annotations.Test;
 
 @Slf4j
+@Test
 public class MVStoreJournalTest extends JournalTest<MVStoreJournal> {
 
     private final MVStore store;

@@ -7,6 +7,9 @@
  */
 package com.eventsourcing;
 
+import org.testng.annotations.Test;
+
+@Test
 public class MemoryLockProviderTest extends LockProviderTest<MemoryLockProvider> {
     public MemoryLockProviderTest() {
         super(new MemoryLockProvider());

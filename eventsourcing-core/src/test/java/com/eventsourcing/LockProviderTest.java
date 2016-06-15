@@ -33,10 +33,12 @@ public abstract class LockProviderTest<T extends LockProvider> {
     public void waiting() {
         Lock lock = lockProvider.lock("test");
         CompletableFuture<Void> future = new CompletableFuture<>();
-        ForkJoinPool.commonPool().execute(() -> {
-            lockProvider.lock("test");
-            future.complete(null);
-        });
+        new Thread() {
+            @Override public void run() {
+                lockProvider.lock("test");
+                future.complete(null);
+            }
+        }.start();
         try {
             future.get(1, TimeUnit.SECONDS);
             fail("Lock wasn't locked");
