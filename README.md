@@ -33,6 +33,8 @@ You can find our current slide deck at https://eventsourcing.com/presentation
 
 Installation instructions and documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
 
+We strive to specify the building blocks behind Eventsourcing and its ecosystem as succinct specifications, you can find the current list of them at [rfc.eventsourcing.com](http://rfc.eventsourcing.com)
+
 # Snapshot versions
 
 Every successful build is published into a [separate Maven repository on Bintray](https://bintray.com/eventsourcing/maven-snapshots) (using a `git describe`
