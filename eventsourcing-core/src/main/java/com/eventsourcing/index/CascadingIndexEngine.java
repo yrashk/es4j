@@ -45,7 +45,7 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
     }
 
     @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC,
-               target = "(!(service.pid=CascadingIndexEngine))")
+               target = "(!(service.pid=com.eventsourcing.index.CascadingIndexEngine))")
     public void addIndexEngine(IndexEngine indexEngine) {
         indexEngines.add(indexEngine);
         sortIndexEngines();
