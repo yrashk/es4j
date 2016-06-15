@@ -7,6 +7,9 @@
  */
 package com.eventsourcing;
 
+import org.testng.annotations.Test;
+
+@Test
 public class MemoryJournalRepositoryTest extends RepositoryTest<RepositoryImpl> {
     public MemoryJournalRepositoryTest() {
         super(new RepositoryImpl());

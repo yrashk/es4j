@@ -11,7 +11,9 @@ import com.eventsourcing.Journal;
 import com.eventsourcing.RepositoryImpl;
 import com.eventsourcing.RepositoryTest;
 import org.h2.mvstore.MVStore;
+import org.testng.annotations.Test;
 
+@Test
 public class MVStoreJournalRepositoryTest extends RepositoryTest<RepositoryImpl> {
     public MVStoreJournalRepositoryTest() {
         super(new RepositoryImpl());
