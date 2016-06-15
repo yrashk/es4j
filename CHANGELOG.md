@@ -4,7 +4,8 @@ WIP
 **Features**
 
 * [Core] Added an API to iterate over command's events ([#46](https://github.com/eventsourcing/es4j/pull/46))
-* [Core] If a command has a timestamp prior to publishing, they timestamp will not be overriden and repository's timestamp will be updated ([#55](https://github.com/eventsourcing/es4j/pull/55))
+* [Core] If a command had a timestamp prior to publishing, the timestamp will not be overriden and repository's timestamp will be updated ([#55](https://github.com/eventsourcing/es4j/pull/55))
+* [Core] If an event had a timestamp prior to journalling, the timestamp will not be overriden and repository's timestamp will be updated ([#56](https://github.com/eventsourcing/es4j/pull/56))
 * [Core] `Repository#getTimestamp()` was added ([#55](https://github.com/eventsourcing/es4j/pull/55))
 
 **Bugfixes**
