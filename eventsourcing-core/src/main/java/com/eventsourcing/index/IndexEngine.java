@@ -14,13 +14,17 @@ import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.Value;
+import org.javatuples.Pair;
 
+import java.beans.Introspector;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -46,8 +50,8 @@ public interface IndexEngine extends Service {
      */
     void setRepository(Repository repository) throws IllegalStateException;
 
-    @SuppressWarnings("unchecked") <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes,
-                                                                        IndexFeature... features)
+    @SuppressWarnings("unchecked") <O extends Entity, A> Index<O> getIndexOnAttributes(Attribute<O, A>[] attributes,
+                                                                                       IndexFeature... features)
             throws IndexNotSupported;
 
     enum IndexFeature {
@@ -74,7 +78,8 @@ public interface IndexEngine extends Service {
         private Function<T, Index> index;
     }
 
-    <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features) throws IndexNotSupported;
+    <O extends Entity, A> Index<O> getIndexOnAttribute(Attribute<O, A> attribute, IndexFeature... features) throws
+                                                                                                IndexNotSupported;
 
     @AllArgsConstructor class IndexNotSupported extends Exception {
         @Getter
@@ -103,18 +108,51 @@ public interface IndexEngine extends Service {
      */
     default Iterable<Index> getIndices(Class<?> klass) throws IndexNotSupported, IllegalAccessException {
         List<Index> indices = new ArrayList<>();
+        for (Pair<com.eventsourcing.annotations.Index, Attribute> attr : getIndexableAttributes(klass)) {
+            indices.add(this.getIndexOnAttribute(attr.getValue1(), attr.getValue0().value()));
+        }
+        return indices;
+    }
+
+    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexableAttributes(Class<?> klass)
+            throws IllegalAccessException {
+        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
         for (Field field : klass.getDeclaredFields()) {
             if (Modifier.isStatic(field.getModifiers()) &&
                     Modifier.isPublic(field.getModifiers())) {
                 com.eventsourcing.annotations.Index annotation = field
                         .getAnnotation(com.eventsourcing.annotations.Index.class);
                 if (annotation != null) {
-                    Attribute attr = (Attribute) field.get(null);
-                    indices.add(this.getIndexOnAttribute(attr, annotation.value()));
+                    attributes.add(Pair.with(annotation, (Attribute) field.get(null)));
                 }
             }
         }
-        return indices;
+        for (Method method : klass.getDeclaredMethods()) {
+            com.eventsourcing.annotations.Index annotation = method
+                    .getAnnotation(com.eventsourcing.annotations.Index.class);
+            if (annotation != null &&
+                Modifier.isPublic(method.getModifiers()) &&
+                method.getParameterCount() == 0) {
+                SimpleAttribute attribute = getAttribute(method);
+                attributes.add(Pair.with(annotation, attribute));
+            }
+        }
+        return attributes;
     }
+
+    @SuppressWarnings("unchecked")
+    static <O extends Entity, A> SimpleAttribute<O, A> getAttribute(Method method) {
+        String name = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
+        return new SimpleAttribute(EntityHandle.class,
+                                   method.getReturnType(),
+                                   name) {
+
+            @SneakyThrows
+            @Override public Object getValue(Entity object, QueryOptions queryOptions) {
+                return method.invoke(object);
+            }
+        };
+    }
+
 
 }

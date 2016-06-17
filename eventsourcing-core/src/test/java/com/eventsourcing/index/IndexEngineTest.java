@@ -15,16 +15,20 @@ import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.*;
 import lombok.experimental.Accessors;
+import org.javatuples.Pair;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertTrue;
 
 public abstract class IndexEngineTest<T extends IndexEngine> {
@@ -81,12 +85,19 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
             this.string = string;
         }
 
+        @com.eventsourcing.annotations.Index
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
             @Override
             public String getValue(TestEvent object, QueryOptions queryOptions) {
                 return object.getString();
             }
         };
+
+        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Setter @Accessors(chain = true)
+        private String anotherString;
+
+        public static Attribute<TestEvent, String> ANOTHER_ATTR = Indexing.getAttribute(TestEvent.class, "anotherString");
+
     }
 
     @Accessors(fluent = true)
@@ -105,7 +116,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     public void test() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        Index<EntityHandle<TestEvent>> index = indexEngine
+        indexEngine
                 .getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         List<Event> events = new ArrayList<>();
@@ -127,5 +138,35 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
 
         handle = coll.retrieve(not(contains(TestEvent.ATTR, "se"))).uniqueResult();
         assertTrue(handle.getOptional().isPresent());
+    }
+
+    @Test
+    @SneakyThrows
+    public void discovery() {
+        Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> attrs = IndexEngine
+                .getIndexableAttributes(TestEvent.class);
+
+        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes  = StreamSupport
+                .stream(Spliterators.spliteratorUnknownSize(attrs.iterator(), Spliterator.IMMUTABLE), false)
+                .collect(Collectors.toList());
+
+        assertEquals(attributes.size(), 2);
+    }
+
+    @Test
+    @SneakyThrows
+    public void getterIndex() {
+        assertNotNull(TestEvent.ANOTHER_ATTR);
+        TestEvent event = new TestEvent().setAnotherString("test");
+        EntityHandle<TestEvent> handle = new EntityHandle<TestEvent>() {
+            @Override public Optional<TestEvent> getOptional() {
+                return Optional.of(event);
+            }
+
+            @Override public UUID uuid() {
+                return event.uuid();
+            }
+        };
+        assertEquals(TestEvent.ANOTHER_ATTR.getValues(handle, noQueryOptions()), Collections.singletonList("test"));
     }
 }

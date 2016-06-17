@@ -7,10 +7,10 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.ComponentContext;
@@ -89,7 +89,7 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
     }
 
     @Override
-    public <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features)
+    public <O extends Entity, A> Index<O> getIndexOnAttribute(Attribute<O, A> attribute, IndexFeature... features)
             throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {
@@ -101,7 +101,7 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
     }
 
     @Override
-    public <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features)
+    public <O extends Entity, A> Index<O> getIndexOnAttributes(Attribute<O, A>[] attributes, IndexFeature... features)
             throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {

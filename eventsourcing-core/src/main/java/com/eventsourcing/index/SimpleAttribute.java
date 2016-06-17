@@ -19,7 +19,8 @@ import com.googlecode.cqengine.query.option.QueryOptions;
  * @param <O>
  * @param <A>
  */
-public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A> {
+public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute
+        .SimpleAttribute<EntityHandle<O>, A> implements Attribute<O, A> {
 
     public SimpleAttribute() {
     }
