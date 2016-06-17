@@ -4,6 +4,7 @@ dependencies {
 
     // Useful utilities
     compile 'com.google.guava:guava:19.0'
+    compile 'org.javatuples:javatuples:1.2'
 
     // Reflections API
     compile 'org.reflections:reflections:0.9.10'

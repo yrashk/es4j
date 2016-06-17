@@ -20,7 +20,7 @@ import java.lang.annotation.Target;
  * <p>
  * <b>Please note</b>: such fields MUST be public and static to be discovered.
  */
-@Target(ElementType.FIELD)
+@Target({ElementType.FIELD, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Index {
     IndexEngine.IndexFeature[] value() default {IndexEngine.IndexFeature.EQ};

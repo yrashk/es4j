@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.google.common.util.concurrent.AbstractService;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 
 import java.util.Arrays;
@@ -20,7 +20,7 @@ public abstract class AbstractIndexEngine extends AbstractService implements Ind
     protected abstract List<IndexCapabilities> getIndexMatrix();
 
     @Override @SuppressWarnings("unchecked")
-    public <A, O> Index<A> getIndexOnAttribute(Attribute<A, O> attribute, IndexFeature... features)
+    public <O extends Entity, A> Index<O> getIndexOnAttribute(Attribute<O, A> attribute, IndexFeature... features)
             throws IndexNotSupported {
         for (IndexCapabilities capabilities : getIndexMatrix()) {
             if (Arrays.asList(capabilities.getFeatures()).containsAll(Arrays.asList(features))) {
@@ -31,7 +31,7 @@ public abstract class AbstractIndexEngine extends AbstractService implements Ind
     }
 
     @Override @SuppressWarnings("unchecked")
-    public <A, O> Index<A> getIndexOnAttributes(Attribute<A, O>[] attributes, IndexFeature... features)
+    public <O extends Entity, A> Index<O> getIndexOnAttributes(Attribute<O, A>[] attributes, IndexFeature... features)
             throws IndexNotSupported {
         for (IndexCapabilities capabilities : getIndexMatrix()) {
             if (Arrays.asList(capabilities.getFeatures()).containsAll(Arrays.asList(features))) {
