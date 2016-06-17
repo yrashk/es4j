@@ -12,6 +12,7 @@ import com.eventsourcing.annotations.Index;
 import lombok.SneakyThrows;
 import org.javatuples.Pair;
 
+import java.util.NoSuchElementException;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Stream;
@@ -34,9 +35,13 @@ public class Indexing {
         Stream<Pair<Index, Attribute>> stream = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(IndexEngine.getIndexableAttributes(klass).iterator(),
                                                             Spliterator.IMMUTABLE), false);
-        return (Attribute<O, A>) stream
-                .filter(p -> p.getValue1().getAttributeName().equals(name)).findFirst()
-                .map(Pair::getValue1)
-                .orElse(null);
+        try {
+            return (Attribute<O, A>) stream
+                    .filter(p -> p.getValue1().getAttributeName().equals(name)).findFirst()
+                    .map(Pair::getValue1)
+                    .get();
+        } catch (NoSuchElementException e) {
+            throw new RuntimeException("Attribute " + name + " can't be found on class " + klass.getName());
+        }
     }
 }
