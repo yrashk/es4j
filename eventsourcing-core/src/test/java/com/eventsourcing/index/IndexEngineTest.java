@@ -11,7 +11,6 @@ import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.*;
 import lombok.experimental.Accessors;
@@ -85,6 +84,11 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
             this.string = string;
         }
 
+        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Setter @Accessors(chain = true)
+        private String anotherString;
+
+        public static Attribute<TestEvent, String> ANOTHER_ATTR = Indexing.getAttribute(TestEvent.class, "anotherString");
+
         @com.eventsourcing.annotations.Index
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
             @Override
@@ -93,10 +97,6 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
             }
         };
 
-        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Setter @Accessors(chain = true)
-        private String anotherString;
-
-        public static Attribute<TestEvent, String> ANOTHER_ATTR = Indexing.getAttribute(TestEvent.class, "anotherString");
 
     }
 
@@ -144,7 +144,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     @SneakyThrows
     public void discovery() {
         Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> attrs = IndexEngine
-                .getIndexableAttributes(TestEvent.class);
+                .getIndexingAttributes(TestEvent.class);
 
         List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes  = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(attrs.iterator(), Spliterator.IMMUTABLE), false)
