@@ -13,6 +13,7 @@ import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;
+import com.googlecode.concurrenttrees.common.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -108,10 +109,18 @@ public interface IndexEngine extends Service {
      */
     default Iterable<Index> getIndices(Class<?> klass) throws IndexNotSupported, IllegalAccessException {
         List<Index> indices = new ArrayList<>();
-        for (Pair<com.eventsourcing.annotations.Index, Attribute> attr : getIndexableAttributes(klass)) {
+        for (Pair<com.eventsourcing.annotations.Index, Attribute> attr : getIndexingAttributes(klass)) {
             indices.add(this.getIndexOnAttribute(attr.getValue1(), attr.getValue0().value()));
         }
         return indices;
+    }
+
+    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexingAttributes(Class<?> klass)
+            throws IllegalAccessException {
+        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
+        attributes.addAll(Iterables.toList(getIndexableAttributes(klass)));
+        attributes.addAll(Iterables.toList(getIndexableGetters(klass)));
+        return attributes;
     }
 
     static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexableAttributes(Class<?> klass)
@@ -127,12 +136,18 @@ public interface IndexEngine extends Service {
                 }
             }
         }
+        return attributes;
+    }
+
+    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexableGetters(Class<?> klass)
+            throws IllegalAccessException {
+        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
         for (Method method : klass.getDeclaredMethods()) {
             com.eventsourcing.annotations.Index annotation = method
                     .getAnnotation(com.eventsourcing.annotations.Index.class);
             if (annotation != null &&
-                Modifier.isPublic(method.getModifiers()) &&
-                method.getParameterCount() == 0) {
+                    Modifier.isPublic(method.getModifiers()) &&
+                    method.getParameterCount() == 0) {
                 SimpleAttribute attribute = getAttribute(method);
                 attributes.add(Pair.with(annotation, attribute));
             }

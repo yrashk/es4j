@@ -33,7 +33,7 @@ public class Indexing {
     @SneakyThrows
     public static <O extends Entity, A> Attribute<O, A> getAttribute(Class<?> klass, String name) {
         Stream<Pair<Index, Attribute>> stream = StreamSupport
-                .stream(Spliterators.spliteratorUnknownSize(IndexEngine.getIndexableAttributes(klass).iterator(),
+                .stream(Spliterators.spliteratorUnknownSize(IndexEngine.getIndexableGetters(klass).iterator(),
                                                             Spliterator.IMMUTABLE), false);
         try {
             return (Attribute<O, A>) stream
