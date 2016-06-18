@@ -7,6 +7,8 @@
 
 Instead of mutating data in a database, it stores all changes (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation for deep analytics, data recovery, audit trails and other associated benefits.
 
+To learn what kind of problems ES4J addresses, please read [Why Use Eventsourcing Database](https://blog.eventsourcing.com/why-use-eventsourcing-database-6b5e2ac61848)
+
 ## Key benefits
 
 * Flexibility of data aggregation and representation
