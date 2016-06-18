@@ -35,6 +35,13 @@ Installation instructions and documentation can be found at [es4j-doc.eventsourc
 
 We strive to specify the building blocks behind Eventsourcing and its ecosystem as succinct specifications, you can find the current list of them at [rfc.eventsourcing.com](http://rfc.eventsourcing.com)
 
+# Roadmap
+
+As this project is striving to be a decentralized, community-driven project governed by the [C4 process](http://rfc.unprotocols.org/spec:1/C4), there is no central roadmap per se. However, individual
+contributors are free to publish their own roadmaps to help indicating their intentions. Current roadmaps available:
+
+* [Yurii Rashkovskii](https://github.com/yrashk/es4j/milestones/Roadmap)
+
 # Snapshot versions
 
 Every successful build is published into a [separate Maven repository on Bintray](https://bintray.com/eventsourcing/maven-snapshots) (using a `git describe`
