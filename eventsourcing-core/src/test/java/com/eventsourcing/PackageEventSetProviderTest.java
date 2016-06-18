@@ -8,6 +8,7 @@
 package com.eventsourcing;
 
 import boguspackage.BogusEvent;
+import com.eventsourcing.repository.PackageEventSetProvider;
 import org.testng.annotations.Test;
 
 public class PackageEventSetProviderTest {

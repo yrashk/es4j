@@ -8,8 +8,10 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.*;
+import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.*;

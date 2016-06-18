@@ -11,6 +11,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

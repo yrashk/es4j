@@ -9,6 +9,11 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.repository.MemoryJournal;
+import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.PackageCommandSetProvider;
+import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.Repository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 import org.testng.annotations.AfterMethod;

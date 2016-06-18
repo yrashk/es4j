@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.Journal;
-import com.eventsourcing.MemoryJournal;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryJournal;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 

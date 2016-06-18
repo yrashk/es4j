@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.Journal;
-import com.eventsourcing.RepositoryImpl;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.RepositoryImpl;
 import com.eventsourcing.RepositoryTest;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.Test;

@@ -8,6 +8,7 @@
 package com.eventsourcing;
 
 import com.eventsourcing.layout.LayoutIgnore;
+import com.eventsourcing.repository.LockProvider;
 
 import java.util.stream.Stream;
 
@@ -38,7 +39,7 @@ public abstract class Command<R> extends Entity {
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
      * <p>
-     * This version of the function receives a {@link LockProvider} if one is needed. {@link DisruptorCommandConsumer}
+     * This version of the function receives a {@link LockProvider} if one is needed. {@link Repository}
      * will pass a special "tracking" provider that will release the locks in two situations:
      * <p>
      * <ul>

@@ -5,8 +5,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
+import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -26,11 +27,10 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @Slf4j
-public class DisruptorCommandConsumer extends AbstractService implements CommandConsumer {
+class DisruptorCommandConsumer extends AbstractService implements CommandConsumer {
 
 
     private final Iterable<Class<? extends Command>> commandClasses;

@@ -9,7 +9,7 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.JournalEntityHandle;
+import com.eventsourcing.repository.JournalEntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
 /**

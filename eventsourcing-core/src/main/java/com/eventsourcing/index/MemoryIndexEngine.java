@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.compound.CompoundIndex;

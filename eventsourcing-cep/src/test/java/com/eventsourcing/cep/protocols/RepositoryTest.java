@@ -7,9 +7,13 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.*;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.repository.MemoryJournal;
+import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.PackageCommandSetProvider;
+import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.Repository;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 

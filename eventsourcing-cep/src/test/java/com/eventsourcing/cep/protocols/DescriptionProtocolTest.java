@@ -12,7 +12,6 @@ import com.eventsourcing.Event;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
 import com.eventsourcing.cep.events.DescriptionChanged;
-import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Getter;
 import lombok.Setter;
