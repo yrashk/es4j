@@ -38,6 +38,9 @@ allprojects {
         maven {
             url  "http://dl.bintray.com/eventsourcing/maven"
         }
+        maven {
+            url  "http://dl.bintray.com/unprotocols/maven"
+        }
     }
 
 }
@@ -98,6 +101,9 @@ subprojects {
         // Remove boilerplate
         compile 'org.projectlombok:lombok:1.16.8'
 
+        // COSS
+        compile 'org.unprotocols:coss:1.0.0'
+
         // OSGi
         compile 'org.osgi:org.osgi.core:6.0.0'
         compile 'org.osgi:org.osgi.service.cm:1.5.0'
@@ -139,3 +145,4 @@ afterReleaseBuild.dependsOn project(':eventsourcing-layout').tasks.findByName("b
 afterReleaseBuild.dependsOn project(':eventsourcing-hlc').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-core').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-h2').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-cep').tasks.findByName("bintrayUpload")
