@@ -3,4 +3,6 @@ include 'eventsourcing-hlc'
 include 'eventsourcing-core'
 include 'eventsourcing-h2'
 
+include 'eventsourcing-cep'
+
 rootProject.name = 'eventsourcing'

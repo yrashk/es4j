@@ -1,8 +1,0 @@
-# Gradle
-.gradle
-# IntelliJ IDEA
-*.iml
-*.ipr
-*.iws
-# Builds
-/build
