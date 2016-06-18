@@ -43,7 +43,7 @@ public interface Repository extends Service {
      */
     static Repository create() throws Exception {
         RepositoryImpl repository = new RepositoryImpl();
-        PhysicalTimeProvider timeProvider = new NTPServerTimeProvider();
+        PhysicalTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         LockProvider lockProvider = new MemoryLockProvider();
         repository.setLockProvider(lockProvider);
