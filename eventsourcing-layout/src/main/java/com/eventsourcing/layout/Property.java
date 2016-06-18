@@ -8,7 +8,9 @@
 package com.eventsourcing.layout;
 
 import com.fasterxml.classmate.ResolvedType;
-import lombok.Value;
+import lombok.*;
+import org.unprotocols.coss.RFC;
+import org.unprotocols.coss.Raw;
 
 import java.util.function.BiConsumer;
 import java.util.function.Function;
@@ -20,12 +22,22 @@ import java.util.function.Function;
  *
  * @param <T>
  */
-@Value
+@NoArgsConstructor
+@RequiredArgsConstructor
+@LayoutName("rfc.eventsourcing.com/spec:7/LDL/#Property")
+@Raw @RFC(url = "http://rfc.eventsourcing.com/spec:7/LDL/", revision = "Jun 18, 2016")
 public class Property<T> {
+    @Getter @Setter @NonNull
     private String name;
+    @Setter
+    private byte[] fingerprint;
+    @Getter @NonNull
     private ResolvedType type;
+    @Getter @NonNull
     private TypeHandler<T> typeHandler;
+    @Getter @NonNull
     private BiConsumer<T, Object> setter;
+    @Getter @NonNull
     private Function<T, Object> getter;
 
     /**
@@ -50,5 +62,15 @@ public class Property<T> {
 
     public String toString() {
         return name + ": " + type.getBriefDescription();
+    }
+
+    public byte[] getFingerprint() {
+        if (fingerprint == null && typeHandler != null) {
+            return typeHandler.getFingerprint();
+        }
+        if (fingerprint != null) {
+            return fingerprint;
+        }
+        throw new RuntimeException("fingerprint or typeHandler expected to be non-null");
     }
 }

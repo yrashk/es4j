@@ -13,7 +13,10 @@ import com.fasterxml.classmate.members.ResolvedMethod;
 import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.google.common.io.BaseEncoding;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
+import org.unprotocols.coss.RFC;
+import org.unprotocols.coss.Raw;
 
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
@@ -55,14 +58,16 @@ import java.util.stream.Collectors;
  *
  * @param <T> Bean's class
  */
+@LayoutName("rfc.eventsourcing.com/spec:7/LDL/#Layout")
+@Raw @RFC(url = "http://rfc.eventsourcing.com/spec:7/LDL/", revision = "Jun 18, 2016")
 public class Layout<T> {
 
     public static final String DIGEST_ALGORITHM = "SHA-1";
     /**
      * Qualified POJO properties. See {@link Layout for definition}
      */
-    @Getter
-    private final List<Property<T>> properties;
+    @Getter @Setter
+    private List<Property<T>> properties;
 
     @Getter
     private final byte[] hash;
@@ -72,6 +77,9 @@ public class Layout<T> {
 
     @Getter
     private Constructor constructor;
+
+    @Getter @Setter
+    private String name;
 
     protected boolean setConstructor(Constructor constructor) {
         if (this.constructor == null || this.constructor.equals(constructor)) {
@@ -277,12 +285,13 @@ public class Layout<T> {
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
 
+        name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class)
+                                                                  .value() : klass.getName();
+
         // It is important to include class name into the hash as there could be situations
         // when POJOs have indistinguishable layouts, and therefore it is impossible to
         // guarantee that we'd pick the right class
         if (hashClassName) {
-            String name = klass.isAnnotationPresent(LayoutName.class) ? klass.getAnnotation(LayoutName.class)
-                                                                             .value() : klass.getName();
             digest.update(name.getBytes());
         }
 
