@@ -7,9 +7,13 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.*;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.PackageCommandSetProvider;
+import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.Repository;
 import org.openjdk.jmh.annotations.*;
 
 import java.util.concurrent.ExecutionException;

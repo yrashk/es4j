@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.eventsourcing.h2.MVStoreIndexEngine;
 import com.eventsourcing.h2.MVStoreJournal;
 import com.eventsourcing.index.IndexEngine;

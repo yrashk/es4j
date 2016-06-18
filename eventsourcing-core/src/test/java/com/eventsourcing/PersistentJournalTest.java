@@ -8,6 +8,7 @@
 package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.repository.Journal;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 

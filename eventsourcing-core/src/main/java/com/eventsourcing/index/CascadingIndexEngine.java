@@ -8,7 +8,7 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
 import com.googlecode.cqengine.index.Index;

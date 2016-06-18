@@ -5,12 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
-public interface RepositoryMBean {
-    boolean isRunning();
+import com.eventsourcing.Event;
 
-    String[] getInstalledCommands();
+import java.util.Set;
 
-    String[] getInstalledEvents();
+public interface EventSetProvider {
+    Set<Class<? extends Event>> getEvents();
 }

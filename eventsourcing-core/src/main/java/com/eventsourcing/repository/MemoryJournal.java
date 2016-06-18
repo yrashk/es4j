@@ -5,13 +5,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
+import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
@@ -130,8 +132,8 @@ public class MemoryJournal extends AbstractService implements Journal {
     @Override
     public synchronized <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(commands.values().stream()
-                .filter(command -> klass.isAssignableFrom(command.getClass()))
-                .map(command -> (EntityHandle<T>) new JournalEntityHandle<T>(this, command.uuid())).iterator());
+                                                       .filter(command -> klass.isAssignableFrom(command.getClass()))
+                                                       .map(command -> (EntityHandle<T>) new JournalEntityHandle<T>(this, command.uuid())).iterator());
     }
 
     @Override

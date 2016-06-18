@@ -8,6 +8,7 @@
 package com.eventsourcing;
 
 import boguspackage.BogusCommand;
+import com.eventsourcing.repository.PackageCommandSetProvider;
 import org.testng.annotations.Test;
 
 public class PackageCommandSetProviderTest {

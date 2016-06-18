@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
 import com.eventsourcing.h2.index.HashIndex;
 import com.eventsourcing.h2.index.UniqueIndex;

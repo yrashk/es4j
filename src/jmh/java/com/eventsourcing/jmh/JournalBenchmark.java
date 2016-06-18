@@ -12,6 +12,11 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.PackageCommandSetProvider;
+import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.Repository;
 import lombok.SneakyThrows;
 import org.openjdk.jmh.annotations.*;
 

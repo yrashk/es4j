@@ -9,7 +9,7 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;

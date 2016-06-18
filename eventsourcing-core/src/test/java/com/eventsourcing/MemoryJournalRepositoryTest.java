@@ -7,6 +7,9 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryJournal;
+import com.eventsourcing.repository.RepositoryImpl;
 import org.testng.annotations.Test;
 
 @Test

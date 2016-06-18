@@ -5,8 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
+import com.eventsourcing.Command;
+import com.eventsourcing.Entity;
+import com.eventsourcing.Event;
+import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;

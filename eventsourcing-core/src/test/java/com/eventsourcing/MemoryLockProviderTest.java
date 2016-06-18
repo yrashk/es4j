@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.repository.MemoryLockProvider;
 import org.testng.annotations.Test;
 
 @Test

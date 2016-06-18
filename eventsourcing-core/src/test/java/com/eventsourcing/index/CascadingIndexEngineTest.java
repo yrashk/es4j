@@ -8,8 +8,8 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
-import com.eventsourcing.Journal;
-import com.eventsourcing.MemoryJournal;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryJournal;
 import com.eventsourcing.Repository;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;

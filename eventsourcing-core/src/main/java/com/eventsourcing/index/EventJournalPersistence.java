@@ -9,7 +9,7 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Event;
-import com.eventsourcing.Journal;
+import com.eventsourcing.repository.Journal;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.support.ObjectStore;

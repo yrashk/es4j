@@ -10,6 +10,10 @@ package com.eventsourcing.examples.order;
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.repository.MemoryJournal;
+import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.PackageCommandSetProvider;
+import com.eventsourcing.repository.PackageEventSetProvider;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 

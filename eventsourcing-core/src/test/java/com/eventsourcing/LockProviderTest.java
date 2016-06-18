@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.repository.LockProvider;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.*;
