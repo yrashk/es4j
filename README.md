@@ -3,7 +3,7 @@
 [ ![Download](https://api.bintray.com/packages/eventsourcing/maven-snapshots/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven-snapshots/eventsourcing-core/_latestVersion)
 [![Join the chat at https://gitter.im/eventsourcing/eventsourcing](https://badges.gitter.im/eventsourcing/eventsourcing.svg)](https://gitter.im/eventsourcing/eventsourcing?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-# Eventsourcing for Java
+# ![logo](https://eventsourcing.com/android-icon-48x48.png) Eventsourcing for Java
 
 Instead of mutating data in a database, it stores all changes (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation for deep analytics, data recovery, audit trails and other associated benefits.
 
