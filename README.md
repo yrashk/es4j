@@ -76,16 +76,6 @@ Maven configuration:
 				<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
 			</repository>
 		</repositories>
-		<pluginRepositories>
-			<pluginRepository>
-				<snapshots>
-					<enabled>false</enabled>
-				</snapshots>
-				<id>bintray-eventsourcing-maven-snapshots</id>
-				<name>bintray-plugins</name>
-				<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
-			</pluginRepository>
-		</pluginRepositories>
 		<id>bintray</id>
 	</profile>
 </profiles>
