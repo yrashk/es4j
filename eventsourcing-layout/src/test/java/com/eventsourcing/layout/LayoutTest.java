@@ -339,4 +339,14 @@ public class LayoutTest {
         assertNotEquals(layout1, layout2, "Should be different");
         assertFalse(Arrays.equals(layout1.getHash(), layout2.getHash()));
     }
+
+    @Test
+    @SneakyThrows
+    public void layoutLayout() {
+        Layout<Layout> layout = new Layout<>(Layout.class);
+        assertEquals(layout.getName(), "rfc.eventsourcing.com/spec:7/LDL/#Layout");
+        assertEquals(layout.getProperties().size(), 2);
+        assertTrue(layout.getProperties().stream().anyMatch(p -> p.getName().contentEquals("name")));
+        assertTrue(layout.getProperties().stream().anyMatch(p -> p.getName().contentEquals("properties")));
+    }
 }
