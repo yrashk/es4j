@@ -22,14 +22,14 @@ public class Entity {
     private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(10_000);
 
     static {
-        ForkJoinPool.commonPool().execute(() -> {
+        new Thread(() -> {
             while (true) {
                 try {
                     uuids.put(UUID.randomUUID());
                 } catch (InterruptedException e) {
                 }
             }
-        });
+        }).start();
     }
 
     @Setter @Accessors(fluent = true)
