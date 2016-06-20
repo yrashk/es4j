@@ -7,10 +7,10 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.repository.Journal;
 import com.eventsourcing.h2.MVStoreIndexEngine;
 import com.eventsourcing.h2.MVStoreJournal;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.repository.Journal;
 import org.h2.mvstore.MVStore;
 
 public class MVStoreMemoryRepositoryBenchmark extends RepositoryBenchmark {

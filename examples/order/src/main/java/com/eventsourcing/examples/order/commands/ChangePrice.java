@@ -7,9 +7,9 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Command;
 import com.eventsourcing.Event;
 import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.PriceChanged;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -24,7 +24,7 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class ChangePrice extends Command<BigDecimal> {
+public class ChangePrice extends StandardCommand<BigDecimal> {
     @Getter
     @Setter
     private UUID id;
@@ -33,7 +33,7 @@ public class ChangePrice extends Command<BigDecimal> {
     private BigDecimal price;
 
     @Override
-    public Stream<Event> events(Repository repository) throws Exception {
+    public Stream<? extends Event> events(Repository repository) throws Exception {
         return Stream.of(new PriceChanged(id, price));
     }
 

@@ -10,7 +10,10 @@ package com.eventsourcing;
 import com.eventsourcing.repository.LockProvider;
 import org.testng.annotations.Test;
 
-import java.util.concurrent.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.testng.Assert.*;
 

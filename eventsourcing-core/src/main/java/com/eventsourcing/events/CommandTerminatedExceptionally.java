@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.events;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
@@ -20,7 +20,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Accessors(fluent = true)
-public class CommandTerminatedExceptionally extends Event {
+public class CommandTerminatedExceptionally extends StandardEvent {
 
     @Getter @Setter
     private UUID commandId;

@@ -83,7 +83,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @Accessors(fluent = true) @ToString
-    public static class TestEvent extends Event {
+    public static class TestEvent extends StandardEvent {
         @Getter @Setter
         private String string;
 
@@ -97,7 +97,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @ToString
-    public static class RepositoryTestCommand extends Command<String> {
+    public static class RepositoryTestCommand extends StandardCommand<String> {
 
         @Getter @Setter
         private String value = "test";
@@ -110,7 +110,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             return Stream.of(new TestEvent().string(value));
         }
 
@@ -200,7 +200,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @ToString
-    public static class TimestampingEventCommand extends Command<String> {
+    public static class TimestampingEventCommand extends StandardCommand<String> {
 
         private HybridTimestamp timestamp;
 
@@ -212,9 +212,9 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             return Stream.of((Event)new TestEvent().string("test").timestamp(timestamp),
-                             new TestEvent().string("followup")
+                             (Event)new TestEvent().string("followup")
                              );
         }
 
@@ -268,8 +268,9 @@ public abstract class RepositoryTest<T extends Repository> {
     public void publishingNewCommand() {
         assertFalse(repository.getCommands().contains(BogusCommand.class));
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{BogusCommand.class.getPackage()}));
-        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{BogusCommand.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{BogusEvent.class.getPackage()}));
         assertTrue(repository.getCommands().contains(BogusCommand.class));
+        assertTrue(repository.getEvents().contains(BogusEvent.class));
         assertEquals("bogus", repository.publish(new BogusCommand()).get());
         // testing its indexing
         IndexedCollection<EntityHandle<BogusEvent>> coll = indexEngine.getIndexedCollection(BogusEvent.class);
@@ -278,9 +279,9 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().string(), "bogus");
     }
 
-    public static class LockCommand extends Command<Void> {
+    public static class LockCommand extends StandardCommand<Void> {
         @Override
-        public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+        public Stream<? extends Event> events(Repository repository, LockProvider lockProvider) {
             lockProvider.lock("LOCK");
             return Stream.empty();
         }
@@ -294,9 +295,9 @@ public abstract class RepositoryTest<T extends Repository> {
         lock.unlock();
     }
 
-    public static class ExceptionalLockCommand extends Command<Void> {
+    public static class ExceptionalLockCommand extends StandardCommand<Void> {
         @Override
-        public Stream<Event> events(Repository repository, LockProvider lockProvider) {
+        public Stream<? extends Event> events(Repository repository, LockProvider lockProvider) {
             lockProvider.lock("LOCK");
             throw new IllegalStateException();
         }
@@ -311,9 +312,9 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
 
-    public static class ExceptionalCommand extends Command<Object> {
+    public static class ExceptionalCommand extends StandardCommand<Object> {
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             throw new IllegalStateException();
         }
     }
@@ -335,7 +336,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
     @ToString
-    public static class StreamExceptionCommand extends Command<Void> {
+    public static class StreamExceptionCommand extends StandardCommand<Void> {
 
         private UUID eventUUID = UUID.randomUUID();
 
@@ -347,9 +348,9 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             return Stream.concat(Stream.of(
-                    (TestEvent) new TestEvent().string("test").uuid(eventUUID)),
+                    (Event) new TestEvent().string("test").uuid(eventUUID)),
                                  Stream.generate((Supplier<Event>) () -> {
                                      throw new IllegalStateException();
                                  }));
@@ -378,12 +379,12 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
 
-    public static class SameInstanceCommand extends Command<String> {
+    public static class SameInstanceCommand extends StandardCommand<String> {
         @Getter
         private String field;
 
         @Override
-        public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+        public Stream<? extends Event> events(Repository repository, LockProvider lockProvider) throws Exception {
             this.field = "hello";
             return super.events(repository, lockProvider);
         }
@@ -400,12 +401,12 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(s, "hello");
     }
 
-    public static class PassingLockProvider extends Command<Boolean> {
+    public static class PassingLockProvider extends StandardCommand<Boolean> {
         @Getter
         private boolean passed = false;
 
         @Override
-        public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+        public Stream<? extends Event> events(Repository repository, LockProvider lockProvider) throws Exception {
             this.passed = lockProvider != null;
             return super.events(repository, lockProvider);
         }
@@ -422,7 +423,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @Accessors(fluent = true) @ToString
-    public static class TestOptionalEvent extends Event {
+    public static class TestOptionalEvent extends StandardEvent {
         @Getter @Setter
         private Optional<String> optional;
 
@@ -437,12 +438,12 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Accessors(fluent = true)
     @ToString
-    public static class TestOptionalCommand extends Command<Void> {
+    public static class TestOptionalCommand extends StandardCommand<Void> {
         @Getter @Setter
         private Optional<String> optional;
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             return Stream.of(new TestOptionalEvent());
         }
 

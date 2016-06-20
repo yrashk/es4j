@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.examples.order.events;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -21,7 +21,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 @RequiredArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class ItemRemovedFromOrder extends Event {
+public class ItemRemovedFromOrder extends StandardEvent {
     @Getter @Setter @NonNull
     private UUID itemId;
 

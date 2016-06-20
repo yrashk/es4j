@@ -5,7 +5,7 @@ Command is a request for changes in the domain. Unlike an [event](event.md), it 
 Defining a command is pretty straightforward, through subclassing `Command<T>`:
 
 ```java
-public class CreateUser extends Command<User> {
+public class CreateUser extends StandardCommand<User> {
   @Getter @Setter
   private String email;
 }
@@ -26,7 +26,7 @@ A more important part of any command is being able to generate events. This is d
 
 ```java
 @Override
-public Stream<Event> events(Repository repository) {
+public Stream<? extends Event> events(Repository repository) {
   return Stream.of(new UserCreated().setEmail(email));
 }
 ```

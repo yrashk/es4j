@@ -7,10 +7,10 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.Command;
 import com.eventsourcing.Event;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.cep.events.Undeleted;
 import lombok.Getter;
@@ -22,7 +22,8 @@ import org.testng.annotations.Test;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertFalse;
+import static org.testng.Assert.assertTrue;
 
 public class DeletedProtocolTest extends RepositoryTest {
 
@@ -32,14 +33,14 @@ public class DeletedProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class Delete extends Command<Void> {
+    public static class Delete extends StandardCommand<Void> {
 
         @Getter @Setter
         private UUID id;
         private UUID eventId;
 
         @Override
-        public Stream<Event> events(Repository repository) throws Exception {
+        public Stream<? extends Event> events(Repository repository) throws Exception {
             Deleted reference = new Deleted().reference(id);
             eventId = reference.uuid();
             return Stream.of(reference);
@@ -52,13 +53,13 @@ public class DeletedProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class Undelete extends Command<Void> {
+    public static class Undelete extends StandardCommand<Void> {
 
         @Getter @Setter
         private UUID id;
 
         @Override
-        public Stream<Event> events(Repository repository) throws Exception {
+        public Stream<? extends Event> events(Repository repository) throws Exception {
             return Stream.of(new Undeleted().deleted(id));
         }
 

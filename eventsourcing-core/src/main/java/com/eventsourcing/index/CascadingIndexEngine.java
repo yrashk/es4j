@@ -8,8 +8,8 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
-import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
+import com.eventsourcing.repository.Journal;
 import com.google.common.base.Joiner;
 import com.googlecode.cqengine.index.Index;
 import lombok.extern.slf4j.Slf4j;

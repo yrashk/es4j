@@ -12,8 +12,8 @@ import com.eventsourcing.Protocol;
 import com.eventsourcing.cep.events.NameChanged;
 import com.googlecode.cqengine.query.option.EngineThresholds;
 import com.googlecode.cqengine.resultset.ResultSet;
-import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Draft;
+import org.unprotocols.coss.RFC;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 

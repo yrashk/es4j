@@ -12,7 +12,6 @@ import com.eventsourcing.layout.types.*;
 import com.fasterxml.classmate.ResolvedType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.AnnotatedType;
 import java.math.BigDecimal;

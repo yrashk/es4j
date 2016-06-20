@@ -7,10 +7,10 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.MemoryJournal;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.MemoryJournal;
 
 public class MemoryRepositoryBenchmark extends RepositoryBenchmark {
     protected IndexEngine createIndex() {

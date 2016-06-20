@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.Event;
 import com.eventsourcing.PersistentJournalTest;
+import com.eventsourcing.StandardEvent;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -73,7 +73,7 @@ public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJ
         }
     }
 
-    public static class TestEvent extends Event {
+    public static class TestEvent extends StandardEvent {
         @Getter @Setter
         private String value;
     }

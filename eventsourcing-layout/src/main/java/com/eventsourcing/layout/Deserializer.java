@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.layout;
 
+import lombok.NonNull;
 import lombok.SneakyThrows;
 
 import java.nio.ByteBuffer;
@@ -21,7 +22,7 @@ public class Deserializer<T> implements com.eventsourcing.layout.core.Deserializ
 
     private final Layout<T> layout;
 
-    public Deserializer(Layout<T> layout) throws NoEmptyConstructorException {
+    public Deserializer(@NonNull Layout<T> layout) throws NoEmptyConstructorException {
         if (layout.isReadOnly()) {
             throw new IllegalArgumentException("Read-only layout");
         }

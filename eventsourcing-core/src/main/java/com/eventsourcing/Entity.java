@@ -9,44 +9,12 @@ package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.LayoutIgnore;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
 
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.LinkedBlockingDeque;
 
-public class Entity {
-
-    private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(10_000);
-
-    static {
-        new Thread(() -> {
-            while (true) {
-                try {
-                    uuids.put(UUID.randomUUID());
-                } catch (InterruptedException e) {
-                }
-            }
-        }).start();
-    }
-
-    @Setter @Accessors(fluent = true)
-    private UUID uuid;
-
-    @LayoutIgnore
-    public UUID uuid() {
-        while (uuid == null) {
-            try {
-                uuid = uuids.take();
-            } catch (InterruptedException e) {
-            }
-        }
-        return uuid;
-    }
-
-    @Getter @Setter @Accessors(fluent = true)
-    private HybridTimestamp timestamp;
-
+public interface Entity<E extends Entity> {
+    @LayoutIgnore UUID uuid();
+    E uuid(UUID uuid);
+    HybridTimestamp timestamp();
+    E timestamp(HybridTimestamp timestamp);
 }
