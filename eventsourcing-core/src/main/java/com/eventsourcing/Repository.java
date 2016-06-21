@@ -186,7 +186,7 @@ public interface Repository extends Service {
      * @return
      */
     default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query,
-                                                                QueryOptions queryOptions) {
+                                                                        QueryOptions queryOptions) {
         return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
     }
 

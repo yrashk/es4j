@@ -7,9 +7,9 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Command;
 import com.eventsourcing.Event;
 import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.ProductAddedToOrder;
 import lombok.*;
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class AddProductToOrder extends Command<Order.Item> {
+public class AddProductToOrder extends StandardCommand<Order.Item> {
 
     @Getter @Setter @NonNull
     private UUID orderId;
@@ -36,7 +36,7 @@ public class AddProductToOrder extends Command<Order.Item> {
     private ProductAddedToOrder addedToOrder;
 
     @Override
-    public Stream<Event> events(Repository repository) throws Exception {
+    public Stream<? extends Event> events(Repository repository) throws Exception {
         this.repository = repository;
         addedToOrder = new ProductAddedToOrder(orderId, productId, quantity);
         return Stream.of(addedToOrder);

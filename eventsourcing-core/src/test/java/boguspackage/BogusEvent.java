@@ -7,7 +7,7 @@
  */
 package boguspackage;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -19,7 +19,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.SC;
 
 @Accessors(fluent = true)
-public class BogusEvent extends Event {
+public class BogusEvent extends StandardEvent {
     @Getter @Setter
     private String string = "bogus";
 

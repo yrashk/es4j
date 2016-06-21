@@ -16,7 +16,6 @@ import com.eventsourcing.layout.Serializer;
 import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.eventsourcing.repository.JournalMBean;
-import com.eventsourcing.Repository;
 import com.eventsourcing.repository.LockProvider;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.base.Joiner;
@@ -231,7 +230,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         return journal(command, listener, lockProvider, null);
     }
 
-    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<Event> events)
+    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<? extends Event> events)
             throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
@@ -247,7 +246,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             TransactionMap<byte[], Boolean> txHashCommands = tx.openMap("hashCommands");
             TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
 
-            Stream<Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
+            Stream<? extends Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
             EventConsumer eventConsumer = new EventConsumer(tx, command, listener);
             long count = actualEvents.peek(eventConsumer).count();
 
@@ -267,9 +266,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             tx.rollback();
             listener.onAbort(e);
 
+
             try {
                 journal(command, listener, lockProvider,
-                        Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
+                        Stream.of((Event)new CommandTerminatedExceptionally(command.uuid(), e)));
             } catch (Exception e1) {
                 throw e1;
             }

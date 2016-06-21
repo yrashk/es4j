@@ -7,6 +7,8 @@
  */
 package com.eventsourcing.layout;
 
+import lombok.NonNull;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -18,7 +20,7 @@ public class Serializer<T> implements com.eventsourcing.layout.core.Serializer<T
 
     private final Layout<T> layout;
 
-    public Serializer(Layout<T> layout) {
+    public Serializer(@NonNull Layout<T> layout) {
         this.layout = layout;
     }
 

@@ -30,7 +30,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public abstract class JournalTest<T extends Journal> {
 
@@ -68,12 +69,12 @@ public abstract class JournalTest<T extends Journal> {
         journal.clear();
     }
 
-    public static class TestEvent extends Event {}
+    public static class TestEvent extends StandardEvent {}
 
-    public static class AnotherTestEvent extends Event {}
+    public static class AnotherTestEvent extends StandardEvent {}
 
     @EqualsAndHashCode(callSuper = false)
-    public static class TestCommand extends Command<Void> {
+    public static class TestCommand extends StandardCommand<Void> {
         @Getter @Setter
         private boolean events;
 
@@ -85,18 +86,18 @@ public abstract class JournalTest<T extends Journal> {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) throws Exception {
+        public Stream<? extends Event> events(Repository repository) throws Exception {
             if (events) {
-                return Stream.of(new TestEvent());
+                return Stream.of((Event)new TestEvent());
             } else {
                 return super.events(repository);
             }
         }
     }
 
-    public static class ExceptionalTestCommand extends Command<Void> {
+    public static class ExceptionalTestCommand extends StandardCommand<Void> {
         @Override
-        public Stream<Event> events(Repository repository) throws Exception {
+        public Stream<? extends Event> events(Repository repository) throws Exception {
             return Stream.generate((Supplier<Event>) () -> {
                 throw new IllegalStateException();
             });
@@ -228,14 +229,14 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     @EqualsAndHashCode(callSuper = false)
-    public static class EventsCommand extends Command<Void> {
+    public static class EventsCommand extends StandardCommand<Void> {
 
         public EventsCommand() {
         }
 
         @Override
-        public Stream<Event> events(Repository repository) throws Exception {
-            return Stream.of(new TestEvent(), new AnotherTestEvent());
+        public Stream<? extends Event> events(Repository repository) throws Exception {
+            return Stream.of((Event)new TestEvent(), (Event)new AnotherTestEvent());
         }
     }
     @Test

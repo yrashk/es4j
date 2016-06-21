@@ -9,8 +9,8 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.repository.Journal;
 import com.eventsourcing.Repository;
+import com.eventsourcing.repository.Journal;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.concurrenttrees.common.Iterables;
@@ -52,7 +52,7 @@ public interface IndexEngine extends Service {
     void setRepository(Repository repository) throws IllegalStateException;
 
     @SuppressWarnings("unchecked") <O extends Entity, A> Index<O> getIndexOnAttributes(Attribute<O, A>[] attributes,
-                                                                                       IndexFeature... features)
+                                                                                               IndexFeature... features)
             throws IndexNotSupported;
 
     enum IndexFeature {

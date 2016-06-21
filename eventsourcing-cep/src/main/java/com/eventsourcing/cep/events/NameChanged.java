@@ -7,12 +7,11 @@
  */
 package com.eventsourcing.cep.events;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutName;
-import com.google.common.primitives.UnsignedLongs;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,9 +21,7 @@ import org.unprotocols.coss.RFC;
 
 import java.util.UUID;
 
-import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
-import static com.eventsourcing.index.IndexEngine.IndexFeature.GT;
-import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 /**
  * This event signifies the name change for a referenced instance.
@@ -32,7 +29,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
 @Accessors(fluent = true)
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#NameChanged")
-public class NameChanged extends Event {
+public class NameChanged extends StandardEvent {
     @Getter @Setter
     UUID reference;
     @Getter @Setter

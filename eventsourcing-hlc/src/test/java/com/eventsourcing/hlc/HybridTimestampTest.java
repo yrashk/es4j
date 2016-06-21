@@ -7,7 +7,10 @@
  */
 package com.eventsourcing.hlc;
 
-import com.eventsourcing.layout.*;
+import com.eventsourcing.layout.Deserializer;
+import com.eventsourcing.layout.Layout;
+import com.eventsourcing.layout.Property;
+import com.eventsourcing.layout.Serializer;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.SneakyThrows;
 import org.testng.annotations.BeforeClass;

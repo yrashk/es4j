@@ -7,7 +7,8 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.*;
+import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -16,7 +17,6 @@ import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.MemoryLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
-import com.eventsourcing.Repository;
 import lombok.SneakyThrows;
 import org.openjdk.jmh.annotations.*;
 
@@ -72,7 +72,7 @@ public abstract class JournalBenchmark {
     @BenchmarkMode(Mode.All)
     @SneakyThrows
     public void basicPublish() throws ExecutionException, InterruptedException {
-        journal.journal((Command<?>) new TestCommand().timestamp(timestamp));
+        journal.journal((StandardCommand<?>) new TestCommand().timestamp(timestamp));
     }
 
 

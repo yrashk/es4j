@@ -8,13 +8,15 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.*;
-import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.*;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.javatuples.Pair;
 import org.testng.annotations.AfterClass;
@@ -28,9 +30,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public abstract class IndexEngineTest<T extends IndexEngine> {
 
@@ -75,7 +75,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
 
 
     @EqualsAndHashCode(callSuper = false)
-    public static class TestEvent extends Event {
+    public static class TestEvent extends StandardEvent {
         @Getter @Setter
         private String string;
 
@@ -103,12 +103,12 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
     @Accessors(fluent = true)
-    public static class TestCommand extends Command<Void> {
+    public static class TestCommand extends StandardCommand<Void> {
         @Getter @Setter
         private String string;
 
         @Override
-        public Stream<Event> events(Repository repository) {
+        public Stream<? extends Event> events(Repository repository) {
             return Stream.of(new TestEvent(string));
         }
     }

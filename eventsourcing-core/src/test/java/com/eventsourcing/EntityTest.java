@@ -18,7 +18,7 @@ public class EntityTest {
 
     @Test
     public void uuidGeneration() {
-        Entity entity = new Entity();
+        Entity entity = new StandardEntity() {};
         UUID uuid = entity.uuid();
         assertNotNull(uuid);
         assertEquals(uuid, entity.uuid());

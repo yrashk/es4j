@@ -7,10 +7,10 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.Entity;
+import com.eventsourcing.Repository;
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.MemoryJournal;
-import com.eventsourcing.Repository;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
@@ -41,7 +41,7 @@ public class CascadingIndexEngineTest {
         }
     }
 
-    private static class MyEntity extends Entity {}
+    private static class MyEntity extends StandardEntity {}
 
     private static SimpleAttribute<MyEntity, UUID> INDEX = new SimpleAttribute<MyEntity, UUID>("idx") {
         @Override

@@ -8,6 +8,7 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.Command;
+import com.eventsourcing.StandardCommand;
 
 import java.util.HashSet;
 import java.util.List;
@@ -18,10 +19,10 @@ import java.util.Set;
  */
 public class BundleCommandSetProvider implements BundleClassScanner, CommandSetProvider {
 
-    private final List<Class<? extends Command>> klasses;
+    private final List<Class<? extends StandardCommand>> klasses;
 
     public BundleCommandSetProvider(Class<?> classInABundle) {
-        klasses = findSubTypesOf(classInABundle, Command.class);
+        klasses = findSubTypesOf(classInABundle, StandardCommand.class);
     }
 
     @Override

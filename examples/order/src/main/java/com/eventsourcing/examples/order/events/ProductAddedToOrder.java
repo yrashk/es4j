@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.examples.order.events;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
@@ -25,7 +25,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 @Accessors(fluent = true)
 @AllArgsConstructor
 @NoArgsConstructor
-public class ProductAddedToOrder extends Event {
+public class ProductAddedToOrder extends StandardEvent {
     @Getter
     @Setter
     private UUID orderId;

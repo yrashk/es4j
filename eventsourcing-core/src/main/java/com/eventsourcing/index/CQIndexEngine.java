@@ -9,7 +9,6 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.*;
 import com.eventsourcing.repository.Journal;
-import com.eventsourcing.Repository;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 

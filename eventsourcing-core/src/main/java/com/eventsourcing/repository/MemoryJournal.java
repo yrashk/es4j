@@ -68,13 +68,13 @@ public class MemoryJournal extends AbstractService implements Journal {
         Set<Event> eventCommands_ = new HashSet<>();
         EventConsumer eventConsumer = new EventConsumer(events_, command, listener);
 
-        Stream<Event> events;
+        Stream<? extends Event> events;
         Exception exception = null;
 
         try {
             events = command.events(repository, lockProvider);
         } catch (Exception e) {
-            events = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e));
+            events = Stream.of((Event) new CommandTerminatedExceptionally(command.uuid(), e));
             exception = e;
         }
 
@@ -89,7 +89,8 @@ public class MemoryJournal extends AbstractService implements Journal {
             listener.onAbort(e);
             exception = e;
             try {
-                count = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer).count();
+                count = Stream.of((Event)new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer)
+                              .count();
             } catch (Exception e1) {
                 events_.clear();
                 exception = e1;

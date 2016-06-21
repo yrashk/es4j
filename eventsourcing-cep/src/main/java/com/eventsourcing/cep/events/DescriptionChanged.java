@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.cep.events;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
@@ -29,7 +29,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 @Accessors(fluent = true)
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#DescriptionChanged")
-public class DescriptionChanged extends Event {
+public class DescriptionChanged extends StandardEvent {
     @Getter @Setter
     UUID reference;
     @Getter @Setter

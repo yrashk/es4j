@@ -7,13 +7,14 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.*;
+import com.eventsourcing.EntityHandle;
+import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.repository.MemoryJournal;
 import com.eventsourcing.repository.MemoryLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
-import com.eventsourcing.Repository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 import org.testng.annotations.AfterMethod;
@@ -47,7 +48,7 @@ public class EntityQueryFactoryTest {
         repository.stopAsync().awaitTerminated();
     }
 
-    public static class TestCommand extends Command<Void> {}
+    public static class TestCommand extends StandardCommand<Void> {}
 
     @Test @SneakyThrows
     public void all() {

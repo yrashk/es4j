@@ -21,20 +21,7 @@ import java.util.stream.Stream;
  *
  * @param <R> result type
  */
-public abstract class Command<R> extends Entity {
-
-    /**
-     * Returns a stream of events that should be recorded. By default, an empty stream returned.
-     *
-     * @param repository Configured repository
-     * @return stream of events
-     * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
-     *                   be recorded
-     */
-
-    public Stream<Event> events(Repository repository) throws Exception {
-        return Stream.empty();
-    }
+public interface Command<R> extends Entity<Command<R>> {
 
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
@@ -53,8 +40,8 @@ public abstract class Command<R> extends Entity {
      * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
      *                   be recorded
      */
-    public Stream<Event> events(Repository repository, LockProvider lockProvider) throws Exception {
-        return events(repository);
+    default Stream<? extends Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+        return Stream.empty();
     }
 
     /**
@@ -66,8 +53,7 @@ public abstract class Command<R> extends Entity {
      *
      * @return Result
      */
-    @LayoutIgnore
-    public R onCompletion() {
+    @LayoutIgnore default R onCompletion() {
         return null;
     }
 }

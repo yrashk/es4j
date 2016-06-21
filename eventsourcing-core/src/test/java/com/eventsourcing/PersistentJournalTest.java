@@ -50,7 +50,7 @@ public abstract class PersistentJournalTest<T extends Journal> extends JournalTe
         timestamp.update();
         List<Event> events = new ArrayList<>();
         TestCommand command = new TestCommand(true);
-        journal.journal((Command<?>) command.timestamp(timestamp), new Journal.Listener() {
+        journal.journal((StandardCommand<?>) command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);

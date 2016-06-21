@@ -7,9 +7,9 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Command;
 import com.eventsourcing.Event;
 import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Product;
 import com.eventsourcing.examples.order.events.NameChanged;
 import com.eventsourcing.examples.order.events.PriceChanged;
@@ -23,7 +23,7 @@ import java.util.stream.Stream;
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 @NoArgsConstructor
-public class CreateProduct extends Command<Product> {
+public class CreateProduct extends StandardCommand<Product> {
 
     @Getter @Setter @NonNull
     private String name;
@@ -35,7 +35,7 @@ public class CreateProduct extends Command<Product> {
     private ProductCreated productCreated;
 
     @Override
-    public Stream<Event> events(Repository repository) throws Exception {
+    public Stream<? extends Event> events(Repository repository) throws Exception {
         this.repository = repository;
         productCreated = new ProductCreated();
         NameChanged nameChanged = new NameChanged(productCreated.uuid(), name);

@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.jmh.models;
 
-import com.eventsourcing.Entity;
+import com.eventsourcing.StandardEntity;
 import com.googlecode.cqengine.attribute.MultiValueAttribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @ToString
-public class Car extends Entity {
+public class Car extends StandardEntity {
     public enum Color {RED, GREEN, BLUE, BLACK, WHITE}
 
     @Getter @Setter

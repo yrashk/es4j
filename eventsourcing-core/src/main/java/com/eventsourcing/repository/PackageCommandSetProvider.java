@@ -8,43 +8,24 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.Command;
-import com.eventsourcing.Entity;
-import org.reflections.Configuration;
-import org.reflections.Reflections;
-import org.reflections.util.ConfigurationBuilder;
 
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Provides a command set from a given list of packages
  */
-public class PackageCommandSetProvider implements CommandSetProvider {
-
-    private final String[] packages;
-    private final ClassLoader[] classLoaders;
+public class PackageCommandSetProvider extends PackageScanner implements CommandSetProvider {
 
     public PackageCommandSetProvider(Package[] packages) {
-        this(packages, new ClassLoader[]{});
+        super(packages);
     }
 
     public PackageCommandSetProvider(Package[] packages, ClassLoader[] classLoaders) {
-        this.packages = Arrays.asList(packages).stream().map(Package::getName).toArray(String[]::new);
-        this.classLoaders = classLoaders;
+        super(packages, classLoaders);
     }
 
     @Override
     public Set<Class<? extends Command>> getCommands() {
-        Configuration configuration = ConfigurationBuilder.build((Object[]) packages).addClassLoaders(classLoaders);
-        Reflections reflections = new Reflections(configuration);
-        Predicate<Class<? extends Entity>> classPredicate = klass ->
-                Modifier.isPublic(klass.getModifiers()) &&
-                        (!klass.isMemberClass() || (klass.isMemberClass() && Modifier
-                                .isStatic(klass.getModifiers()))) &&
-                        !Modifier.isAbstract(klass.getModifiers());
-        return reflections.getSubTypesOf(Command.class).stream().filter(classPredicate).collect(Collectors.toSet());
+       return scan(Command.class);
     }
 }

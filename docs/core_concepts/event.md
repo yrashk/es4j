@@ -7,7 +7,7 @@ Defining an event is quite similar to command, by subclassing `Event`:
 
 
 ```java
-public class UserCreated extends Event {
+public class UserCreated extends StandardEvent {
   @Getter @Setter
   private String email;
 }

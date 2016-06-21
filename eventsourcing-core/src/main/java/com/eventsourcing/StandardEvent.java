@@ -7,8 +7,8 @@
  */
 package com.eventsourcing;
 
-/**a
- * Event is a statement of a fact that has occurred once written to a journal.
+/**
+ * Standard {@link Event} implementation. Doesn't add any functionality.
  */
-public interface Event extends Entity<Event> {
+public abstract class StandardEvent extends StandardEntity<Event> implements Event {
 }

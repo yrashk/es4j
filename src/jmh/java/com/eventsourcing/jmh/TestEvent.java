@@ -7,14 +7,14 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
-public class TestEvent extends Event {
+public class TestEvent extends StandardEvent {
     private String string;
 
     @Index({EQ})

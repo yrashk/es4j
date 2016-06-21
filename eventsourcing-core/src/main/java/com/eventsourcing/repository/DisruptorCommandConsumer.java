@@ -233,8 +233,8 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
     }
 
     private <T, C extends Command<T>> void translate(CommandEvent event, long sequence, C command,
-                                                     Collection<EntitySubscriber> subscribers,
-                                                     CompletableFuture<T> completed) {
+                                                             Collection<EntitySubscriber> subscribers,
+                                                             CompletableFuture<T> completed) {
         event.setEntitySubscribers(subscribers);
         event.setCommandClass((Class<Command>) command.getClass());
         event.commands.put(command.getClass(), command);
