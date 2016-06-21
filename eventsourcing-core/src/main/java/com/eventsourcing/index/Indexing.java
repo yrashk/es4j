@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.StandardEntity;
+import com.eventsourcing.Entity;
 import com.eventsourcing.annotations.Index;
 import lombok.SneakyThrows;
 import org.javatuples.Pair;
@@ -31,7 +31,7 @@ public class Indexing {
      */
     @SuppressWarnings("unchecked")
     @SneakyThrows
-    public static <O extends StandardEntity, A> Attribute<O, A> getAttribute(Class<?> klass, String name) {
+    public static <O extends Entity, A> Attribute<O, A> getAttribute(Class<?> klass, String name) {
         Stream<Pair<Index, Attribute>> stream = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(IndexEngine.getIndexableGetters(klass).iterator(),
                                                             Spliterator.IMMUTABLE), false);
