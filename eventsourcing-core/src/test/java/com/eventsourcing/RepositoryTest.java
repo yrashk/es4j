@@ -11,6 +11,7 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -47,7 +48,7 @@ public abstract class RepositoryTest<T extends Repository> {
     private final T repository;
     private Journal journal;
     private MemoryIndexEngine indexEngine;
-    private MemoryLockProvider lockProvider;
+    private LocalLockProvider lockProvider;
     private NTPServerTimeProvider timeProvider;
 
     public RepositoryTest(T repository) {
@@ -65,7 +66,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.setPhysicalTimeProvider(timeProvider);
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
-        lockProvider = new MemoryLockProvider();
+        lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         repository.startAsync().awaitRunning();
     }
@@ -469,6 +470,16 @@ public abstract class RepositoryTest<T extends Repository> {
         TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class))
                                                         .uniqueResult().get();
         assertFalse(testOptionalEvent.optional().isPresent());
+    }
+
+    @Test @SneakyThrows
+    public void causalRelationship() {
+        RepositoryTestCommand command = new RepositoryTestCommand();
+        repository.publish(command).get();
+        try (ResultSet<EntityHandle<EventCausalityEstablished>> resultSet = repository
+                .query(EventCausalityEstablished.class, equal(EventCausalityEstablished.COMMAND, command.uuid()))) {
+            assertEquals(resultSet.size(), 1);
+        }
     }
 
 }

@@ -48,6 +48,7 @@ dependencies {
     compile 'org.projectlombok:lombok:1.16.8'
 
     compile "com.eventsourcing:eventsourcing-core:${eventsourcingVersion}"
+    compile "com.eventsourcing:eventsourcing-inmem:${eventsourcingVersion}"
     compile "com.eventsourcing:eventsourcing-h2:${eventsourcingVersion}"
 }
 

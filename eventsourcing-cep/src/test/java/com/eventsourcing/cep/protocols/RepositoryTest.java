@@ -10,8 +10,8 @@ package com.eventsourcing.cep.protocols;
 import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.repository.MemoryJournal;
-import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.inmem.MemoryJournal;
+import com.eventsourcing.repository.LocalLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
 import org.testng.annotations.AfterMethod;
@@ -21,7 +21,7 @@ public abstract class RepositoryTest {
 
     private final Package[] packages;
     protected Repository repository;
-    protected MemoryLockProvider lockProvider;
+    protected LocalLockProvider lockProvider;
     protected NTPServerTimeProvider timeProvider;
 
     public RepositoryTest(Package ...packages) {
@@ -36,7 +36,7 @@ public abstract class RepositoryTest {
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setJournal(new MemoryJournal());
         repository.setIndexEngine(new MemoryIndexEngine());
-        lockProvider = new MemoryLockProvider();
+        lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         repository.startAsync().awaitRunning();
         // Add commands/events after the startup, to simulate production better

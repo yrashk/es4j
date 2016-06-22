@@ -15,4 +15,6 @@ dependencies {
     // Indexing
     compile 'com.googlecode.cqengine:cqengine:2.6.0'
 
+
+    testCompile project(':eventsourcing-inmem')
 }

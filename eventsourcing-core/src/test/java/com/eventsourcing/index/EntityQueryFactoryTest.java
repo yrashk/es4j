@@ -11,8 +11,8 @@ import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
-import com.eventsourcing.repository.MemoryJournal;
-import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.inmem.MemoryJournal;
+import com.eventsourcing.repository.LocalLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -39,7 +39,7 @@ public class EntityQueryFactoryTest {
         NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setIndexEngine(new MemoryIndexEngine());
-        repository.setLockProvider(new MemoryLockProvider());
+        repository.setLockProvider(new LocalLockProvider());
         repository.startAsync().awaitRunning();
     }
 

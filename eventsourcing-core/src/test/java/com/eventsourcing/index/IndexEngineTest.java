@@ -10,6 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -50,7 +51,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{getClass().getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClass().getPackage()}));
         repository.setIndexEngine(indexEngine);
-        repository.setLockProvider(new MemoryLockProvider());
+        repository.setLockProvider(new LocalLockProvider());
         timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
 

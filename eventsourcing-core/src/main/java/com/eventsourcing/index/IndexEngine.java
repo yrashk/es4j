@@ -158,9 +158,10 @@ public interface IndexEngine extends Service {
     @SuppressWarnings("unchecked")
     static <O extends Entity, A> SimpleAttribute<O, A> getAttribute(Method method) {
         String name = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
-        return new SimpleAttribute(EntityHandle.class,
-                                   method.getReturnType(),
-                                   name) {
+        return new SimpleAttribute<O, A>(// this is used to pass type information, the value is not important
+                                         (Class<EntityHandle<O>>) method.getDeclaringClass(),
+                                         (Class<A>)method.getReturnType(),
+                                         name) {
 
             @SneakyThrows
             @Override public Object getValue(Entity object, QueryOptions queryOptions) {

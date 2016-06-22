@@ -7,12 +7,12 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.LocalLockProvider;
 import org.testng.annotations.Test;
 
 @Test
-public class MemoryLockProviderTest extends LockProviderTest<MemoryLockProvider> {
-    public MemoryLockProviderTest() {
-        super(new MemoryLockProvider());
+public class LocalLockProviderTest extends LockProviderTest<LocalLockProvider> {
+    public LocalLockProviderTest() {
+        super(new LocalLockProvider());
     }
 }

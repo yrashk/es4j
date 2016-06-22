@@ -7,10 +7,9 @@
  */
 package com.eventsourcing.repository;
 
-import com.eventsourcing.Command;
-import com.eventsourcing.Entity;
-import com.eventsourcing.Event;
-import com.eventsourcing.Repository;
+import com.eventsourcing.*;
+import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -71,6 +70,12 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         if (lockProvider == null) {
             notifyFailed(new IllegalStateException("lockProvider == null"));
         }
+
+        addEventSetProvider(() -> {
+            List<Class<? extends Event>> classes = Arrays
+                    .asList(CommandTerminatedExceptionally.class, EventCausalityEstablished.class);
+            return new HashSet<>(classes);
+        });
 
         journal.setRepository(this);
         indexEngine.setJournal(journal);
