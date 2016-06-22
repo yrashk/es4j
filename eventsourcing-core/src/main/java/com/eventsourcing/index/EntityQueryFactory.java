@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.StandardEntity;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -18,7 +18,7 @@ import java.util.Collections;
 
 public class EntityQueryFactory {
 
-    public static class All<O extends StandardEntity> extends SimpleQuery<EntityHandle<O>, O> {
+    public static class All<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
 
         final Class<O> attributeType;
 
@@ -89,7 +89,7 @@ public class EntityQueryFactory {
      * @param <O> The type of the objects in the collection
      * @return A query which matches all objects in the collection
      */
-    public static <O extends StandardEntity> Query<EntityHandle<O>> all(Class<O> objectType) {
+    public static <O extends Entity> Query<EntityHandle<O>> all(Class<O> objectType) {
         return new All<>(objectType);
     }
 

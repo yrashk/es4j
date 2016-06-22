@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -53,7 +54,7 @@ public abstract class JournalTest<T extends Journal> {
         repository.setJournal(this.journal);
         timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
-        repository.setLockProvider(new MemoryLockProvider());
+        repository.setLockProvider(new LocalLockProvider());
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
         repository.startAsync().awaitRunning();
@@ -98,7 +99,7 @@ public abstract class JournalTest<T extends Journal> {
     public static class ExceptionalTestCommand extends StandardCommand<Void> {
         @Override
         public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.generate((Supplier<Event>) () -> {
+            return Stream.generate(() -> {
                 throw new IllegalStateException();
             });
         }
@@ -109,9 +110,9 @@ public abstract class JournalTest<T extends Journal> {
     public void journalCounting() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        assertEquals(journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp)), 1);
+        assertEquals(journal.journal(new TestCommand(true).timestamp(timestamp)), 1);
         timestamp.update();
-        assertEquals(journal.journal((Command<?>) new TestCommand(false).timestamp(timestamp)), 0);
+        assertEquals(journal.journal(new TestCommand(false).timestamp(timestamp)), 0);
     }
 
     @Test
@@ -123,7 +124,7 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
 
         assertEquals(1,
-                     journal.journal((Command<?>) new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
+                     journal.journal(new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
                          @Override
                          public void onEvent(Event event) {
                              onEvent.incrementAndGet();
@@ -135,7 +136,7 @@ public abstract class JournalTest<T extends Journal> {
                          }
                      }));
 
-        assertEquals(onEvent.get(), 1);
+        assertEquals(onEvent.get(), 2);
         assertTrue(onCommit.get());
     }
 
@@ -147,7 +148,7 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
 
         try {
-            assertEquals(1, journal.journal((Command<?>) new ExceptionalTestCommand().timestamp(timestamp),
+            assertEquals(1, journal.journal(new ExceptionalTestCommand().timestamp(timestamp),
                                             new Journal.Listener() {
                                                 @Override
                                                 public void onAbort(Throwable throwable) {
@@ -168,13 +169,13 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
         List<Event> events = new ArrayList<>();
         TestCommand command = new TestCommand(true);
-        journal.journal((Command<?>) command.timestamp(timestamp), new Journal.Listener() {
+        journal.journal(command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
             }
         });
-        assertEquals(events.size(), 1);
+        assertEquals(events.size(), 2);
 
         Optional<Entity> entity = journal.get(command.uuid());
         assertTrue(entity.isPresent());
@@ -194,14 +195,14 @@ public abstract class JournalTest<T extends Journal> {
         List<Event> events = new ArrayList<>();
         TestCommand command1 = new TestCommand(true);
         TestCommand command2 = new TestCommand(true);
-        journal.journal((Command<?>) command1.timestamp(timestamp), new Journal.Listener() {
+        journal.journal(command1.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
             }
         });
 
-        journal.journal((Command<?>) command2.timestamp(timestamp), new Journal.Listener() {
+        journal.journal(command2.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
@@ -218,47 +219,16 @@ public abstract class JournalTest<T extends Journal> {
         assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command1.uuid())));
         assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command2.uuid())));
 
-        assertEquals(events.size(), 2);
+        assertEquals(events.size(), 4);
 
         Iterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);
         List<UUID> iteratedEvents = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(eventIterator, Spliterator.IMMUTABLE), false)
                 .map(EntityHandle::uuid)
                 .collect(Collectors.toList());
-        assertTrue(iteratedEvents.containsAll(events.stream().map(Event::uuid).collect(Collectors.toList())));
-    }
-
-    @EqualsAndHashCode(callSuper = false)
-    public static class EventsCommand extends StandardCommand<Void> {
-
-        public EventsCommand() {
-        }
-
-        @Override
-        public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.of((Event)new TestEvent(), (Event)new AnotherTestEvent());
-        }
-    }
-    @Test
-    @SneakyThrows
-    public void journalCommandEventsIterating() {
-        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
-        EventsCommand command = new EventsCommand();
-        journal.journal((Command<?>) command.timestamp(timestamp));
-
-        CloseableIterator<EntityHandle<Event>> iterator = journal
-                .commandEventsIterator(command.uuid());
-
-        List<EntityHandle<Event>> events = StreamSupport
-                .stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.IMMUTABLE), false)
-                .collect(Collectors.toList());
-
-        assertEquals(events.size(), 2);
-
-        assertTrue(events.stream().anyMatch(h -> h.get() instanceof TestEvent));
-        assertTrue(events.stream().anyMatch(h -> h.get() instanceof AnotherTestEvent));
-
+        assertTrue(iteratedEvents.containsAll(events.stream().filter(e -> e instanceof TestEvent)
+                                                    .map(Event::uuid)
+                                                    .collect(Collectors.toList())));
     }
 
 }

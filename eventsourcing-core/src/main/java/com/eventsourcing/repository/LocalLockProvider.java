@@ -8,6 +8,7 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.Lock;
+import com.eventsourcing.repository.LockProvider;
 import com.google.common.util.concurrent.AbstractService;
 import org.osgi.service.component.annotations.Component;
 
@@ -19,7 +20,7 @@ import java.util.concurrent.Semaphore;
  * Local, in-memory lock provider
  */
 @Component(property = {"type=MemoryLockProvider"})
-public class MemoryLockProvider extends AbstractService implements LockProvider {
+public class LocalLockProvider extends AbstractService implements LockProvider {
     private Map<Object, Semaphore> locks = new HashMap<>();
 
     @Override

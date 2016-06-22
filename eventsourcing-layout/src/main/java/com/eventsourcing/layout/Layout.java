@@ -70,7 +70,7 @@ public class Layout<T> {
     private List<Property<T>> properties;
 
     @Getter
-    private final byte[] hash;
+    private byte[] hash;
 
     @Getter
     private boolean readOnly = false;
@@ -90,10 +90,13 @@ public class Layout<T> {
         }
     }
 
-    private final Class<T> klass;
+    private Class<T> klass;
 
     public Class<T> getLayoutClass() {
         return klass;
+    }
+
+    public Layout() {
     }
 
     /**

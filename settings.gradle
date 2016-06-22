@@ -1,8 +1,10 @@
 include 'eventsourcing-layout'
 include 'eventsourcing-hlc'
 include 'eventsourcing-core'
+include 'eventsourcing-inmem'
 include 'eventsourcing-h2'
 
 include 'eventsourcing-cep'
+include 'eventsourcing-migrations'
 
 rootProject.name = 'eventsourcing'

@@ -10,7 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardEntity;
 import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.MemoryJournal;
+import com.eventsourcing.inmem.MemoryJournal;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;

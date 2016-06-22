@@ -11,7 +11,7 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.LocalLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
 import org.openjdk.jmh.annotations.*;
@@ -24,7 +24,7 @@ public abstract class RepositoryBenchmark {
     private Repository repository;
     private Journal journal;
     private IndexEngine indexEngine;
-    private MemoryLockProvider lockProvider;
+    private LocalLockProvider lockProvider;
 
     @Setup
     public void setup() throws Exception {
@@ -40,7 +40,7 @@ public abstract class RepositoryBenchmark {
         indexEngine = createIndex();
         repository.setIndexEngine(indexEngine);
 
-        lockProvider = new MemoryLockProvider();
+        lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
 
         repository.addCommandSetProvider(

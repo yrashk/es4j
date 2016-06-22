@@ -14,7 +14,7 @@ import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.MemoryLockProvider;
+import com.eventsourcing.repository.LocalLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
 import lombok.SneakyThrows;
@@ -28,7 +28,7 @@ public abstract class JournalBenchmark {
     private Journal journal;
 
     private IndexEngine indexEngine;
-    private MemoryLockProvider lockProvider;
+    private LocalLockProvider lockProvider;
     private HybridTimestamp timestamp;
 
     @Setup
@@ -45,7 +45,7 @@ public abstract class JournalBenchmark {
         indexEngine = new MemoryIndexEngine();
         repository.setIndexEngine(indexEngine);
 
-        lockProvider = new MemoryLockProvider();
+        lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
 
         repository.addCommandSetProvider(

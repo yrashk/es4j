@@ -5,14 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.repository;
+package com.eventsourcing.inmem;
 
 import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.repository.Journal;
+import com.eventsourcing.repository.JournalEntityHandle;
+import com.eventsourcing.repository.LockProvider;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
@@ -42,7 +46,6 @@ public class MemoryJournal extends AbstractService implements Journal {
 
     private Map<UUID, Command> commands = new HashMap<>();
     private Map<UUID, Event> events = new HashMap<>();
-    private Map<UUID, Set<UUID>> eventCommands = new HashMap<>();
 
     @Override
     protected void doStart() {
@@ -65,7 +68,6 @@ public class MemoryJournal extends AbstractService implements Journal {
     public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider)
             throws Exception {
         Map<UUID, Event> events_ = new HashMap<>();
-        Set<Event> eventCommands_ = new HashSet<>();
         EventConsumer eventConsumer = new EventConsumer(events_, command, listener);
 
         Stream<? extends Event> events;
@@ -81,9 +83,13 @@ public class MemoryJournal extends AbstractService implements Journal {
         long count = 0;
 
         try {
-            count = events.peek(eventConsumer).count();
+            count = events.peek(new Consumer<Event>() {
+                @Override public void accept(Event event) {
+                    eventConsumer.accept(event);
+                    eventConsumer.accept(new EventCausalityEstablished().event(event.uuid()).command(command.uuid()));
+                }
+            }).count();
             events_ = eventConsumer.getEvents();
-            eventCommands_ = new HashSet<>(events_.values());
         } catch (Exception e) {
             events_.clear();
             listener.onAbort(e);
@@ -98,7 +104,6 @@ public class MemoryJournal extends AbstractService implements Journal {
         }
 
         this.events.putAll(events_);
-        this.eventCommands.put(command.uuid(), eventCommands_.stream().map(Entity::uuid).collect(Collectors.toSet()));
 
         Layout<Command> layout = new Layout<>((Class<Command>) command.getClass());
         Serializer<Command> serializer = new Serializer<>(layout);
@@ -144,16 +149,10 @@ public class MemoryJournal extends AbstractService implements Journal {
                  .map(event -> (EntityHandle<T>) new JournalEntityHandle<T>(this, event.uuid())).iterator());
     }
 
-    @Override public <T extends Event> CloseableIterator<EntityHandle<T>> commandEventsIterator(UUID uuid) {
-        return new CloseableWrappingIterator<>(eventCommands.get(uuid).stream()
-                 .map(uuid_ -> (EntityHandle<T>) new JournalEntityHandle<T>(this, uuid_)).iterator());
-    }
-
     @Override
     public synchronized void clear() {
         events.clear();
         commands.clear();
-        eventCommands.clear();
     }
 
     @Override @SuppressWarnings("unchecked")

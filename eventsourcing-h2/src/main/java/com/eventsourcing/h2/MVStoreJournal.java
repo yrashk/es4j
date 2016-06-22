@@ -9,6 +9,7 @@ package com.eventsourcing.h2;
 
 import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Deserializer;
 import com.eventsourcing.layout.Layout;
@@ -17,7 +18,6 @@ import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.eventsourcing.repository.JournalMBean;
 import com.eventsourcing.repository.LockProvider;
-import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
@@ -62,10 +62,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private TransactionMap<UUID, byte[]> commandHashes;
     private TransactionMap<byte[], Boolean> hashCommands;
     private TransactionMap<UUID, ByteBuffer> eventPayloads;
-    private TransactionMap<UUID, UUID> eventCommands;
     private TransactionMap<byte[], Boolean> hashEvents;
     private TransactionMap<UUID, byte[]> eventHashes;
-    private TransactionMap<byte[], byte[]> commandEvents;
 
     private MVMap<byte[], byte[]> layouts;
     private TransactionStore transactionStore;
@@ -202,10 +200,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         commandHashes = readTx.openMap("commandHashes");
         hashCommands = readTx.openMap("hashCommands");
         eventPayloads = readTx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
-        eventCommands = readTx.openMap("eventCommands");
         eventHashes = readTx.openMap("eventHashes");
         hashEvents = readTx.openMap("hashEvents");
-        commandEvents = readTx.openMap("commandEvents");
 
         layouts = store.openMap("layouts");
     }
@@ -248,7 +244,12 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
             Stream<? extends Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
             EventConsumer eventConsumer = new EventConsumer(tx, command, listener);
-            long count = actualEvents.peek(eventConsumer).count();
+            long count = actualEvents.peek(new Consumer<Event>() {
+                @Override public void accept(Event event) {
+                    eventConsumer.accept(event);
+                    eventConsumer.accept(new EventCausalityEstablished().event(event.uuid()).command(command.uuid()));
+                }
+            }).count();
 
             ByteBuffer buffer = new Serializer<>(commandLayout).serialize(command);
             buffer.rewind();
@@ -322,34 +323,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
                                           new EntityFunction<>(hash));
     }
 
-    @Override public <T extends Event> CloseableIterator<EntityHandle<T>> commandEventsIterator(UUID uuid) {
-        ByteBuffer prefixBuffer = ByteBuffer.allocate(16);
-        prefixBuffer.putLong(uuid.getMostSignificantBits());
-        prefixBuffer.putLong(uuid.getLeastSignificantBits());
-        byte[] prefix = prefixBuffer.array();
-        byte[] from = commandEvents.higherKey(prefix);
-        if (from == null) {
-            return new CloseableWrappingIterator<>(new LinkedList<EntityHandle<T>>().iterator());
-        }
-        Iterator<Map.Entry<byte[], byte[]>> iterator = commandEvents.entryIterator(from);
-        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, prefix) == 0,
-                                          (bytes, value) -> {
-                                              ByteBuffer buffer = ByteBuffer.wrap(bytes);
-                                              UUID entityUuid = new UUID(buffer.getLong(16), buffer.getLong(16+8));
-                                              return new JournalEntityHandle<>(MVStoreJournal.this, entityUuid);
-                                          });
-
-    }
-
     @Override
     public void clear() {
         commandPayloads.clear();
         hashCommands.clear();
         eventPayloads.clear();
-        eventCommands.clear();
         eventHashes.clear();
         hashEvents.clear();
-        commandEvents.clear();
         layouts.clear();
     }
 
@@ -487,8 +467,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         private final TransactionStore.Transaction tx;
         private final Command<?> command;
         private final Journal.Listener listener;
-        private final TransactionMap<byte[], byte[]> txCommandEvents;
-        private final TransactionMap<UUID, UUID> txEventCommands;
         private final TransactionMap<UUID, byte[]> txEventHashes;
         private final TransactionMap<byte[], Boolean> txHashEvents;
         private final TransactionMap<UUID, ByteBuffer> txEventPayloads;
@@ -501,8 +479,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             txEventPayloads = tx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
             txHashEvents = tx.openMap("hashEvents");
             txEventHashes = tx.openMap("eventHashes");
-            txEventCommands = tx.openMap("eventCommands");
-            txCommandEvents = tx.openMap("commandEvents");
         }
 
         @Override
@@ -528,24 +504,15 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             txEventPayloads.tryPut(event.uuid(), payloadBuffer);
 
             ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
-            ByteBuffer commandEventBuf = ByteBuffer.allocate(32);
 
             hashBuffer.rewind();
             hashBuffer.put(layout.getHash());
             hashBuffer.putLong(event.uuid().getMostSignificantBits());
             hashBuffer.putLong(event.uuid().getLeastSignificantBits());
 
-            commandEventBuf.rewind();
-            commandEventBuf.putLong(command.uuid().getMostSignificantBits());
-            commandEventBuf.putLong(command.uuid().getLeastSignificantBits());
-            commandEventBuf.putLong(event.uuid().getMostSignificantBits());
-            commandEventBuf.putLong(event.uuid().getLeastSignificantBits());
-
 
             txHashEvents.tryPut(hashBuffer.array(), true);
             txEventHashes.tryPut(event.uuid(), layout.getHash());
-            txEventCommands.tryPut(event.uuid(), command.uuid());
-            txCommandEvents.tryPut(commandEventBuf.array(), layout.getHash());
 
             listener.onEvent(event);
         }

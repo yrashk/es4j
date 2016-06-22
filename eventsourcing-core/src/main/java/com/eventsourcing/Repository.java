@@ -36,7 +36,7 @@ public interface Repository extends Service {
      * <p>
      * <ul>
      * <li>Default {@link NTPServerTimeProvider} is set with {@link #setPhysicalTimeProvider(PhysicalTimeProvider)}</li>
-     * <li>Default {@link MemoryLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
+     * <li>Default {@link LocalLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
      * </ul>
      *
      * @return
@@ -45,7 +45,7 @@ public interface Repository extends Service {
         RepositoryImpl repository = new RepositoryImpl();
         PhysicalTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
-        LockProvider lockProvider = new MemoryLockProvider();
+        LockProvider lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         return repository;
     }
