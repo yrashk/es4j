@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * NTPServerTimeProvider is an EventReducer Service and needs to be started prior
  * to using it as a PhysicalTimeProvider.
  */
-@Component(property = "ntp.servers=0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org,localhost")
+@Component(property = "ntp.servers=localhost,0.pool.ntp.org,1.pool.ntp.org,2.pool.ntp.org,3.pool.ntp.org")
 public class NTPServerTimeProvider extends AbstractScheduledService implements PhysicalTimeProvider {
 
 
@@ -45,7 +45,7 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
             Executors.newScheduledThreadPool(1);
 
     private static final String[] DEFAULT_NTP_SERVERS =
-            {"0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org", "localhost"};
+            {"localhost", "0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org"};
 
     private final NTPUDPClient client;
     private List<InetAddress> servers;
