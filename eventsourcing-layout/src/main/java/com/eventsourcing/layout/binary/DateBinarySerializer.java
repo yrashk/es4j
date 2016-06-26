@@ -5,21 +5,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.layout.types;
+package com.eventsourcing.layout.binary;
 
-import com.eventsourcing.layout.TypeHandler;
+import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.layout.types.DateTypeHandler;
 
 import java.nio.ByteBuffer;
 import java.util.Date;
 import java.util.Optional;
 
-public class DateHandler implements TypeHandler<Date> {
-    private static final Optional<Integer> SIZE = Optional.of(8);
+public class DateBinarySerializer implements Serializer<Date, DateTypeHandler> {
 
-    @Override
-    public byte[] getFingerprint() {
-        return "Timestamp".getBytes();
-    }
+    private static final Optional<Integer> SIZE = Optional.of(8);
 
     @Override
     public int size(Date value) {
@@ -37,8 +34,4 @@ public class DateHandler implements TypeHandler<Date> {
         buffer.putLong(value == null ? 0 : value.getTime());
     }
 
-    @Override
-    public Date deserialize(ByteBuffer buffer) {
-        return new Date(buffer.getLong());
-    }
 }

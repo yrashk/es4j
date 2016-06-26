@@ -10,35 +10,19 @@ package com.eventsourcing.layout.types;
 import com.eventsourcing.layout.TypeHandler;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 
-public class ShortTypeHandler implements TypeHandler<Short> {
-
-    private static final Optional<Integer> SIZE = Optional.of(2);
+public class ShortTypeHandler implements TypeHandler {
 
     @Override
     public byte[] getFingerprint() {
         return "Short".getBytes();
     }
 
-    @Override
-    public int size(Short value) {
-        return 2;
+    @Override public int hashCode() {
+        return ByteBuffer.wrap(getFingerprint()).hashCode();
     }
 
-    @Override
-    public Optional<Integer> constantSize() {
-        return SIZE;
-    }
-
-
-    @Override
-    public void serialize(Short value, ByteBuffer buffer) {
-        buffer.putShort(value == null ? 0 : value);
-    }
-
-    @Override
-    public Short deserialize(ByteBuffer buffer) {
-        return buffer.getShort();
+    @Override public boolean equals(Object obj) {
+        return obj instanceof ShortTypeHandler && obj.hashCode() == hashCode();
     }
 }

@@ -10,34 +10,20 @@ package com.eventsourcing.layout.types;
 import com.eventsourcing.layout.TypeHandler;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 
-public class BooleanTypeHandler implements TypeHandler<Boolean> {
-
-    private static final Optional<Integer> SIZE = Optional.of(1);
+public class BooleanTypeHandler implements TypeHandler {
 
     @Override
     public byte[] getFingerprint() {
         return "Boolean".getBytes();
     }
 
-    @Override
-    public int size(Boolean value) {
-        return 1;
+    @Override public int hashCode() {
+        return ByteBuffer.wrap(getFingerprint()).hashCode();
     }
 
-    @Override
-    public Optional<Integer> constantSize() {
-        return SIZE;
+    @Override public boolean equals(Object obj) {
+        return obj instanceof BooleanTypeHandler && obj.hashCode() == hashCode();
     }
 
-    @Override
-    public void serialize(Boolean value, ByteBuffer buffer) {
-        buffer.put((byte) (value == null ? 0 : (value ? 1 : 0)));
-    }
-
-    @Override
-    public Boolean deserialize(ByteBuffer buffer) {
-        return buffer.get() == 1;
-    }
 }

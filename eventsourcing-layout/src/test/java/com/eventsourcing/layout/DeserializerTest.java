@@ -7,6 +7,10 @@
  */
 package com.eventsourcing.layout;
 
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
+import com.eventsourcing.layout.binary.ObjectBinarySerializer;
+import com.eventsourcing.layout.types.ObjectTypeHandler;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -24,10 +28,12 @@ public class DeserializerTest {
         private String test;
     }
 
-    @Test(expectedExceptions = Deserializer.NoEmptyConstructorException.class)
+    @Test(expectedExceptions = ObjectBinaryDeserializer.NoEmptyConstructorException.class)
     @SneakyThrows
     public void noEmptyConstuctor() {
-        new Deserializer<>(new Layout<>(NoEmptyConstructor.class));
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        ObjectDeserializer<Object> deserializer = serialization.getDeserializer(NoEmptyConstructor.class);
+        deserializer.deserialize(ByteBuffer.allocate(0)); // size doesn't matter, should throw an exception
     }
 
 
@@ -44,8 +50,9 @@ public class DeserializerTest {
     public void matchingConstructor() {
         Layout<MatchingConstructor> layout = new Layout<>(MatchingConstructor.class);
         assertFalse(layout.isReadOnly());
-        Serializer<MatchingConstructor> serializer = new Serializer<>(layout);
-        Deserializer<MatchingConstructor> deserializer = new Deserializer<>(layout);
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        ObjectSerializer<MatchingConstructor> serializer = serialization.getSerializer(MatchingConstructor.class);
+        ObjectDeserializer<MatchingConstructor> deserializer = serialization.getDeserializer(MatchingConstructor.class);
         ByteBuffer buffer = serializer.serialize(new MatchingConstructor("test1", "test2"));
         buffer.rewind();
         MatchingConstructor value = deserializer.deserialize(buffer);
@@ -53,7 +60,7 @@ public class DeserializerTest {
         assertEquals(value.getTest2(), "test2");
     }
 
-    private static class ReadonlyTest {
+    public static class ReadonlyTest {
         @Getter
         private String getter;
     }
@@ -63,7 +70,10 @@ public class DeserializerTest {
     public void readonly() {
         Layout<ReadonlyTest> layout = new Layout<>(ReadonlyTest.class, true);
         assertTrue(layout.isReadOnly());
-        new Deserializer<>(layout);
+
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        ObjectDeserializer<Object> deserializer = serialization.getDeserializer(ReadonlyTest.class, true);
+        deserializer.deserialize(ByteBuffer.allocate(0)); // size doesn't matter, should throw an exception
     }
 
 

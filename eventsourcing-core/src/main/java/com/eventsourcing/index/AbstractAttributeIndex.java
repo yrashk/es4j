@@ -7,11 +7,11 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.TypeHandler;
-import com.eventsourcing.layout.core.Deserializer;
-import com.eventsourcing.layout.core.Serializer;
-import com.eventsourcing.layout.types.UnknownTypeHandler;
+import com.eventsourcing.layout.*;
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinarySerializer;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
+import com.eventsourcing.layout.types.ObjectTypeHandler;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.googlecode.cqengine.attribute.Attribute;
@@ -26,10 +26,12 @@ import java.util.Set;
 
 public abstract class AbstractAttributeIndex<A, O> extends com.googlecode.cqengine.index.support.AbstractAttributeIndex<A, O> {
 
-    protected Serializer<A> attributeSerializer;
-    protected Deserializer<A> attributeDeserializer;
-    protected Serializer<O> objectSerializer;
-    protected Deserializer<O> objectDeserializer;
+    protected Serializer<A, TypeHandler> attributeSerializer;
+    protected Deserializer<A, TypeHandler> attributeDeserializer;
+    protected ObjectSerializer<O> objectSerializer;
+    protected ObjectDeserializer<O> objectDeserializer;
+
+    private final static Serialization serialization = BinarySerialization.getInstance();
 
     /**
      * Protected constructor, called by subclasses.
@@ -46,24 +48,18 @@ public abstract class AbstractAttributeIndex<A, O> extends com.googlecode.cqengi
         AnnotatedParameterizedType cls = (AnnotatedParameterizedType) attribute.getClass().getAnnotatedSuperclass();
         AnnotatedType annotatedType = cls.getAnnotatedActualTypeArguments()[1];
 
-        TypeHandler<A> attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
-        attributeSerializer = attrTypeHandler;
-        attributeDeserializer = attrTypeHandler;
+        TypeHandler attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
+        attributeSerializer = serialization.getSerializer(attrTypeHandler);
+        attributeDeserializer = serialization.getDeserializer(attrTypeHandler);
 
         ResolvedType objectType = new TypeResolver().resolve(attribute.getObjectType());
-        TypeHandler<O> objectTypeHandler = TypeHandler.lookup(objectType, null);
-        if (!(objectTypeHandler instanceof UnknownTypeHandler)) {
-            objectSerializer = objectTypeHandler;
-            objectDeserializer = objectTypeHandler;
+        ObjectTypeHandler objectTypeHandler = (ObjectTypeHandler) TypeHandler.lookup(objectType, null);
+        if (!(objectTypeHandler instanceof ObjectTypeHandler)) {
+            throw new RuntimeException("Index " + attribute.getAttributeName() +
+                                               " is not an object, but " + objectType.getBriefDescription());
         } else {
-            try {
-                Layout<O> oLayout = new Layout<>(attribute.getObjectType());
-                objectSerializer = new com.eventsourcing.layout.Serializer<>(oLayout);
-                objectDeserializer = new com.eventsourcing.layout.Deserializer<>(oLayout);
-            } catch (IntrospectionException | NoSuchAlgorithmException | IllegalAccessException | com.eventsourcing.layout.Deserializer.NoEmptyConstructorException e) {
-                assert false;
-                e.printStackTrace();
-            }
+            objectSerializer = serialization.getSerializer(objectTypeHandler.getWrappedClass());
+            objectDeserializer = serialization.getDeserializer(objectTypeHandler.getWrappedClass());
         }
     }
 }

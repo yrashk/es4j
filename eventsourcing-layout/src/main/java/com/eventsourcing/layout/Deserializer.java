@@ -7,72 +7,35 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.NonNull;
-import lombok.SneakyThrows;
-
 import java.nio.ByteBuffer;
-import java.util.function.Function;
 
-/**
- * Layout deserializer
- *
- * @param <T>
- */
-public class Deserializer<T> implements com.eventsourcing.layout.core.Deserializer<T> {
+public interface Deserializer<T, H extends TypeHandler> {
 
-    private final Layout<T> layout;
-
-    public Deserializer(@NonNull Layout<T> layout) throws NoEmptyConstructorException {
-        if (layout.isReadOnly()) {
-            throw new IllegalArgumentException("Read-only layout");
+    interface RequiresTypeHandler<T, H extends TypeHandler> extends Deserializer<T, H> {
+        default T deserialize(ByteBuffer buffer) {
+            throw new UnsupportedOperationException();
         }
-        if (layout.getConstructor() == null && layout.getLayoutClass().getConstructors().length > 0) {
-            try {
-                layout.getLayoutClass().getConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new NoEmptyConstructorException();
-            }
-        }
-        this.layout = layout;
     }
 
     /**
-     * Deserialize value of type <code>T</code> from a {@link ByteBuffer}
+     * Deserializes value of type <code>T</code> from a {@link ByteBuffer}'s
+     * current position
      *
-     * @param object object with {@link #layout} layout
-     * @param buffer {@link ByteBuffer}
+     * @param buffer ByteBuffer
+     * @return value
      */
-    public void deserialize(T object, ByteBuffer buffer) {
-        for (Property<T> property : layout.getProperties()) {
-            property.set(object, property.getTypeHandler().deserialize(buffer));
-        }
-    }
+    T deserialize(ByteBuffer buffer);
 
-    @Override
-    @SneakyThrows
-    public T deserialize(ByteBuffer buffer) {
-        if (layout.getConstructor() != null) {
-            return (T) layout.getConstructor().newInstance(
-                    layout.getProperties().stream().map(new PropertyFunction<>(buffer)).toArray());
-        } else {
-            T value = layout.getLayoutClass().newInstance();
-            deserialize(value, buffer);
-            return value;
-        }
-    }
+    /**
+     * Deserializes value of type <code>T</code> from a {@link ByteBuffer}'s
+     * current position
+     *
+     * @param typeHandler {@link TypeHandler instance}
+     * @param buffer ByteBuffer
+     * @return value
+     */
 
-    public static class NoEmptyConstructorException extends Exception {}
-
-    private class PropertyFunction<T> implements Function<Property<T>, T> {
-        private final ByteBuffer buffer;
-
-        public PropertyFunction(ByteBuffer buffer) {
-            this.buffer = buffer;
-        }
-
-        @Override
-        public T apply(Property<T> prop) {
-            return prop.getTypeHandler().deserialize(buffer);
-        }
+    default T deserialize(H typeHandler, ByteBuffer buffer) {
+        return deserialize(buffer);
     }
 }

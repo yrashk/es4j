@@ -9,24 +9,27 @@ package com.eventsourcing.layout.types;
 
 import com.eventsourcing.layout.TypeHandler;
 import com.google.common.primitives.Bytes;
+import lombok.Getter;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class EnumTypeHandler implements TypeHandler<Enum> {
+public class EnumTypeHandler implements TypeHandler {
 
-    private final Class<? extends Enum> klass;
-    private final String[] enumNames;
+    @Getter
+    private final Class<? extends Enum> enumClass;
 
-    public EnumTypeHandler(Class<? extends Enum> klass) {
-        this.klass = klass;
-        enumNames = Arrays.stream(klass.getEnumConstants()).map(Enum::name).toArray(String[]::new);
+    public EnumTypeHandler() {
+        this.enumClass = Enum.class;
+    }
+
+    public EnumTypeHandler(Class<? extends Enum> enumClass) {
+        this.enumClass = enumClass;
     }
 
     @Override
     public byte[] getFingerprint() {
-        byte[] shape = Arrays.asList(klass.getEnumConstants()).stream().
+        byte[] shape = Arrays.asList(enumClass.getEnumConstants()).stream().
                 sorted((o1, o2) -> o1.name().compareTo(o2.name())).
                                      map(c -> c.name() + ":" + c.ordinal()).
                                      collect(Collectors.joining(",")).getBytes();
@@ -35,22 +38,12 @@ public class EnumTypeHandler implements TypeHandler<Enum> {
         return Bytes.concat("Enum[".getBytes(), shape, "]".getBytes());
     }
 
-    @Override
-    public Enum deserialize(ByteBuffer buffer) {
-        return Enum.valueOf(klass, enumNames[buffer.getInt()]);
+    @Override public int hashCode() {
+        return "Enum".hashCode();
     }
 
-    @Override
-    public int size(Enum value) {
-        return 4;
+    @Override public boolean equals(Object obj) {
+        return obj instanceof EnumTypeHandler && obj.hashCode() == hashCode();
     }
 
-    @Override
-    public void serialize(Enum value, ByteBuffer buffer) {
-        if (value == null) {
-            buffer.putInt(0);
-        } else {
-            buffer.putInt(value.ordinal());
-        }
-    }
 }

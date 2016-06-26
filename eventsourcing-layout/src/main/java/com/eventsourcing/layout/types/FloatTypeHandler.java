@@ -10,34 +10,20 @@ package com.eventsourcing.layout.types;
 import com.eventsourcing.layout.TypeHandler;
 
 import java.nio.ByteBuffer;
-import java.util.Optional;
 
-public class FloatTypeHandler implements TypeHandler<Float> {
-
-    private static Optional<Integer> SIZE = Optional.of(4);
+public class FloatTypeHandler implements TypeHandler {
 
     @Override
     public byte[] getFingerprint() {
         return "Float".getBytes();
     }
 
-    @Override
-    public int size(Float value) {
-        return 4;
+    @Override public int hashCode() {
+        return ByteBuffer.wrap(getFingerprint()).hashCode();
     }
 
-    @Override
-    public Optional<Integer> constantSize() {
-        return SIZE;
+    @Override public boolean equals(Object obj) {
+        return obj instanceof FloatTypeHandler && obj.hashCode() == hashCode();
     }
 
-    @Override
-    public void serialize(Float value, ByteBuffer buffer) {
-        buffer.putFloat(value == null ? 0 : value);
-    }
-
-    @Override
-    public Float deserialize(ByteBuffer buffer) {
-        return buffer.getFloat();
-    }
 }

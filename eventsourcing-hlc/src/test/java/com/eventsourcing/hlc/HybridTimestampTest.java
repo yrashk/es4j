@@ -7,10 +7,13 @@
  */
 package com.eventsourcing.hlc;
 
-import com.eventsourcing.layout.Deserializer;
+import com.eventsourcing.layout.ObjectDeserializer;
+import com.eventsourcing.layout.ObjectSerializer;
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
-import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.layout.binary.ObjectBinarySerializer;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.SneakyThrows;
 import org.testng.annotations.BeforeClass;
@@ -78,8 +81,10 @@ public class HybridTimestampTest {
         HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
         timestamp.update();
 
-        Serializer<HybridTimestamp> serializer = new Serializer<>(layout);
-        Deserializer<HybridTimestamp> deserializer = new Deserializer<>(layout);
+        BinarySerialization serialization = BinarySerialization.getInstance();
+
+        ObjectSerializer<HybridTimestamp> serializer = serialization.getSerializer(HybridTimestamp.class);
+        ObjectDeserializer<HybridTimestamp> deserializer = serialization.getDeserializer(HybridTimestamp.class);
 
         ByteBuffer buffer = serializer.serialize(timestamp);
         buffer.rewind();

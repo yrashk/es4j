@@ -7,9 +7,9 @@
  */
 package com.eventsourcing.layout;
 
-import com.eventsourcing.layout.core.Deserializer;
 import com.eventsourcing.layout.types.*;
 import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.TypeResolver;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
@@ -21,14 +21,28 @@ import java.util.Optional;
 import java.util.UUID;
 
 /**
- * Interface for handling supported type T
+ * Interface for handling a supported type
  *
- * @param <T>
  */
-public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer<T>,
-        Deserializer<T> {
+public interface TypeHandler {
 
-    int SIZE_TAG_LENGTH = 4;
+    BigDecimalTypeHandler BIG_DECIMAL_TYPE_HANDLER = new BigDecimalTypeHandler();
+    BooleanTypeHandler BOOLEAN_TYPE_HANDLER = new BooleanTypeHandler();
+    ByteArrayTypeHandler BYTE_ARRAY_TYPE_HANDLER = new ByteArrayTypeHandler(true);
+    ByteTypeHandler BYTE_TYPE_HANDLER = new ByteTypeHandler();
+    DateTypeHandler DATE_TYPE_HANDLER = new DateTypeHandler();
+    DoubleTypeHandler DOUBLE_TYPE_HANDLER = new DoubleTypeHandler();
+    EnumTypeHandler ENUM_TYPE_HANDLER = new EnumTypeHandler();
+    ObjectTypeHandler OBJECT_TYPE_HANDLER = new ObjectTypeHandler();
+    FloatTypeHandler FLOAT_TYPE_HANDLER = new FloatTypeHandler();
+    IntegerTypeHandler INTEGER_TYPE_HANDLER = new IntegerTypeHandler();
+    ListTypeHandler LIST_TYPE_HANDLER = new ListTypeHandler();
+    OptionalTypeHandler OPTIONAL_TYPE_HANDLER = new OptionalTypeHandler();
+    ShortTypeHandler SHORT_TYPE_HANDLER = new ShortTypeHandler();
+    LongTypeHandler LONG_TYPE_HANDLER = new LongTypeHandler();
+    StringTypeHandler STRING_TYPE_HANDLER = new StringTypeHandler();
+    UUIDTypeHandler UUID_TYPE_HANDLER = new UUIDTypeHandler();
+
 
     /**
      * Returns unique byte-array "fingerprint" representing type <code>T</code>
@@ -67,35 +81,35 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
     static TypeHandler lookup(ResolvedType type, AnnotatedType annotatedType) throws TypeHandlerException {
         try {
             if (type.isInstanceOf(Byte.TYPE) || type.isInstanceOf(Byte.class)) {
-                return new ByteTypeHandler();
+                return BYTE_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Short.TYPE) || type.isInstanceOf(Short.class)) {
-                return new ShortTypeHandler();
+                return SHORT_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Integer.TYPE) || type.isInstanceOf(Integer.class)) {
-                return new IntegerTypeHandler();
+                return INTEGER_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Long.TYPE) || type.isInstanceOf(Long.class)) {
-                return new LongTypeHandler();
+                return LONG_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Float.TYPE) || type.isInstanceOf(Float.class)) {
-                return new FloatTypeHandler();
+                return FLOAT_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Double.TYPE) || type.isInstanceOf(Double.class)) {
-                return new DoubleTypeHandler();
+                return DOUBLE_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(BigDecimal.class)) {
-                return new BigDecimalTypeHandler();
+                return BIG_DECIMAL_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Boolean.TYPE) || type.isInstanceOf(Boolean.class)) {
-                return new BooleanTypeHandler();
+                return BOOLEAN_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Character.TYPE) || type.isInstanceOf(Character.class)) {
@@ -103,15 +117,15 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
             }
 
             if (type.isInstanceOf(String.class)) {
-                return new StringTypeHandler();
+                return STRING_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(UUID.class)) {
-                return new UUIDTypeHandler();
+                return UUID_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(Date.class)) {
-                return new DateHandler();
+                return DATE_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(List.class)) {
@@ -133,7 +147,7 @@ public interface TypeHandler<T> extends com.eventsourcing.layout.core.Serializer
                 return new EnumTypeHandler((Class<? extends Enum>) type.getErasedType());
             }
 
-            return new UnknownTypeHandler(type.getErasedType());
+            return new ObjectTypeHandler(type.getErasedType());
         } catch (Exception e) {
             throw new TypeHandlerException(e, type);
         }

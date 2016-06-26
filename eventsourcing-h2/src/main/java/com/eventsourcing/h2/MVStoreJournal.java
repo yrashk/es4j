@@ -11,9 +11,13 @@ import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.layout.Deserializer;
+import com.eventsourcing.layout.ObjectDeserializer;
+import com.eventsourcing.layout.ObjectSerializer;
+import com.eventsourcing.layout.Serialization;
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
 import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.layout.binary.ObjectBinarySerializer;
 import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.eventsourcing.repository.JournalMBean;
@@ -74,11 +78,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         this.store = store;
     }
 
+    private final static Serialization serialization = BinarySerialization.getInstance();
+
     @SneakyThrows
     public MVStoreJournal() {
         layoutInformationLayout = new Layout<>(LayoutInformation.class);
-        layoutInformationSerializer = new Serializer<>(layoutInformationLayout);
-        layoutInformationDeserializer = new Deserializer<>(layoutInformationLayout);
+        layoutInformationSerializer = serialization.getSerializer(LayoutInformation.class);
+        layoutInformationDeserializer = serialization.getDeserializer(LayoutInformation.class);
     }
 
     @Activate
@@ -251,7 +257,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
                 }
             }).count();
 
-            ByteBuffer buffer = new Serializer<>(commandLayout).serialize(command);
+            ByteBuffer buffer = serialization.getSerializer(command.getClass()).serialize(command);
             buffer.rewind();
             txCommandPayloads.tryPut(command.uuid(), buffer);
             txHashCommands.tryPut(hashBuffer.array(), true);
@@ -264,6 +270,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             
             return count;
         } catch (Exception e) {
+            e.printStackTrace();
             tx.rollback();
             listener.onAbort(e);
 
@@ -288,8 +295,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
             Layout<Command<?>> layout = layoutsByHash.get(encodedHash);
-            Command command = (Command) layout.getLayoutClass().newInstance().uuid(uuid);
-            new Deserializer<>(layout).deserialize(command, payload);
+            Command command = layout.getLayoutClass().newInstance().uuid(uuid);
+            serialization.getDeserializer(layout.getLayoutClass()).deserialize(command, payload);
             return Optional.of((T) command);
         }
         if (eventPayloads.containsKey(uuid)) {
@@ -297,8 +304,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
             Layout<Event> layout = layoutsByHash.get(encodedHash);
-            Event event = (Event) layout.getLayoutClass().newInstance().uuid(uuid);
-            new Deserializer<>(layout).deserialize(event, payload);
+            Event event = layout.getLayoutClass().newInstance().uuid(uuid);
+            serialization.getDeserializer(layout.getLayoutClass()).deserialize(event, payload);
             return Optional.of((T) event);
         }
         return Optional.empty();
@@ -376,8 +383,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     }
 
     private final Layout<LayoutInformation> layoutInformationLayout;
-    private final Serializer<LayoutInformation> layoutInformationSerializer;
-    private final Deserializer<LayoutInformation> layoutInformationDeserializer;
+    private final ObjectSerializer<LayoutInformation> layoutInformationSerializer;
+    private final ObjectDeserializer<LayoutInformation> layoutInformationDeserializer;
 
 
     private class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
@@ -494,7 +501,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
             Layout layout = layoutsByClass.get(event.getClass().getName());
 
-            Serializer serializer = new Serializer<>(layout);
+            ObjectSerializer serializer = serialization.getSerializer(event.getClass());
             int size = serializer.size(event);
 
             ByteBuffer payloadBuffer = ByteBuffer.allocate(size);

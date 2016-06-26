@@ -7,66 +7,91 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.NonNull;
-
 import java.nio.ByteBuffer;
+import java.util.Optional;
 
-/**
- * Layout serializer
- *
- * @param <T>
- */
-public class Serializer<T> implements com.eventsourcing.layout.core.Serializer<T> {
+public interface Serializer<T, H extends TypeHandler> {
 
-    private final Layout<T> layout;
+    interface RequiresTypeHandler<T, H extends TypeHandler> extends Serializer<T,H> {
+        default int size(T value) {
+            throw new UnsupportedOperationException();
+        }
+        default void serialize(T value, ByteBuffer buffer) {
+            throw new UnsupportedOperationException();
+        }
+    }
+    /**
+     * @param value value to be serialized
+     * @return serialized value size in bytes
+     */
+    int size(T value);
 
-    public Serializer(@NonNull Layout<T> layout) {
-        this.layout = layout;
+    /**
+     * @param typeHandler instance of {@link TypeHandler}
+     * @param value value to be serialized
+     * @return serialized value size in bytes
+     */
+
+    default int size(H typeHandler, T value) {
+        return size(value);
     }
 
     /**
-     * Serializes value of a type <code>T</code> to a newly allocated
-     * {@link ByteBuffer}.
-     * <p>
-     * If you already have a ByteBuffer of a size of at least {@link #size(Object)},
-     * you can use {@link #serialize(Object, ByteBuffer)}.
+     * If type is of a constant size, should return a non-empty
+     * {@link Optional} containing value size in bytes
      *
-     * @param value
-     * @return New {@link ByteBuffer} instance
+     * @return Optional constant size
      */
-    public ByteBuffer serialize(T value) {
-        ByteBuffer buffer = ByteBuffer.allocate(size(value));
-        serialize(value, buffer);
+    default Optional<Integer> constantSize() {
+        return Optional.empty();
+    }
+
+
+    /**
+     * Serialize to a byte buffer
+     * @param typeHandler
+     * @param value
+     * @return
+     */
+    default ByteBuffer serialize(H typeHandler, T value) {
+        ByteBuffer buffer = ByteBuffer.allocate(size(typeHandler, value));
+        serialize(typeHandler, value, buffer);
         return buffer;
     }
 
     /**
-     * Serializes value of a type <code>T</code> to an existing {@link ByteBuffer}.
+     * Serialize to a byte buffer
+     * @param value
+     * @return
+     */
+    default ByteBuffer serialize(T value) {
+        ByteBuffer buffer = ByteBuffer.allocate(size(value));
+        serialize(value, buffer);
+        return buffer;
+    }
+    /**
+     * Serializes value of type <code>T</code> to a {@link ByteBuffer}.
      * <p>
-     * Note that {@link ByteBuffer} should have at least {@link #size(Object)} bytes available.
+     * {@link ByteBuffer} should be of a correct size. The size can be obtained
+     * from {@link #size(Object)}
      *
      * @param value  value to serialize
-     * @param buffer existing {@link ByteBuffer}
+     * @param buffer ByteBuffer
      */
-    public void serialize(T value, ByteBuffer buffer) {
-        for (Property<T> property : layout.getProperties()) {
-            property.getTypeHandler().serialize(property.get(value), buffer);
-        }
-    }
+    void serialize(T value, ByteBuffer buffer);
 
     /**
-     * Returns size of the data of type <code>T</code>
+     * Serializes value of type <code>T</code> to a {@link ByteBuffer}.
+     * <p>
+     * {@link ByteBuffer} should be of a correct size. The size can be obtained
+     * from {@link #size(Object)}
      *
-     * @param value
-     * @return size in bytes
+     * @param typeHandler Instance of {@link TypeHandler}
+     * @param value  value to serialize
+     * @param buffer ByteBuffer
      */
-    public int size(T value) {
-        int sz = 0;
-        for (Property<T> property : layout.getProperties()) {
-            sz += property.getTypeHandler().size(property.get(value));
-        }
-        return sz;
+    default void serialize(H typeHandler, T value, ByteBuffer buffer) {
+        serialize(value, buffer);
     }
-
 
 }
