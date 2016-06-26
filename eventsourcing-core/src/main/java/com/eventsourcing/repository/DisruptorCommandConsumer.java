@@ -11,7 +11,10 @@ import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.layout.Deserializer;
+import com.eventsourcing.layout.ObjectDeserializer;
+import com.eventsourcing.layout.Serialization;
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
 import com.eventsourcing.layout.Layout;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -40,7 +43,7 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
     private final IndexEngine indexEngine;
     private final LockProvider lockProvider;
     private final Map<Class<? extends Command>, Layout> layouts = new HashMap<>();
-    private final Map<Class<? extends Command>, Deserializer> deserializers = new HashMap<>();
+    private final Map<Class<? extends Command>, ObjectDeserializer<?>> deserializers = new HashMap<>();
 
     private static class CommandEvent {
         @Getter @Setter
@@ -189,6 +192,8 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         }
     }
 
+    private final static Serialization serialization = BinarySerialization.getInstance();
+
     @SneakyThrows
     public DisruptorCommandConsumer(Iterable<Class<? extends Command>> commandClasses,
                                     PhysicalTimeProvider timeProvider,
@@ -204,7 +209,7 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         for (Class<? extends Command> cmd : commandClasses) {
             Layout<? extends Command> layout = new Layout<>(cmd);
             layouts.put(cmd, layout);
-            deserializers.put(cmd, new Deserializer<>(layout));
+            deserializers.put(cmd, serialization.getDeserializer(cmd));
         }
     }
 

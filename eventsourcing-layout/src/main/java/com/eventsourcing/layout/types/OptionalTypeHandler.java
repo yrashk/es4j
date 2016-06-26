@@ -11,15 +11,19 @@ import com.eventsourcing.layout.TypeHandler;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.primitives.Bytes;
+import lombok.Getter;
 
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.lang.reflect.ParameterizedType;
-import java.nio.ByteBuffer;
-import java.util.Optional;
 
-public class OptionalTypeHandler implements TypeHandler<Optional> {
-    private final TypeHandler handler;
+public class OptionalTypeHandler implements TypeHandler {
+    @Getter
+    private final TypeHandler wrappedHandler;
+
+    public OptionalTypeHandler() {
+        wrappedHandler = null;
+    }
 
     public OptionalTypeHandler(AnnotatedType annotatedType) throws TypeHandlerException {
         if (!(annotatedType instanceof AnnotatedParameterizedType)) {
@@ -34,57 +38,20 @@ public class OptionalTypeHandler implements TypeHandler<Optional> {
             klass = (Class<?>) arg.getType();
         }
         ResolvedType resolvedType = new TypeResolver().resolve(klass);
-        handler = TypeHandler.lookup(resolvedType, arg);
+        wrappedHandler = TypeHandler.lookup(resolvedType, arg);
     }
 
     @Override
     public byte[] getFingerprint() {
-        return Bytes.concat("Optional[".getBytes(), handler.getFingerprint(), "]".getBytes());
+        return Bytes.concat("Optional[".getBytes(), wrappedHandler.getFingerprint(), "]".getBytes());
     }
 
-    @Override
-    public Optional deserialize(ByteBuffer buffer) {
-        if (buffer.get() == 0) {
-            return Optional.empty();
-        }
-        return Optional.of(handler.deserialize(buffer));
+    @Override public int hashCode() {
+        return "Optional".hashCode();
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public int size(Optional value) {
-        if (value == null) {
-            return 1;
-        }
-        return value.isPresent() ? handler.size(value.get()) + 1 : 1;
+    @Override public boolean equals(Object obj) {
+        return obj instanceof OptionalTypeHandler && obj.hashCode() == hashCode();
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public void serialize(Optional value, ByteBuffer buffer) {
-        if (value == null) {
-            buffer.put((byte) 0);
-        } else {
-            buffer.put((byte) (value.isPresent() ? 1 : 0));
-            if (value.isPresent()) {
-                handler.serialize(value.get(), buffer);
-            }
-        }
-    }
-
-    @Override @SuppressWarnings("unchecked")
-    public int comparableSize(Optional value) {
-        if (value == null) {
-            return 0;
-        }
-        return value.isPresent() ? handler.comparableSize(value.get()) : 0;
-    }
-
-    @Override @SuppressWarnings("unchecked")
-    public void serializeComparable(Optional value, ByteBuffer buffer) {
-        if (value == null) {
-        } else {
-            if (value.isPresent()) {
-                handler.serializeComparable(value.get(), buffer);
-            }
-        }
-    }
 }

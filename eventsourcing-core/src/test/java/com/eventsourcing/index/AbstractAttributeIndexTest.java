@@ -8,12 +8,17 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.layout.TypeHandler;
+import com.eventsourcing.layout.types.ListTypeHandler;
 import com.eventsourcing.models.Car;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.TypeResolver;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
@@ -77,7 +82,10 @@ public class AbstractAttributeIndexTest {
 
     }
 
+    public List<String> list;
+
     @Test
+    @SneakyThrows
     public void generics() {
         SimpleAttribute<Car, List<String>> FEATURES_LIST = new SimpleAttribute<Car, List<String>>("features") {
             @Override
@@ -90,11 +98,14 @@ public class AbstractAttributeIndexTest {
                                                                                      new HashSet<Class<? extends Query>>() {{
                                                                                      }});
 
-        List<String> list = Arrays.asList("Hello");
-        ByteBuffer buffer = ByteBuffer.allocate(index.attributeSerializer.size(list));
-        index.attributeSerializer.serialize(list, buffer);
+        list = Arrays.asList("Hello");
+        TypeResolver typeResolver = new TypeResolver();
+        ResolvedType klassType = typeResolver.resolve(List.class);
+        TypeHandler listTypeHandler = TypeHandler.lookup(klassType, getClass().getField("list").getAnnotatedType());
+        ByteBuffer buffer = ByteBuffer.allocate(index.attributeSerializer.size(listTypeHandler, list));
+        index.attributeSerializer.serialize(listTypeHandler, list, buffer);
         buffer.rewind();
-        List<String> deserialized = index.attributeDeserializer.deserialize(buffer);
+        List<String> deserialized = index.attributeDeserializer.deserialize(listTypeHandler, buffer);
         assertEquals(deserialized.get(0), list.get(0));
     }
 }

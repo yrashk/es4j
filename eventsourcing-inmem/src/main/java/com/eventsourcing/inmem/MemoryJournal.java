@@ -11,9 +11,13 @@ import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.layout.Deserializer;
+import com.eventsourcing.layout.ObjectDeserializer;
+import com.eventsourcing.layout.ObjectSerializer;
+import com.eventsourcing.layout.Serialization;
+import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
 import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.Serializer;
+import com.eventsourcing.layout.binary.ObjectBinarySerializer;
 import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.eventsourcing.repository.LockProvider;
@@ -28,7 +32,6 @@ import org.osgi.service.component.annotations.Component;
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -36,6 +39,8 @@ import java.util.stream.Stream;
  */
 @Component(property = {"type=MemoryJournal"})
 public class MemoryJournal extends AbstractService implements Journal {
+
+    private static final Serialization serialization = BinarySerialization.getInstance();
 
     private Repository repository;
 
@@ -105,9 +110,8 @@ public class MemoryJournal extends AbstractService implements Journal {
 
         this.events.putAll(events_);
 
-        Layout<Command> layout = new Layout<>((Class<Command>) command.getClass());
-        Serializer<Command> serializer = new Serializer<>(layout);
-        Deserializer<Command> deserializer = new Deserializer<>(layout);
+        ObjectSerializer<Command> serializer = serialization.getSerializer(command.getClass());
+        ObjectDeserializer<Command> deserializer = serialization.getDeserializer(command.getClass());
 
         ByteBuffer buffer = serializer.serialize(command);
         buffer.rewind();
@@ -204,9 +208,8 @@ public class MemoryJournal extends AbstractService implements Journal {
                 ts.update(event.timestamp().clone());
             }
 
-            Layout<Event> layout = new Layout<>((Class<Event>) event.getClass());
-            Serializer<Event> serializer = new Serializer<>(layout);
-            Deserializer<Event> deserializer = new Deserializer<>(layout);
+            ObjectSerializer<Event> serializer = serialization.getSerializer(event.getClass());
+            ObjectDeserializer<Event> deserializer = serialization.getDeserializer(event.getClass());
 
             ByteBuffer buffer = serializer.serialize(event);
             buffer.rewind();

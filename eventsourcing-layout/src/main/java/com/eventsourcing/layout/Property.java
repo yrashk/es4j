@@ -34,7 +34,7 @@ public class Property<T> {
     @Getter @NonNull
     private ResolvedType type;
     @Getter @NonNull
-    private TypeHandler<T> typeHandler;
+    private TypeHandler typeHandler;
     @Getter @NonNull
     private BiConsumer<T, Object> setter;
     @Getter @NonNull

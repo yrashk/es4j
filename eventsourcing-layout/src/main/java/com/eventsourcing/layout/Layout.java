@@ -233,6 +233,9 @@ public class Layout<T> {
                                                               @Override
                                                               @SneakyThrows
                                                               public Object apply(T t) {
+                                                                  if (t == null) {
+                                                                      return null;
+                                                                  }
                                                                   return getterHandler.invoke(t);
                                                               }
                                                           });
