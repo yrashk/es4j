@@ -51,6 +51,13 @@ public interface Repository extends Service {
     }
 
     /**
+     * Gets journal as previously configured.
+     *
+     * @return null if journal was not configured yet.
+     */
+    Journal getJournal();
+
+    /**
      * Sets journal to be used in this repository
      * <p>
      * Should be done before invoking {@link #startAsync()}
@@ -59,6 +66,13 @@ public interface Repository extends Service {
      * @throws IllegalStateException if called after the service is started
      */
     void setJournal(Journal journal) throws IllegalStateException;
+
+    /**
+     * Gets index engine as previously configured. Useful for querying.
+     *
+     * @return null if index engine was not configured yet.
+     */
+    IndexEngine getIndexEngine();
 
     /**
      * Sets index engine to be used in this repository
@@ -71,11 +85,11 @@ public interface Repository extends Service {
     void setIndexEngine(IndexEngine indexEngine) throws IllegalStateException;
 
     /**
-     * Get index engine as previously configured. Useful for querying.
+     * Gets physical time provider as previously configured
      *
-     * @return null if index engine was not configured yet.
+     * @return null if physical time provider was not configured yet.
      */
-    IndexEngine getIndexEngine();
+    PhysicalTimeProvider getPhysicalTimeProvider();
 
     /**
      * Sets physical time provider
@@ -85,11 +99,39 @@ public interface Repository extends Service {
     void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) throws IllegalStateException;
 
     /**
+     * Gets lock provider as previously configured
+     *
+     * @return null if lock provider was not configured yet.
+     */
+    LockProvider getLockProvider();
+
+    /**
      * Sets lock provider
      *
      * @param lockProvider
      */
     void setLockProvider(LockProvider lockProvider) throws IllegalStateException;
+
+    /**
+     * @return Repository's current timestamp
+     */
+    HybridTimestamp getTimestamp();
+
+    /**
+     * Returns a set of commands discovered or configured
+     * with this repository
+     *
+     * @return
+     */
+    Set<Class<? extends Command>> getCommands();
+
+    /**
+     * Returns a set of events discovered or configured
+     * with this repository
+     *
+     * @return
+     */
+    Set<Class<? extends Event>> getEvents();
 
     /**
      * Adds a command set provider. Will fetch a command set upon initialization
@@ -130,22 +172,6 @@ public interface Repository extends Service {
      * @param subscriber
      */
     void removeEntitySubscriber(EntitySubscriber subscriber);
-
-    /**
-     * Returns a set of commands discovered or configured
-     * with this repository
-     *
-     * @return
-     */
-    Set<Class<? extends Command>> getCommands();
-
-    /**
-     * Returns a set of events discovered or configured
-     * with this repository
-     *
-     * @return
-     */
-    Set<Class<? extends Event>> getEvents();
 
     /**
      * Publishes command asynchronously
@@ -190,8 +216,4 @@ public interface Repository extends Service {
         return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
     }
 
-    /**
-     * @return Repository's current timestamp
-     */
-    HybridTimestamp getTimestamp();
 }
