@@ -26,11 +26,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
+@Getter
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
            property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=com.eventsourcing:type=repository"})
 @Slf4j
 public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
 
+    @Getter
     private Journal journal;
 
     @Getter
@@ -42,6 +44,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Getter
     private IndexEngine indexEngine;
     private ServiceManager services;
+    @Getter
     private LockProvider lockProvider;
     private CommandConsumer commandConsumer;
 
@@ -193,6 +196,11 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     public void removeEventSetProvider(EventSetProvider provider) {
         final Set<Class<? extends Event>> providedEvents = provider.getEvents();
         events.removeAll(providedEvents);
+    }
+
+    @Override
+    public PhysicalTimeProvider getPhysicalTimeProvider() {
+        return timeProvider;
     }
 
     @Reference
