@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 
-@Getter
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
            property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=com.eventsourcing:type=repository"})
 @Slf4j
@@ -40,12 +39,14 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Getter
     private Set<Class<? extends Event>> events = new HashSet<>();
 
-    private PhysicalTimeProvider timeProvider;
+    @Getter
+    private PhysicalTimeProvider physicalTimeProvider;
     @Getter
     private IndexEngine indexEngine;
-    private ServiceManager services;
     @Getter
     private LockProvider lockProvider;
+
+    private ServiceManager services;
     private CommandConsumer commandConsumer;
 
     private List<EntitySubscriber> entitySubscribers = new ArrayList<>();
@@ -64,7 +65,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         if (journal == null) {
             notifyFailed(new IllegalStateException("journal == null"));
         }
-        if (timeProvider == null) {
+        if (physicalTimeProvider == null) {
             notifyFailed(new IllegalStateException("physicalTimeProvider == null"));
         }
         if (indexEngine == null) {
@@ -84,14 +85,14 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         indexEngine.setJournal(journal);
         indexEngine.setRepository(this);
 
-        services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, timeProvider).stream().
+        services = new ServiceManager(Arrays.asList(journal, indexEngine, lockProvider, physicalTimeProvider).stream().
                 filter(s -> !s.isRunning()).collect(Collectors.toSet()));
         services.startAsync().awaitHealthy();
 
         initialization.forEach(Runnable::run);
         initialization.clear();
 
-        commandConsumer = new DisruptorCommandConsumer(commands, timeProvider, this, journal, indexEngine,
+        commandConsumer = new DisruptorCommandConsumer(commands, physicalTimeProvider, this, journal, indexEngine,
                                                        lockProvider);
         commandConsumer.startAsync().awaitRunning();
 
@@ -114,7 +115,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         services.stopAsync().awaitStopped();
         // Try stopping services that were started beforehand and didn't
         // make it into `services`
-        Arrays.asList(journal, indexEngine, lockProvider, timeProvider).stream().
+        Arrays.asList(journal, indexEngine, lockProvider, physicalTimeProvider).stream().
                 filter(Service::isRunning).forEach(s -> s.stopAsync().awaitTerminated());
         notifyStopped();
     }
@@ -198,18 +199,13 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         events.removeAll(providedEvents);
     }
 
-    @Override
-    public PhysicalTimeProvider getPhysicalTimeProvider() {
-        return timeProvider;
-    }
-
     @Reference
     @Override
     public void setPhysicalTimeProvider(PhysicalTimeProvider timeProvider) throws IllegalStateException {
         if (isRunning()) {
             throw new IllegalStateException();
         }
-        this.timeProvider = timeProvider;
+        this.physicalTimeProvider = timeProvider;
     }
 
     @Reference
