@@ -1,3 +1,33 @@
+WIP
+===
+
+**Backwards-incompatible changes**
+
+* [Core] `Entity`, `Command` and `Event` are now interfaces, the classes were moved to to `StandardEntity`, `StandardCommand` and `StandardEvent` ([#67](https://github.com/eventsourcing/es4j/pull/67))
+* [Core] Most of repository implementation related code was moved to `com.eventsourcing.repository` ([#64](https://github.com/eventsourcing/es4j/pull/64))
+* [Core] `Repository.create()` now will use localhost NTP server ([#66](https://github.com/eventsourcing/es4j/pull/66))
+* [Core] Renamed `MemoryLockProvider` to `LocalLockProvider` ([#69](https://github.com/eventsourcing/es4j/pull/69), [#70](https://github.com/eventsourcing/es4j/pull/70)
+* [Core] `Journal#commandEventsIterator` has been removed ([#69](https://github.com/eventsourcing/es4j/pull/69))
+* [Core] `MemoryJournal` has been moved to `eventsourcing-inmem` ([#69](https://github.com/eventsourcing/es4j/pull/69))
+
+**Bugfixes**
+
+* [Core] Entity static initialization can no longer hang the current thread ([#65](https://github.com/eventsourcing/es4j/pull/65))
+
+**Features**
+
+* [Core] Added a simplified attribute indexing definition API ([#57](https://github.com/eventsourcing/es4j/pull/57))
+* [CEP] Migrated es4j-cep into the project to maintain version parity
+([#60](https://github.com/eventsourcing/es4j/pull/60))
+* [Migrations] Implemented [8/EMT](http://rfc.eventsourcing.com/spec:8/EMT) and `LayoutMigration` to standardize migrations ([#69](https://github.com/eventsourcing/es4j/pull/69))
+* [Core] `EventCausalityEstablished` event-command causality indexing has been implemented ([#69](https://github.com/eventsourcing/es4j/pull/69))
+* [Core] Better support for Kotlin in `Repository` ([#72](https://github.com/eventsourcing/es4j/pull/72))
+
+**Specification compliance**
+
+* [Core] Layout and Property are now [7/LDL](http://rfc.eventsourcing.com/spec:7/LDL) compliant ([#61](https://github.com/eventsourcing/es4j/pull/61))
+
+
 0.3.2
 ===
 
