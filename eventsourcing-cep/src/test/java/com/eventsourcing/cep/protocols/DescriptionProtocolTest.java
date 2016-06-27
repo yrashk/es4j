@@ -50,10 +50,10 @@ public class DescriptionProtocolTest extends RepositoryTest {
         }
     }
 
-    @Accessors(fluent = true)
+    @Accessors
     public static class TestModel implements Model, DescriptionProtocol {
 
-        @Getter @Accessors(fluent = false)
+        @Getter
         private final Repository repository;
 
         @Getter
@@ -74,18 +74,19 @@ public class DescriptionProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        ChangeDescription changeDescription = new ChangeDescription().id(model.id()).description("Description #1");
+        ChangeDescription changeDescription = new ChangeDescription().id(model.getId()).description("Description #1");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #1");
 
-        ChangeDescription changeBefore = (ChangeDescription) new ChangeDescription().id(model.id()).description("Description #0")
+        ChangeDescription changeBefore = (ChangeDescription) new ChangeDescription().id(model.getId()).description
+                ("Description #0")
                                                                                     .timestamp(timestamp);
         assertTrue(changeBefore.timestamp().compareTo(changeDescription.timestamp()) < 0);
         repository.publish(changeBefore).get();
         assertEquals(model.description(), "Description #1"); // earlier change shouldn't affect the description
 
 
-        changeDescription = new ChangeDescription().id(model.id()).description("Description #2");
+        changeDescription = new ChangeDescription().id(model.getId()).description("Description #2");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #2");
     }

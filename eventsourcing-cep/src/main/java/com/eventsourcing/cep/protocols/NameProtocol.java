@@ -21,7 +21,7 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
 public interface NameProtocol extends Protocol {
     default String name() {
         try (ResultSet<EntityHandle<NameChanged>> resultSet =
-                     getRepository().query(NameChanged.class, equal(NameChanged.REFERENCE_ID, id()),
+                     getRepository().query(NameChanged.class, equal(NameChanged.REFERENCE_ID, getId()),
                                       queryOptions(orderBy(descending(NameChanged.TIMESTAMP)),
                                                    applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
             if (resultSet.isEmpty()) {

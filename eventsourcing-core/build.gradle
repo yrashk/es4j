@@ -1,3 +1,15 @@
+buildscript {
+    ext.kotlin_version = '1.0.2-1'
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+apply plugin: "kotlin"
+
 dependencies {
     compile project(':eventsourcing-layout')
     compile project(':eventsourcing-hlc')
@@ -17,4 +29,8 @@ dependencies {
 
 
     testCompile project(':eventsourcing-inmem')
+}
+
+license {
+     mapping('kt', 'JAVADOC_STYLE')
 }

@@ -68,10 +68,10 @@ public class DeletedProtocolTest extends RepositoryTest {
         }
     }
 
-    @Accessors(fluent = true)
+    @Accessors
     public static class TestModel implements Model, DeletedProtocol {
 
-        @Getter @Accessors(fluent = false)
+        @Getter
         private final Repository repository;
 
         @Getter
@@ -88,7 +88,7 @@ public class DeletedProtocolTest extends RepositoryTest {
     public void deletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
         assertFalse(model.deleted().isPresent());
-        Delete delete = new Delete().id(model.id());
+        Delete delete = new Delete().id(model.getId());
         repository.publish(delete).get();
         assertTrue(model.deleted().isPresent());
     }
@@ -96,7 +96,7 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Test @SneakyThrows
     public void undeletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
-        Delete delete = new Delete().id(model.id());
+        Delete delete = new Delete().id(model.getId());
         repository.publish(delete).get();
         Undelete undelete = new Undelete().id(delete.eventId);
         repository.publish(undelete).get();
