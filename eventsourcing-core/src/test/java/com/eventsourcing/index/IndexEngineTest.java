@@ -104,13 +104,13 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     }
 
     @Accessors(fluent = true)
-    public static class TestCommand extends StandardCommand<Void> {
+    public static class TestCommand extends StandardCommand<Void, Void> {
         @Getter @Setter
         private String string;
 
         @Override
-        public Stream<? extends Event> events(Repository repository) {
-            return Stream.of(new TestEvent(string));
+        public EventStream<Void> events(Repository repository) {
+            return EventStream.of(new TestEvent(string));
         }
     }
 

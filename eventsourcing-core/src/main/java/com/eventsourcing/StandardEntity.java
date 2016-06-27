@@ -9,10 +9,8 @@ package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.LayoutIgnore;
-import lombok.experimental.Accessors;
 
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.LinkedBlockingDeque;
 
 /**

@@ -7,28 +7,22 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.OrderCreated;
 
-import java.util.stream.Stream;
-
-public class CreateOrder extends StandardCommand<Order> {
-
-    private Repository repository;
-    private OrderCreated orderCreated;
+public class CreateOrder extends StandardCommand<Order, OrderCreated> {
 
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        this.repository = repository;
-        this.orderCreated = new OrderCreated();
-        return Stream.of(orderCreated);
+    public EventStream<OrderCreated> events(Repository repository) throws Exception {
+        OrderCreated orderCreated = new OrderCreated();
+        return EventStream.ofWithState(orderCreated, orderCreated);
     }
 
     @Override
-    public Order onCompletion() {
+    public Order onCompletion(OrderCreated orderCreated, Repository repository) {
         return Order.lookup(repository, orderCreated.uuid()).get();
     }
 }

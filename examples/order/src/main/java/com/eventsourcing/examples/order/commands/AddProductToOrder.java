@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
@@ -16,12 +16,11 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class AddProductToOrder extends StandardCommand<Order.Item> {
+public class AddProductToOrder extends StandardCommand<Order.Item, ProductAddedToOrder> {
 
     @Getter @Setter @NonNull
     private UUID orderId;
@@ -32,19 +31,15 @@ public class AddProductToOrder extends StandardCommand<Order.Item> {
     @Getter @Setter @NonNull
     private Integer quantity;
 
-    private Repository repository;
-    private ProductAddedToOrder addedToOrder;
-
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        this.repository = repository;
-        addedToOrder = new ProductAddedToOrder(orderId, productId, quantity);
-        return Stream.of(addedToOrder);
+    public EventStream<ProductAddedToOrder> events(Repository repository) throws Exception {
+        ProductAddedToOrder addedToOrder = new ProductAddedToOrder(orderId, productId, quantity);
+        return EventStream.ofWithState(addedToOrder, addedToOrder);
     }
 
     @Override
-    public Order.Item onCompletion() {
+    public Order.Item onCompletion(ProductAddedToOrder productAddedToOrder, Repository repository) {
         return Order.lookup(repository, orderId).get().items().stream().
-                filter(item -> item.id().equals(addedToOrder.uuid())).findFirst().get();
+                filter(item -> item.id().equals(productAddedToOrder.uuid())).findFirst().get();
     }
 }

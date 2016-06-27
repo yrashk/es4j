@@ -9,7 +9,6 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.layout.TypeHandler;
-import com.eventsourcing.layout.types.ListTypeHandler;
 import com.eventsourcing.models.Car;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;

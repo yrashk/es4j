@@ -43,7 +43,7 @@ public interface Journal extends Service {
      * @param command
      * @return number of events processed
      */
-    default long journal(Command<?> command) throws Exception {
+    default long journal(Command<?, ?> command) throws Exception {
         return journal(command, DEFAULT_LISTENER);
     }
 
@@ -58,7 +58,7 @@ public interface Journal extends Service {
      * @param listener
      * @return number of events processed
      */
-    default long journal(Command<?> command, Listener listener) throws Exception {
+    default long journal(Command<?, ?> command, Listener listener) throws Exception {
         return journal(command, listener, new LocalLockProvider());
     }
 
@@ -71,7 +71,7 @@ public interface Journal extends Service {
      * @param lockProvider
      * @return number of events processed
      */
-    long journal(Command<?> command, Listener listener, LockProvider lockProvider) throws Exception;
+    long journal(Command<?, ?> command, Listener listener, LockProvider lockProvider) throws Exception;
 
     /**
      * Retrieves a command or event by UUID
@@ -89,7 +89,7 @@ public interface Journal extends Service {
      * @param <T>
      * @return iterator
      */
-    <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass);
+    <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass);
 
     /**
      * Iterate over events of a specific type (through {@code EntityHandler<T>})
@@ -129,6 +129,13 @@ public interface Journal extends Service {
      * Journalling listener. Useful for observing progress.
      */
     interface Listener {
+
+        /**
+         * Called when command event generation produces a state
+         * @param state
+         */
+        default void onCommandStateReceived(Object state) {}
+
         /**
          * Called when a new event is received from the stream and
          * persisted into the journal. Note that at this point the event

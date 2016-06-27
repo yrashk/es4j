@@ -228,11 +228,12 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     }
 
     @Override @SuppressWarnings("unchecked")
-    public long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
+    public long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
         return journal(command, listener, lockProvider, null);
     }
 
-    private long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider, Stream<? extends Event> events)
+    private long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider, Stream<? extends
+            Event> events)
             throws Exception {
         TransactionStore.Transaction tx = transactionStore.begin();
         try {
@@ -248,7 +249,16 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             TransactionMap<byte[], Boolean> txHashCommands = tx.openMap("hashCommands");
             TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
 
-            Stream<? extends Event> actualEvents = events == null ? command.events(repository, lockProvider) : events;
+            Stream<? extends Event> actualEvents;
+
+            if (events == null) {
+                EventStream<?> eventStream = command.events(repository, lockProvider);
+                listener.onCommandStateReceived(eventStream.getState());
+                actualEvents = eventStream.getStream();
+            } else {
+                actualEvents = events;
+            }
+
             EventConsumer eventConsumer = new EventConsumer(tx, command, listener);
             long count = actualEvents.peek(new Consumer<Event>() {
                 @Override public void accept(Event event) {
@@ -270,7 +280,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             
             return count;
         } catch (Exception e) {
-            e.printStackTrace();
             tx.rollback();
             listener.onAbort(e);
 
@@ -294,7 +303,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             ByteBuffer payload = commandPayloads.get(uuid);
             payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
-            Layout<Command<?>> layout = layoutsByHash.get(encodedHash);
+            Layout<Command<?, ?>> layout = layoutsByHash.get(encodedHash);
             Command command = layout.getLayoutClass().newInstance().uuid(uuid);
             serialization.getDeserializer(layout.getLayoutClass()).deserialize(command, payload);
             return Optional.of((T) command);
@@ -313,7 +322,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     }
 
     @Override
-    public <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+    public <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         Layout layout = layoutsByClass.get(klass.getName());
         byte[] hash = layout.getHash();
         Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.higherKey(hash));
@@ -346,7 +355,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             return Iterators.size(eventIterator((Class<Event>) klass));
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return Iterators.size(commandIterator((Class<Command<?>>) klass));
+            return Iterators.size(commandIterator((Class<Command<?, ?>>) klass));
         }
         throw new IllegalArgumentException();
     }
@@ -357,7 +366,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             return !eventIterator((Class<Event>) klass).hasNext();
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return !commandIterator((Class<Command<?>>) klass).hasNext();
+            return !commandIterator((Class<Command<?, ?>>) klass).hasNext();
         }
         throw new IllegalArgumentException();
     }
@@ -472,13 +481,13 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private class EventConsumer implements Consumer<Event> {
         private final HybridTimestamp ts;
         private final TransactionStore.Transaction tx;
-        private final Command<?> command;
+        private final Command<?, ?> command;
         private final Journal.Listener listener;
         private final TransactionMap<UUID, byte[]> txEventHashes;
         private final TransactionMap<byte[], Boolean> txHashEvents;
         private final TransactionMap<UUID, ByteBuffer> txEventPayloads;
 
-        public EventConsumer(TransactionStore.Transaction tx, Command<?> command, Journal.Listener listener) {
+        public EventConsumer(TransactionStore.Transaction tx, Command<?, ?> command, Journal.Listener listener) {
             this.tx = tx;
             this.command = command;
             this.listener = listener;

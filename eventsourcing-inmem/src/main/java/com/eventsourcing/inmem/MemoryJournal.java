@@ -70,7 +70,7 @@ public class MemoryJournal extends AbstractService implements Journal {
     // documentation
 
     @Override
-    public synchronized long journal(Command<?> command, Journal.Listener listener, LockProvider lockProvider)
+    public synchronized long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider)
             throws Exception {
         Map<UUID, Event> events_ = new HashMap<>();
         EventConsumer eventConsumer = new EventConsumer(events_, command, listener);
@@ -79,7 +79,9 @@ public class MemoryJournal extends AbstractService implements Journal {
         Exception exception = null;
 
         try {
-            events = command.events(repository, lockProvider);
+            EventStream<?> eventStream = command.events(repository, lockProvider);
+            listener.onCommandStateReceived(eventStream.getState());
+            events = eventStream.getStream();
         } catch (Exception e) {
             events = Stream.of((Event) new CommandTerminatedExceptionally(command.uuid(), e));
             exception = e;
@@ -140,7 +142,7 @@ public class MemoryJournal extends AbstractService implements Journal {
     }
 
     @Override
-    public synchronized <T extends Command<?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+    public synchronized <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(commands.values().stream()
                                                        .filter(command -> klass.isAssignableFrom(command.getClass()))
                                                        .map(command -> (EntityHandle<T>) new JournalEntityHandle<T>(this, command.uuid())).iterator());
@@ -165,7 +167,7 @@ public class MemoryJournal extends AbstractService implements Journal {
             return Iterators.size(eventIterator((Class<Event>) klass));
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return Iterators.size(commandIterator((Class<Command<?>>) klass));
+            return Iterators.size(commandIterator((Class<Command<?, ?>>) klass));
         }
         return 0;
     }
@@ -176,7 +178,7 @@ public class MemoryJournal extends AbstractService implements Journal {
             return !eventIterator((Class<Event>) klass).hasNext();
         }
         if (Command.class.isAssignableFrom(klass)) {
-            return !commandIterator((Class<Command<?>>) klass).hasNext();
+            return !commandIterator((Class<Command<?, ?>>) klass).hasNext();
         }
         return true;
     }

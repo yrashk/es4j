@@ -34,9 +34,9 @@ public class LayoutMigrationTest extends RepositoryTest {
         super(LayoutMigrationTest.class.getPackage());
     }
 
-    public static class TestCommand extends StandardCommand<Void> {
-        @Override public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.of(new TestEvent1().x(0));
+    public static class TestCommand extends StandardCommand<Void, Void> {
+        @Override public EventStream<Void> events(Repository repository) throws Exception {
+            return EventStream.of(new TestEvent1().x(0));
         }
     }
 
@@ -54,13 +54,14 @@ public class LayoutMigrationTest extends RepositoryTest {
         private int y;
     }
 
-    public static class MigrationCommand extends StandardCommand<Void> {
+    public static class MigrationCommand extends StandardCommand<Void, Void> {
 
-        @Override public Stream<? extends Event> events(Repository repository, LockProvider lockProvider) throws Exception {
+        @Override public EventStream<Void> events(Repository repository, LockProvider lockProvider) throws
+                                                                                                       Exception {
             LayoutMigration<TestEvent1, TestEvent2> migration = new LayoutMigration<>(
                     TestEvent1.class, TestEvent2.class,
                     testEvent1 -> new TestEvent2().y(testEvent1.x + 1));
-            return migration.events(repository, lockProvider);
+            return EventStream.of(migration.events(repository, lockProvider));
         }
     }
 

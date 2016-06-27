@@ -48,7 +48,7 @@ public class EntityQueryFactoryTest {
         repository.stopAsync().awaitTerminated();
     }
 
-    public static class TestCommand extends StandardCommand<Void> {}
+    public static class TestCommand extends StandardCommand<Void, Void> {}
 
     @Test @SneakyThrows
     public void all() {

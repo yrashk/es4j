@@ -7,13 +7,11 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.repository.*;
-import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +24,6 @@ import org.testng.annotations.Test;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -75,7 +72,7 @@ public abstract class JournalTest<T extends Journal> {
     public static class AnotherTestEvent extends StandardEvent {}
 
     @EqualsAndHashCode(callSuper = false)
-    public static class TestCommand extends StandardCommand<Void> {
+    public static class TestCommand extends StandardCommand<Void, Void> {
         @Getter @Setter
         private boolean events;
 
@@ -87,21 +84,21 @@ public abstract class JournalTest<T extends Journal> {
         }
 
         @Override
-        public Stream<? extends Event> events(Repository repository) throws Exception {
+        public EventStream<Void> events(Repository repository) throws Exception {
             if (events) {
-                return Stream.of((Event)new TestEvent());
+                return EventStream.of(new TestEvent());
             } else {
                 return super.events(repository);
             }
         }
     }
 
-    public static class ExceptionalTestCommand extends StandardCommand<Void> {
+    public static class ExceptionalTestCommand extends StandardCommand<Void, Void> {
         @Override
-        public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.generate(() -> {
+        public EventStream<Void> events(Repository repository) throws Exception {
+            return EventStream.of(Stream.generate(() -> {
                 throw new IllegalStateException();
-            });
+            }));
         }
     }
 

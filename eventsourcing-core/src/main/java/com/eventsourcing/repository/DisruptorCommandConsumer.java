@@ -11,11 +11,10 @@ import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
-import com.eventsourcing.layout.Layout;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.googlecode.cqengine.IndexedCollection;
@@ -51,6 +50,8 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         Map<Class<? extends Command>, Command> commands = new HashMap<>();
         TrackingLockProvider lockProvider;
         CompletableFuture completed;
+        @Getter @Setter
+        Object state;
         private Class<? extends Command> commandClass;
 
         @SneakyThrows
@@ -88,13 +89,13 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         private final CommandEvent disruptorEvent;
         private final IndexEngine indexEngine;
         private final Journal journal;
-        private final Command<?> command;
+        private final Command<?,?> command;
         private final HybridTimestamp timestamp;
         private HybridTimestamp lastTimestamp;
 
         private final Map<EntitySubscriber, Set<UUID>> subscriptions = new HashMap<>();
         
-        private JournalListener(CommandEvent event, IndexEngine indexEngine, Journal journal, Command<?> command,
+        private JournalListener(CommandEvent event, IndexEngine indexEngine, Journal journal, Command<?, ?> command,
                                 HybridTimestamp timestamp) {
             this.disruptorEvent = event;
             this.indexEngine = indexEngine;
@@ -103,6 +104,10 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
             this.timestamp = timestamp;
             disruptorEvent.getEntitySubscribers().forEach(s -> subscriptions.put(s, new HashSet<>()));
             lastTimestamp = command.timestamp().clone();
+        }
+
+        @Override public void onCommandStateReceived(Object state) {
+            disruptorEvent.setState(state);
         }
 
         @Override @SuppressWarnings("unchecked")
@@ -118,9 +123,9 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
 
         @Override @SuppressWarnings("unchecked")
         public void onCommit() {
-            IndexedCollection<EntityHandle<Command<?>>> coll = indexEngine
-                    .getIndexedCollection((Class<Command<?>>) command.getClass());
-            EntityHandle<Command<?>> commandHandle = new JournalEntityHandle<>(journal, command.uuid());
+            IndexedCollection<EntityHandle<Command<?, ?>>> coll = indexEngine
+                    .getIndexedCollection((Class<Command<?, ?>>) command.getClass());
+            EntityHandle<Command<?, ?>> commandHandle = new JournalEntityHandle<>(journal, command.uuid());
             coll.add(commandHandle);
             subscriptions.entrySet().stream()
                     .forEach(entry -> entry.getKey()
@@ -232,12 +237,12 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
 
     private void complete(CommandEvent event) throws Exception {
         if (!event.completed.isCompletedExceptionally()) {
-            event.completed.complete(event.getCommand().onCompletion());
+            event.completed.complete(event.getCommand().onCompletion(event.getState(), repository, event.lockProvider));
             event.lockProvider.release();
         }
     }
 
-    private <T, C extends Command<T>> void translate(CommandEvent event, long sequence, C command,
+    private <T, C extends Command<T, ?>> void translate(CommandEvent event, long sequence, C command,
                                                              Collection<EntitySubscriber> subscribers,
                                                              CompletableFuture<T> completed) {
         event.setEntitySubscribers(subscribers);
@@ -247,7 +252,8 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
     }
 
     @Override
-    public <T, C extends Command<T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers) {
+    public <T, C extends Command<T, ?>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber>
+            subscribers) {
         CompletableFuture<T> future = new CompletableFuture<>();
         ringBuffer.publishEvent(this::translate, command, subscribers, future);
         return future;

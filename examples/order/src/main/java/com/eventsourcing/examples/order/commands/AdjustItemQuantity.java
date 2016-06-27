@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.ItemQuantityAdjusted;
@@ -15,12 +15,11 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class AdjustItemQuantity extends StandardCommand<Void> {
+public class AdjustItemQuantity extends StandardCommand<Void, Void> {
     @Getter @Setter @NonNull
     private UUID itemId;
 
@@ -28,7 +27,7 @@ public class AdjustItemQuantity extends StandardCommand<Void> {
     private Integer quantity;
 
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        return Stream.of(new ItemQuantityAdjusted(itemId, quantity));
+    public EventStream<Void> events(Repository repository) throws Exception {
+        return EventStream.of(new ItemQuantityAdjusted(itemId, quantity));
     }
 }
