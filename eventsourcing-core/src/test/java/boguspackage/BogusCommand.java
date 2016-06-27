@@ -7,17 +7,15 @@
  */
 package boguspackage;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 
-import java.util.stream.Stream;
-
-public class BogusCommand extends StandardCommand<String> {
+public class BogusCommand extends StandardCommand<String, Void> {
 
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        return Stream.of(new BogusEvent());
+    public EventStream<Void> events(Repository repository) throws Exception {
+        return EventStream.of(new BogusEvent());
     }
 
     @Override

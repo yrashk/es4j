@@ -15,7 +15,7 @@ import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-public class CommandJournalPersistence<T extends Command<?>> extends JournalPersistence<T> {
+public class CommandJournalPersistence<T extends Command<?, ?>> extends JournalPersistence<T> {
     public CommandJournalPersistence(Journal journal, Class<T> klass) {
         super(journal, klass);
     }
@@ -40,7 +40,7 @@ public class CommandJournalPersistence<T extends Command<?>> extends JournalPers
 
     }
 
-    static class CommandJournalObjectStore<T extends Command<?>> extends JournalObjectStore<T> {
+    static class CommandJournalObjectStore<T extends Command<?, ?>> extends JournalObjectStore<T> {
 
         public CommandJournalObjectStore(Journal journal, Class<T> klass) {
             super(journal, klass);

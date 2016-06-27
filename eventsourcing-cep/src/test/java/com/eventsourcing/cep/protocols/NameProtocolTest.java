@@ -7,10 +7,7 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.Event;
-import com.eventsourcing.Model;
-import com.eventsourcing.Repository;
-import com.eventsourcing.StandardCommand;
+import com.eventsourcing.*;
 import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Getter;
@@ -32,7 +29,7 @@ public class NameProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class Rename extends StandardCommand<String> {
+    public static class Rename extends StandardCommand<String, Void> {
 
         @Getter @Setter
         private UUID id;
@@ -40,8 +37,8 @@ public class NameProtocolTest extends RepositoryTest {
         private String name;
 
         @Override
-        public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.of((Event) new NameChanged().reference(id).name(name).timestamp(timestamp()));
+        public EventStream<Void> events(Repository repository) throws Exception {
+            return EventStream.of(new NameChanged().reference(id).name(name).timestamp(timestamp()));
         }
 
         @Override

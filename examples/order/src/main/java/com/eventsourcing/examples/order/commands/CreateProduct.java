@@ -8,6 +8,7 @@
 package com.eventsourcing.examples.order.commands;
 
 import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Product;
@@ -18,12 +19,11 @@ import lombok.*;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
-import java.util.stream.Stream;
 
 @Accessors(fluent = true)
 @RequiredArgsConstructor
 @NoArgsConstructor
-public class CreateProduct extends StandardCommand<Product> {
+public class CreateProduct extends StandardCommand<Product, ProductCreated> {
 
     @Getter @Setter @NonNull
     private String name;
@@ -31,20 +31,16 @@ public class CreateProduct extends StandardCommand<Product> {
     @Getter @Setter @NonNull
     private BigDecimal price;
 
-    private Repository repository;
-    private ProductCreated productCreated;
-
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        this.repository = repository;
-        productCreated = new ProductCreated();
+    public EventStream<ProductCreated> events(Repository repository) throws Exception {
+        ProductCreated productCreated = new ProductCreated();
         NameChanged nameChanged = new NameChanged(productCreated.uuid(), name);
         PriceChanged priceChanged = new PriceChanged(productCreated.uuid(), price);
-        return Stream.of(productCreated, nameChanged, priceChanged);
+        return EventStream.ofWithState(productCreated, new Event[]{productCreated, nameChanged, priceChanged});
     }
 
     @Override
-    public Product onCompletion() {
+    public Product onCompletion(ProductCreated productCreated, Repository repository) {
         return Product.lookup(repository, productCreated.uuid()).get();
     }
 }

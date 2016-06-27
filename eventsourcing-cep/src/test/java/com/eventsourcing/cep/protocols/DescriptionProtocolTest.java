@@ -7,10 +7,7 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.Event;
-import com.eventsourcing.Model;
-import com.eventsourcing.Repository;
-import com.eventsourcing.StandardCommand;
+import com.eventsourcing.*;
 import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Getter;
@@ -32,7 +29,7 @@ public class DescriptionProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class ChangeDescription extends StandardCommand<String> {
+    public static class ChangeDescription extends StandardCommand<String, Void> {
 
         @Getter @Setter
         private UUID id;
@@ -40,8 +37,8 @@ public class DescriptionProtocolTest extends RepositoryTest {
         private String description;
 
         @Override
-        public Stream<? extends Event> events(Repository repository) throws Exception {
-            return Stream.of((Event)new DescriptionChanged()
+        public EventStream<Void> events(Repository repository) throws Exception {
+            return EventStream.of(new DescriptionChanged()
                     .reference(id)
                     .description(description)
                     .timestamp(timestamp()));

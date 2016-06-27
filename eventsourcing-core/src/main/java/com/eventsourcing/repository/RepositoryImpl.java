@@ -7,7 +7,10 @@
  */
 package com.eventsourcing.repository;
 
-import com.eventsourcing.*;
+import com.eventsourcing.Command;
+import com.eventsourcing.Entity;
+import com.eventsourcing.Event;
+import com.eventsourcing.Repository;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
@@ -218,7 +221,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     }
 
     @Override
-    public <T extends Command<C>, C> CompletableFuture<C> publish(T command) {
+    public <T extends Command<C, ?>, C> CompletableFuture<C> publish(T command) {
         return this.commandConsumer.publish(command, entitySubscribers);
     }
 

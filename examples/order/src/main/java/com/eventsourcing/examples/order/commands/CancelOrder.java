@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.OrderCancelled;
@@ -18,18 +18,17 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
-import java.util.stream.Stream;
 
 @AllArgsConstructor
 @NoArgsConstructor
 @Accessors(fluent = true)
-public class CancelOrder extends StandardCommand<Void> {
+public class CancelOrder extends StandardCommand<Void, Void> {
 
     @Getter @Setter
     private UUID id;
 
     @Override
-    public Stream<? extends Event> events(Repository repository) throws Exception {
-        return Stream.of(new OrderCancelled(id));
+    public EventStream<Void> events(Repository repository) throws Exception {
+        return EventStream.of(new OrderCancelled(id));
     }
 }

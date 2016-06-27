@@ -9,8 +9,6 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.binary.ObjectBinarySerializer;
-import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
 import com.eventsourcing.layout.types.ObjectTypeHandler;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
@@ -18,10 +16,8 @@ import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 import lombok.SneakyThrows;
 
-import java.beans.IntrospectionException;
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
-import java.security.NoSuchAlgorithmException;
 import java.util.Set;
 
 public abstract class AbstractAttributeIndex<A, O> extends com.googlecode.cqengine.index.support.AbstractAttributeIndex<A, O> {

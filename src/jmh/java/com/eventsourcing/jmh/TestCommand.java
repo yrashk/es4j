@@ -7,16 +7,14 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.Event;
+import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 
-import java.util.stream.Stream;
-
-public class TestCommand extends StandardCommand<String> {
+public class TestCommand extends StandardCommand<String, Void> {
     @Override
-    public Stream<? extends Event> events(Repository repository) {
-        return Stream.of((Event)new TestEvent().string("test"));
+    public EventStream<Void> events(Repository repository) {
+        return EventStream.of(new TestEvent().string("test"));
     }
 
     @Override

@@ -2,10 +2,10 @@
 
 Command is a request for changes in the domain. Unlike an [event](event.md), it is not a statement of fact as it might be rejected. For example, `CreateUser` command may or may not result in an `UserCreated` event being produced.
 
-Defining a command is pretty straightforward, through subclassing `Command<T>`:
+Defining a command is pretty straightforward, through subclassing `StandardCommand<T, S>`:
 
 ```java
-public class CreateUser extends StandardCommand<User> {
+public class CreateUser extends StandardCommand<User, Void> {
   @Getter @Setter
   private String email;
 }
@@ -26,7 +26,7 @@ A more important part of any command is being able to generate events. This is d
 
 ```java
 @Override
-public Stream<? extends Event> events(Repository repository) {
-  return Stream.of(new UserCreated().setEmail(email));
+public EventStream<Void> events(Repository repository) {
+  return EventStream.of(new UserCreated().setEmail(email));
 }
 ```

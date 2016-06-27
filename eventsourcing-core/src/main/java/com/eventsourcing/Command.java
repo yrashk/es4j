@@ -10,8 +10,6 @@ package com.eventsourcing;
 import com.eventsourcing.layout.LayoutIgnore;
 import com.eventsourcing.repository.LockProvider;
 
-import java.util.stream.Stream;
-
 /**
  * Command is a request for changes in the domain. Unlike an event,
  * it is not a statement of fact as it might be rejected.
@@ -20,8 +18,9 @@ import java.util.stream.Stream;
  * OrderConfirmed event being produced.
  *
  * @param <R> result type
+ * @param <S> state type
  */
-public interface Command<R> extends Entity<Command<R>> {
+public interface Command<R,S> extends Entity<Command<R,S>> {
 
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
@@ -31,7 +30,7 @@ public interface Command<R> extends Entity<Command<R>> {
      * <p>
      * <ul>
      * <li>{@link #events(Repository, LockProvider)} threw an exception</li>
-     * <li>{@link #onCompletion()} did not release any locks</li>
+     * <li>{@link #onCompletion(Object, Repository, LockProvider)} did not release any locks</li>
      * </ul>
      *
      * @param repository   Configured repository
@@ -40,8 +39,8 @@ public interface Command<R> extends Entity<Command<R>> {
      * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
      *                   be recorded
      */
-    default Stream<? extends Event> events(Repository repository, LockProvider lockProvider) throws Exception {
-        return Stream.empty();
+    default EventStream<S> events(Repository repository, LockProvider lockProvider) throws Exception {
+        return EventStream.empty();
     }
 
     /**
@@ -53,7 +52,7 @@ public interface Command<R> extends Entity<Command<R>> {
      *
      * @return Result
      */
-    @LayoutIgnore default R onCompletion() {
+    @LayoutIgnore default R onCompletion(S state, Repository repository, LockProvider lockProvider) {
         return null;
     }
 }
