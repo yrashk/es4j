@@ -62,10 +62,38 @@ subprojects {
         }
     }
 
+    javadoc {
+        failOnError = false
+    }
+
+    task sourceJar(type: Jar) {
+        group "Build"
+        description "An archive of the source code"
+        classifier "sources"
+        from sourceSets.main.allJava
+    }
+
+    task javadocJar(type: Jar) {
+        group "Build"
+        description "An archive of the javadoc"
+        classifier "javadoc"
+        from javadoc
+    }
+
+    jar.finalizedBy sourceJar
+    jar.finalizedBy javadocJar
+
+    artifacts {
+        sourceJar
+        javadocJar
+    }
+
     publishing {
         publications {
             MyPublication(MavenPublication) {
                 from components.java
+                artifact sourceJar
+                artifact javadocJar
                 groupId 'com.eventsourcing'
                 artifactId project.name
                 version rootProject.hasProperty('snapshot') ? gitVersion() : project.version
