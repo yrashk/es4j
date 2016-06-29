@@ -133,7 +133,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
 
 
-    private String getParameter(Property p) {
+    private String getParameter(Property p, boolean topLevel) {
         if (p.getTypeHandler() instanceof ObjectTypeHandler) {
             List<? extends Property<?>> ps = ((ObjectTypeHandler) p
                     .getTypeHandler())
@@ -141,8 +141,8 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             return
                     Joiner.on(", ").join(
                             ps.stream()
-                              .map(px -> "(" + p.getName() + ")" +
-                                      ".\"" + px.getName() + "\"")
+                              .map(px -> (topLevel ? "(" : "") + "\"" + p.getName() + "\"" +
+                                         (topLevel ? ")" : "") + "." + getParameter(px, false) + "")
                               .collect(Collectors.toList()));
         } else
         if (p.getTypeHandler() instanceof ListTypeHandler &&
@@ -172,7 +172,8 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 Layout<?> layout = layoutsByHash.get(hash);
                 List<? extends Property<?>> properties = layout.getProperties();
                 String columns = Joiner.on(", ").join(properties.stream()
-                                                            .map(p -> getParameter(p)).collect(Collectors.toList()));
+                                                            .map(p -> getParameter(p, true)).collect(Collectors.toList
+                                ()));
                 String query = "SELECT " + columns + " FROM layout_" + hash + " WHERE uuid = ?::UUID";
 
                 PreparedStatement s1 = connection.prepareStatement(query);
@@ -371,7 +372,12 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 return resultSet.getBoolean(i.getAndIncrement());
             }
             if (typeHandler instanceof ByteArrayTypeHandler) {
-                return resultSet.getBytes(i.getAndIncrement());
+                byte[] bytes = resultSet.getBytes(i.getAndIncrement());
+                if (((ByteArrayTypeHandler) typeHandler).isPrimitive()) {
+                    return bytes;
+                } else {
+                    return ((ByteArrayTypeHandler) typeHandler).toObject(bytes);
+                }
             }
             if (typeHandler instanceof ByteTypeHandler) {
                 return resultSet.getByte(i.getAndIncrement());
@@ -474,9 +480,10 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 return "ROW(" + rowParameters + ")";
             } else if (typeHandler instanceof ListTypeHandler) {
                 TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
+                List<?> list = object == null ? Arrays.asList() : (List<?>) object;
                 String listParameters = Joiner.on(",").join(
-                        ((List<?>)object).stream().map(i -> getParameter(connection, handler, i))
-                                  .collect(Collectors.toList()));
+                        list.stream().map(i -> getParameter(connection, handler, i))
+                                          .collect(Collectors.toList()));
                 return "ARRAY[" + listParameters + "]::" + getMappedType(connection, handler) + "[]";
             } else {
                 return "?";
@@ -526,7 +533,12 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 s.setBoolean(i, value == null ? false: (Boolean) value);
             } else
             if (typeHandler instanceof ByteArrayTypeHandler) {
-                s.setBytes(i, value == null ? new byte[]{} : (byte[]) value);
+                if (((ByteArrayTypeHandler) typeHandler).isPrimitive()) {
+                    s.setBytes(i, value == null ? new byte[]{} : (byte[]) value);
+                } else {
+                    s.setBytes(i, value == null ?  new byte[]{} :
+                            (byte[]) ((ByteArrayTypeHandler) typeHandler).toPrimitive(value));
+                }
             } else
             if (typeHandler instanceof ByteTypeHandler) {
                 s.setByte(i, value == null ? 0 : (Byte) value);
@@ -550,7 +562,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             if (typeHandler instanceof ListTypeHandler) {
                 int j=i;
                 TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
-                for (Object item : ((List)value)) {
+                for (Object item : (value == null ? Arrays.asList() : (List)value)) {
                     j = setValue(connection, s, j, item, handler);
                 }
                 return j;
@@ -559,10 +571,12 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 s.setLong(i, value == null ? 0 : (Long) value);
             } else
             if (typeHandler instanceof ObjectTypeHandler) {
-                List<? extends Property<?>> properties = ((ObjectTypeHandler) typeHandler).getLayout().getProperties();
+                Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
+                Object value_ = value == null ? layout.getLayoutClass().newInstance() : value;
+                List<? extends Property<?>> properties = layout.getProperties();
                 int j=i;
                 for (Property p : properties) {
-                    j = setValue(connection, s, j, p.get(value), p.getTypeHandler());
+                    j = setValue(connection, s, j, p.get(value_), p.getTypeHandler());
                 }
                 return j;
             } else
