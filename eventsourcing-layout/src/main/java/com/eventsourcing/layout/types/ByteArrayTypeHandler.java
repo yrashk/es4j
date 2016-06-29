@@ -12,7 +12,9 @@ import lombok.Getter;
 
 import java.nio.ByteBuffer;
 
-public class ByteArrayTypeHandler implements TypeHandler {
+import static org.apache.commons.lang3.ArrayUtils.nullToEmpty;
+
+public class ByteArrayTypeHandler implements TypeHandler, PrimitiveTypeHandler {
 
     @Getter
     private boolean primitive;
@@ -34,4 +36,29 @@ public class ByteArrayTypeHandler implements TypeHandler {
         return obj instanceof ByteArrayTypeHandler && obj.hashCode() == hashCode();
     }
 
+    @Override public Object toPrimitive(Object o) {
+        if (o instanceof byte[]) {
+            return nullToEmpty((byte[]) o);
+        }
+        if (o instanceof Byte[]) {
+            return nullToEmpty(org.apache.commons.lang3.ArrayUtils.toPrimitive((Byte[]) o));
+        }
+        if (o == null) {
+            return new byte[]{};
+        }
+        throw new IllegalArgumentException(o.toString());
+    }
+
+    @Override public Object toObject(Object o) {
+        if (o instanceof byte[]) {
+            return org.apache.commons.lang3.ArrayUtils.toObject(nullToEmpty((byte[]) o));
+        }
+        if (o instanceof Byte[]) {
+            return nullToEmpty((Byte[])o);
+        }
+        if (o == null) {
+            return new Byte[]{};
+        }
+        throw new IllegalArgumentException(o.toString());
+    }
 }
