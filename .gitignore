@@ -4,6 +4,8 @@
 *.iml
 *.ipr
 *.iws
+# Delombok
+*/src/delombok
 # Builds
 /build
 */build

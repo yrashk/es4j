@@ -18,7 +18,6 @@ import java.util.stream.Stream;
  * once they are committed. Use {@link Repository#addEntitySubscriber(EntitySubscriber)}
  * to add an entity subscriber.
  *
- * <p/>
  *
  * When an event or a command are being processed, repository will
  * use {@link EntitySubscriber#matches(Entity)} to determine whether
@@ -31,7 +30,6 @@ import java.util.stream.Stream;
  * By default, {@link EntitySubscriber#accept(Stream)} invokes {@link EntitySubscriber#onEntity(EntityHandle)}
  * for every entity handle.
  *
- * <p/>
  *
  * Most common entity subscriber is a {@link ClassEntitySubscriber}
  * @param <T>
