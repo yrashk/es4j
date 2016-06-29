@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -48,6 +49,8 @@ public abstract class JournalTest<T extends Journal> {
         repository = new RepositoryImpl();
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{JournalTest.class.getPackage()}));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{EventCausalityEstablished.class
+                .getPackage()}));
         repository.setJournal(this.journal);
         timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);

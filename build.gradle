@@ -164,9 +164,13 @@ dependencies {
     compile project(':eventsourcing-core')
     compile project(':eventsourcing-inmem')
     compile project(':eventsourcing-h2')
+    compile project(':eventsourcing-postgresql')
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'
+
+    // Connection pool
+    testCompile 'com.zaxxer:HikariCP:2.4.6'
 
 }
 
