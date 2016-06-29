@@ -1,3 +1,7 @@
+services:
+  - postgresql
+addons:
+  postgresql: "9.4"
 language: java
 jdk:
   - oraclejdk8
@@ -6,6 +10,9 @@ before_install:
   - sudo apt-get -qq update
   - sudo apt-get install -y ntp
   - sudo service ntp start
+before_script:
+  - psql -h localhost -c "create user eventsourcing with superuser password 'eventsourcing';" -U postgres 
+  - psql -h localhost -c 'create database eventsourcing owner eventsourcing;' -U postgres
 script:
   - ./gradlew check
   - ./gradlew publishToMavenLocal

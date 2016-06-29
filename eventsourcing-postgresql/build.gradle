@@ -1,0 +1,12 @@
+dependencies {
+    compile project(':eventsourcing-core')
+    testCompile project(':eventsourcing-core').sourceSets.test.output
+
+    compile 'org.postgresql:postgresql:9.4.1208'
+
+    // Migrations
+    compile 'org.flywaydb:flyway-core:4.0.3'
+
+    // Connection pool
+    testCompile 'com.zaxxer:HikariCP:2.4.6'
+}
