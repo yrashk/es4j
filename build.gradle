@@ -62,9 +62,18 @@ subprojects {
         }
     }
 
-    javadoc {
-        failOnError = false
+    task delombok(type: JavaExec) {
+        classpath = configurations.compile
+        main = "lombok.launch.Main"
+        args("delombok", "--quiet", "src/main/java", "--target", "src/delombok/java")
     }
+
+    javadoc {
+        source = file("src/delombok/java")
+        classpath = configurations.compile
+    }
+
+    javadoc.dependsOn(delombok)
 
     task sourceJar(type: Jar) {
         group "Build"
