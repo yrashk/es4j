@@ -12,7 +12,6 @@ import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
@@ -29,7 +28,7 @@ public class DescriptionProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class ChangeDescription extends StandardCommand<String, Void> {
+    public static class ChangeDescription extends StandardCommand<Void, String> {
 
         @Getter
         private final UUID id;

@@ -15,7 +15,7 @@ import com.eventsourcing.repository.LockProvider;
  * @param <R> result type
  * @param <S> state type
  */
-public abstract class StandardCommand<R, S> extends StandardEntity<Command<S, R>> implements Command<S, R> {
+public abstract class StandardCommand<S, R> extends StandardEntity<Command<S, R>> implements Command<S, R> {
 
     public StandardCommand(HybridTimestamp timestamp) {
         super(timestamp);

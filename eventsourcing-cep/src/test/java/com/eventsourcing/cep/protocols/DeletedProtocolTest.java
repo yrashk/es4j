@@ -16,7 +16,6 @@ import com.eventsourcing.cep.events.Undeleted;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;

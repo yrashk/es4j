@@ -13,7 +13,7 @@ import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 
-public class BogusCommand extends StandardCommand<String, Void> {
+public class BogusCommand extends StandardCommand<Void, String> {
 
     @Builder
     public BogusCommand(HybridTimestamp timestamp) {

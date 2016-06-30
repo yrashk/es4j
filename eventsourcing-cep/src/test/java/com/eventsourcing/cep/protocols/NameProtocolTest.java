@@ -12,13 +12,11 @@ import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -30,7 +28,7 @@ public class NameProtocolTest extends RepositoryTest {
     }
 
     @Accessors(fluent = true)
-    public static class Rename extends StandardCommand<String, Void> {
+    public static class Rename extends StandardCommand<Void, String> {
 
         @Getter
         private final UUID id;

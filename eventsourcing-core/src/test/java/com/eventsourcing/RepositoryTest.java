@@ -101,7 +101,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @ToString
-    public static class RepositoryTestCommand extends StandardCommand<String, Void> {
+    public static class RepositoryTestCommand extends StandardCommand<Void, String> {
 
         @Getter
         private final String value;
@@ -205,7 +205,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @ToString
-    public static class TimestampingEventCommand extends StandardCommand<String, Void> {
+    public static class TimestampingEventCommand extends StandardCommand<Void, String> {
 
         private final HybridTimestamp eventTimestamp;
 
@@ -333,7 +333,7 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
 
-    public static class ExceptionalCommand extends StandardCommand<Object, Void> {
+    public static class ExceptionalCommand extends StandardCommand<Void, Object> {
         @Builder
         public ExceptionalCommand(HybridTimestamp timestamp) {
             super(timestamp);

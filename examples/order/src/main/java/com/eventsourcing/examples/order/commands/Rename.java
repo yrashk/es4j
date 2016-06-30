@@ -19,7 +19,7 @@ import lombok.experimental.Accessors;
 import java.util.UUID;
 
 @Accessors(fluent = true)
-public class Rename extends StandardCommand<String, Void> {
+public class Rename extends StandardCommand<Void, String> {
     @Getter
     private final UUID id;
 
