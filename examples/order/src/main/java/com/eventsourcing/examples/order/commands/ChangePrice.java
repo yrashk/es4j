@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 import java.util.UUID;
 
 @Accessors(fluent = true)
-public class ChangePrice extends StandardCommand<BigDecimal, Void> {
+public class ChangePrice extends StandardCommand<Void, BigDecimal> {
     @Getter
     private final UUID id;
 

@@ -21,7 +21,7 @@ import lombok.experimental.Accessors;
 import java.util.UUID;
 
 @Accessors(fluent = true)
-public class AddProductToOrder extends StandardCommand<Order.Item, ProductAddedToOrder> {
+public class AddProductToOrder extends StandardCommand<ProductAddedToOrder, Order.Item> {
 
     @Getter @NonNull
     private final UUID orderId;

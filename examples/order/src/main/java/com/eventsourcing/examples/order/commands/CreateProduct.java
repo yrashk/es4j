@@ -24,7 +24,7 @@ import lombok.experimental.Accessors;
 import java.math.BigDecimal;
 
 @Accessors(fluent = true)
-public class CreateProduct extends StandardCommand<Product, ProductCreated> {
+public class CreateProduct extends StandardCommand<ProductCreated, Product> {
 
     @Getter @NonNull
     private final String name;

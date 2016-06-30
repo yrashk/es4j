@@ -168,7 +168,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             this.test = test;
         }
     }
-    public static class SerializationCommand extends StandardCommand<UUID, SerializationEvent> {
+    public static class SerializationCommand extends StandardCommand<SerializationEvent, UUID> {
 
         private TestClass t;
 

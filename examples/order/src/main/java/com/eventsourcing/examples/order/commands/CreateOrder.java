@@ -15,7 +15,7 @@ import com.eventsourcing.examples.order.events.OrderCreated;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 
-public class CreateOrder extends StandardCommand<Order, OrderCreated> {
+public class CreateOrder extends StandardCommand<OrderCreated, Order> {
 
     @Builder
     public CreateOrder(HybridTimestamp timestamp) {
