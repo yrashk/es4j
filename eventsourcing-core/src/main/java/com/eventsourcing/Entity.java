@@ -8,12 +8,11 @@
 package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.layout.LayoutIgnore;
 
 import java.util.UUID;
 
 public interface Entity<E extends Entity> {
-    @LayoutIgnore UUID uuid();
+    UUID uuid();
     E uuid(UUID uuid);
     HybridTimestamp timestamp();
     E timestamp(HybridTimestamp timestamp);

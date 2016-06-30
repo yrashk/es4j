@@ -18,7 +18,7 @@ public class PropertyTest {
     @Test
     @SneakyThrows
     public void propertyLayout() {
-        Layout<Property> layout = new Layout<>(Property.class);
+        Layout<Property> layout = Layout.forClass(Property.class);
         assertEquals(layout.getName(), "rfc.eventsourcing.com/spec:7/LDL/#Property");
         assertEquals(layout.getProperties().size(), 2);
         assertTrue(layout.getProperties().stream().anyMatch(p -> p.getName().contentEquals("name")));

@@ -9,11 +9,12 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.repository.Journal;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.postgresql.ds.PGSimpleDataSource;
@@ -47,101 +48,147 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
     @Accessors(fluent = true)
     public static class SomeValue {
-        @Getter @Setter
-        private String value;
+        @Getter
+        private final String value;
+
+        @Builder
+        public SomeValue(String value) {this.value = value;}
     }
 
     @Accessors(fluent = true)
-    public static class TestBean {
+    public static class TestClass {
 
-        @Getter @Setter
-        private byte pByte;
-        @Getter @Setter
-        private Byte oByte;
+        @Getter
+        private final byte pByte;
+        @Getter
+        private final Byte oByte;
 
-        @Getter @Setter
-        private byte[] pByteArr;
-        @Getter @Setter
-        private Byte[] oByteArr;
+        @Getter
+        private final byte[] pByteArr;
+        @Getter
+        private final Byte[] oByteArr;
 
-        @Getter @Setter
-        private short pShort;
-        @Getter @Setter
-        private Short oShort;
+        @Getter
+        private final short pShort;
+        @Getter
+        private final Short oShort;
 
-        @Getter @Setter
-        private int pInt;
-        @Getter @Setter
-        private Integer oInt;
+        @Getter
+        private final int pInt;
+        @Getter
+        private final Integer oInt;
 
-        @Getter @Setter
-        private long pLong;
-        @Getter @Setter
-        private Long oLong;
+        @Getter
+        private final long pLong;
+        @Getter
+        private final Long oLong;
 
-        @Getter @Setter
-        private float pFloat;
-        @Getter @Setter
-        private Float oFloat;
+        @Getter
+        private final float pFloat;
+        @Getter
+        private final Float oFloat;
 
-        @Getter @Setter
-        private double pDouble;
-        @Getter @Setter
-        private Double oDouble;
+        @Getter
+        private final double pDouble;
+        @Getter
+        private final Double oDouble;
 
-        @Getter @Setter
-        private boolean pBoolean;
-        @Getter @Setter
-        private Boolean oBoolean;
+        @Getter
+        private final boolean pBoolean;
+        @Getter
+        private final Boolean oBoolean;
 
-        @Getter @Setter
-        private String str;
+        @Getter
+        private final String str;
 
-        @Getter @Setter
-        private UUID uuid;
+        @Getter
+        private final UUID uuid;
 
         public enum E {A, B}
 
-        @Getter @Setter
-        private E e;
+        @Getter
+        private final E e;
 
-        @Getter @Setter
-        private SomeValue value;
+        @Getter
+        private final SomeValue value;
 
-        @Getter @Setter
-        private List<List<String>> list;
+        @Getter
+        private final List<List<String>> list;
 
-        @Getter @Setter
-        private Optional<String> optional;
+        @Getter
+        private final Optional<String> optional;
 
-        @Getter @Setter
-        private BigDecimal bigDecimal;
+        @Getter
+        private final BigDecimal bigDecimal;
 
-        @Getter @Setter
-        private Date date;
+        @Getter
+        private final Date date;
+
+        @Builder
+        public TestClass(byte pByte, Byte oByte, byte[] pByteArr, Byte[] oByteArr, short pShort, Short oShort, int pInt,
+                         Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
+                         Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
+                         E e, SomeValue value, List<List<String>> list, Optional<String> optional,
+                         BigDecimal bigDecimal, Date date) {
+            this.pByte = pByte;
+            this.oByte = oByte;
+            this.pByteArr = pByteArr;
+            this.oByteArr = oByteArr;
+            this.pShort = pShort;
+            this.oShort = oShort;
+            this.pInt = pInt;
+            this.oInt = oInt;
+            this.pLong = pLong;
+            this.oLong = oLong;
+            this.pFloat = pFloat;
+            this.oFloat = oFloat;
+            this.pDouble = pDouble;
+            this.oDouble = oDouble;
+            this.pBoolean = pBoolean;
+            this.oBoolean = oBoolean;
+            this.str = str;
+            this.uuid = uuid;
+            this.e = e;
+            this.value = value;
+            this.list = list;
+            this.optional = optional;
+            this.bigDecimal = bigDecimal;
+            this.date = date;
+        }
     }
 
 
     public static class SerializationEvent extends StandardEvent {
-        @Getter @Setter
-        TestBean test;
+        @Getter
+        final TestClass test;
+
+        @Builder
+        public SerializationEvent(HybridTimestamp timestamp, TestClass test) {
+            super(timestamp);
+            this.test = test;
+        }
     }
     public static class SerializationCommand extends StandardCommand<UUID, SerializationEvent> {
 
-        private TestBean t;
+        private TestClass t;
 
-        public SerializationCommand() {
+        @LayoutConstructor
+        public SerializationCommand(HybridTimestamp timestamp) {
+            super(timestamp);
         }
 
-        public SerializationCommand(TestBean t) {
+        @Builder
+        public SerializationCommand(TestClass t) {
+            super(null);
             this.t = t;
         }
 
         @Override public EventStream<SerializationEvent> events(Repository repository) throws Exception {
-            SerializationEvent serializationEvent = new SerializationEvent();
+            SerializationEvent.SerializationEventBuilder builder = SerializationEvent.builder();
             if (t != null) {
-                serializationEvent.setTest(t);
+                builder.test(t);
             }
+            SerializationEvent serializationEvent = builder.build();
             return EventStream.ofWithState(serializationEvent, serializationEvent);
         }
 
@@ -157,14 +204,14 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         timestamp.update();
         final SerializationEvent[] serializationEvent = new SerializationEvent[1];
 
-        journal.journal(new SerializationCommand().timestamp(timestamp), new Journal.Listener() {
+        journal.journal(SerializationCommand.builder().build().timestamp(timestamp), new Journal.Listener() {
             @Override public void onCommandStateReceived(Object state) {
                 serializationEvent[0] = (SerializationEvent) state;
             }
         });
 
         Optional<SerializationEvent> event = journal.get(serializationEvent[0].uuid());
-        TestBean test = event.get().getTest();
+        TestClass test = event.get().getTest();
 
         assertEquals(test.pByte, 0);
         assertEquals(test.oByte, Byte.valueOf((byte) 0));
@@ -195,7 +242,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
         assertEquals(test.uuid, new UUID(0,0));
 
-        assertEquals(test.e, TestBean.E.A);
+        assertEquals(test.e, TestClass.E.A);
 
         assertNotNull(test.value);
         assertEquals(test.value.value, "");
@@ -216,67 +263,68 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
     @Test @SneakyThrows
     public void serializationValue() {
-        assertEquals(serializationResult(new TestBean().pByte(Byte.MIN_VALUE)).pByte(), Byte.MIN_VALUE);
-        assertEquals(serializationResult(new TestBean().pByte(Byte.MAX_VALUE)).pByte(), Byte.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pByte(Byte.MIN_VALUE).build()).pByte(), Byte.MIN_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pByte(Byte.MAX_VALUE).build()).pByte(), Byte.MAX_VALUE);
 
-        assertEquals((byte)serializationResult(new TestBean().oByte(Byte.MIN_VALUE)).oByte(), Byte.MIN_VALUE);
-        assertEquals((byte)serializationResult(new TestBean().oByte(Byte.MAX_VALUE)).oByte(), Byte.MAX_VALUE);
+        assertEquals((byte)serializationResult(TestClass.builder().oByte(Byte.MIN_VALUE).build()).oByte(), Byte.MIN_VALUE);
+        assertEquals((byte)serializationResult(TestClass.builder().oByte(Byte.MAX_VALUE).build()).oByte(), Byte.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pByteArr("Hello, world".getBytes())).pByteArr(),
+        assertEquals(serializationResult(TestClass.builder().pByteArr("Hello, world".getBytes()).build()).pByteArr(),
                      "Hello, world".getBytes());
-        assertEquals(serializationResult(new TestBean().oByteArr(toObject(("Hello, world").getBytes()))).oByteArr(),
+        assertEquals(serializationResult(TestClass.builder().oByteArr(toObject(("Hello, world").getBytes())).build()).oByteArr(),
                      "Hello, world".getBytes());
 
-        assertEquals(serializationResult(new TestBean().pShort(Short.MIN_VALUE)).pShort(), Short.MIN_VALUE);
-        assertEquals((short)serializationResult(new TestBean().oShort(Short.MAX_VALUE)).oShort(), Short.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pShort(Short.MIN_VALUE).build()).pShort(), Short.MIN_VALUE);
+        assertEquals((short)serializationResult(TestClass.builder().oShort(Short.MAX_VALUE).build()).oShort(), Short.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pInt(Integer.MIN_VALUE)).pInt(), Integer.MIN_VALUE);
-        assertEquals((int)serializationResult(new TestBean().oInt(Integer.MAX_VALUE)).oInt(), Integer.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pInt(Integer.MIN_VALUE).build()).pInt(), Integer.MIN_VALUE);
+        assertEquals((int)serializationResult(TestClass.builder().oInt(Integer.MAX_VALUE).build()).oInt(), Integer.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pLong(Long.MIN_VALUE)).pLong(), Long.MIN_VALUE);
-        assertEquals((long)serializationResult(new TestBean().oLong(Long.MAX_VALUE)).oLong(), Long.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pLong(Long.MIN_VALUE).build()).pLong(), Long.MIN_VALUE);
+        assertEquals((long)serializationResult(TestClass.builder().oLong(Long.MAX_VALUE).build()).oLong(), Long.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pFloat(Float.MIN_VALUE)).pFloat(), Float.MIN_VALUE);
-        assertEquals(serializationResult(new TestBean().oFloat(Float.MAX_VALUE)).oFloat(), Float.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pFloat(Float.MIN_VALUE).build()).pFloat(), Float.MIN_VALUE);
+        assertEquals(serializationResult(TestClass.builder().oFloat(Float.MAX_VALUE).build()).oFloat(), Float.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pDouble(Double.MIN_VALUE)).pDouble(), Double.MIN_VALUE);
-        assertEquals(serializationResult(new TestBean().oDouble(Double.MAX_VALUE)).oDouble(), Double.MAX_VALUE);
+        assertEquals(serializationResult(TestClass.builder().pDouble(Double.MIN_VALUE).build()).pDouble(), Double.MIN_VALUE);
+        assertEquals(serializationResult(TestClass.builder().oDouble(Double.MAX_VALUE).build()).oDouble(), Double.MAX_VALUE);
 
-        assertEquals(serializationResult(new TestBean().pBoolean(true)).pBoolean(), true);
-        assertEquals(serializationResult(new TestBean().pBoolean(false)).pBoolean(), false);
+        assertEquals(serializationResult(TestClass.builder().pBoolean(true).build()).pBoolean(), true);
+        assertEquals(serializationResult(TestClass.builder().pBoolean(false).build()).pBoolean(), false);
 
-        assertEquals((boolean)serializationResult(new TestBean().oBoolean(true)).oBoolean(), true);
-        assertEquals((boolean)serializationResult(new TestBean().oBoolean(false)).oBoolean(), false);
+        assertEquals((boolean)serializationResult(TestClass.builder().oBoolean(true).build()).oBoolean(), true);
+        assertEquals((boolean)serializationResult(TestClass.builder().oBoolean(false).build()).oBoolean(), false);
 
-        assertEquals(serializationResult(new TestBean().str("Hello, world")).str(), "Hello, world");
+        assertEquals(serializationResult(TestClass.builder().str("Hello, world").build()).str(), "Hello, world");
 
         UUID uuid = UUID.randomUUID();
-        assertEquals(serializationResult(new TestBean().uuid(uuid)).uuid(), uuid);
+        assertEquals(serializationResult(TestClass.builder().uuid(uuid).build()).uuid(), uuid);
 
-        assertEquals(serializationResult(new TestBean().e(TestBean.E.B)).e(), TestBean.E.B);
+        assertEquals(serializationResult(TestClass.builder().e(TestClass.E.B).build()).e(), TestClass.E.B);
 
-        assertEquals(serializationResult(new TestBean().value(new SomeValue().value("test"))).value().value(), "test");
+        assertEquals(serializationResult(TestClass.builder().value(new SomeValue("test")).build())
+                             .value().value(), "test");
 
         ArrayList<List<String>> l = new ArrayList<>();
         ArrayList<String> l1 = new ArrayList<>();
         l1.add("test");
         l.add(l1);
-        assertEquals(serializationResult(new TestBean().list(l)).list().get(0).get(0), "test");
+        assertEquals(serializationResult(TestClass.builder().list(l).build()).list().get(0).get(0), "test");
 
 
-        assertFalse(serializationResult(new TestBean().optional(Optional.empty())).optional().isPresent());
-        assertTrue(serializationResult(new TestBean().optional(Optional.of("test"))).optional().isPresent());
-        assertEquals(serializationResult(new TestBean().optional(Optional.of("test"))).optional().get(), "test");
+        assertFalse(serializationResult(TestClass.builder().optional(Optional.empty()).build()).optional().isPresent());
+        assertTrue(serializationResult(TestClass.builder().optional(Optional.of("test")).build()).optional().isPresent());
+        assertEquals(serializationResult(TestClass.builder().optional(Optional.of("test")).build()).optional().get(), "test");
 
         BigDecimal bigDecimal = new BigDecimal("0.00000000000000000000000000001");
-        assertEquals(serializationResult(new TestBean().bigDecimal(bigDecimal)).bigDecimal(), bigDecimal);
+        assertEquals(serializationResult(TestClass.builder().bigDecimal(bigDecimal).build()).bigDecimal(), bigDecimal);
 
         Date date = new Date();
-        assertEquals(serializationResult(new TestBean().date(date)).date(), date);
+        assertEquals(serializationResult(TestClass.builder().date(date).build()).date(), date);
     }
 
     @SneakyThrows
-    private TestBean serializationResult(TestBean t) {
+    private TestClass serializationResult(TestClass t) {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         final SerializationEvent[] serializationEvent = new SerializationEvent[1];

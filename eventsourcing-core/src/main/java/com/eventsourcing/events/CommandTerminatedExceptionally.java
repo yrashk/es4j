@@ -8,8 +8,10 @@
 package com.eventsourcing.events;
 
 import com.eventsourcing.StandardEvent;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
@@ -22,28 +24,34 @@ import java.util.stream.Collectors;
 @Accessors(fluent = true)
 public class CommandTerminatedExceptionally extends StandardEvent {
 
-    @Getter @Setter
-    private UUID commandId;
-    @Getter @Setter
-    private String className;
-    @Getter @Setter
-    private String message;
-    @Getter @Setter
-    private List<StackTraceElement> stacktrace;
+    @Getter
+    private final UUID commandId;
+    @Getter
+    private final String className;
+    @Getter
+    private final String message;
+    @Getter
+    private final List<StackTraceElement> stacktrace;
 
     public static class StackTraceElement {
-        @Getter @Setter
-        private String className;
-        @Getter @Setter
-        private String fileName;
-        @Getter @Setter
-        private int lineNumber;
-        @Getter @Setter
-        private String methodName;
-        @Getter @Setter
-        private boolean nativeMethod;
+        @Getter
+        private final String className;
+        @Getter
+        private final String fileName;
+        @Getter
+        private final int lineNumber;
+        @Getter
+        private final String methodName;
+        @Getter
+        private final boolean nativeMethod;
 
-        public StackTraceElement() {
+        public StackTraceElement(String className, String fileName, int lineNumber, String methodName,
+                                 boolean nativeMethod) {
+            this.className = className;
+            this.fileName = fileName;
+            this.lineNumber = lineNumber;
+            this.methodName = methodName;
+            this.nativeMethod = nativeMethod;
         }
 
         public StackTraceElement(java.lang.StackTraceElement element) {
@@ -55,10 +63,19 @@ public class CommandTerminatedExceptionally extends StandardEvent {
         }
     }
 
-    public CommandTerminatedExceptionally() {
+    @Builder
+    public CommandTerminatedExceptionally(HybridTimestamp timestamp, UUID commandId, String className,
+                                          String message,
+                                          List<StackTraceElement> stacktrace) {
+        super(timestamp);
+        this.commandId = commandId;
+        this.className = className;
+        this.message = message;
+        this.stacktrace = stacktrace;
     }
 
     public CommandTerminatedExceptionally(UUID commandId, Exception t) {
+        super(null);
         this.commandId = commandId;
         this.className = t.getClass().getName();
         this.message = t.getMessage();

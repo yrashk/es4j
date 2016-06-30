@@ -11,27 +11,31 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.NameChanged;
-import lombok.AllArgsConstructor;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class Rename extends StandardCommand<String, Void> {
-    @Getter @Setter
-    private UUID id;
+    @Getter
+    private final UUID id;
 
-    @Getter @Setter
-    private String name;
+    @Getter
+    private final String name;
+
+    @Builder
+    public Rename(HybridTimestamp timestamp, UUID id, String name) {
+        super(timestamp);
+        this.id = id;
+        this.name = name;
+    }
 
     @Override
     public EventStream<Void> events(Repository repository) throws Exception {
-        return EventStream.of(new NameChanged(id, name));
+        return EventStream.of(NameChanged.builder().id(id).name(name).build());
     }
 
     @Override

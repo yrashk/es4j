@@ -38,9 +38,9 @@ public class LayoutMigration<A extends Event, B extends Event> {
     @SneakyThrows
     public LayoutMigration(Class<A> oldClass, Class<B> newClass, Function<A, B> transformation, boolean includeLayout) {
         this.includeLayout = includeLayout;
-        this.oldLayout = new Layout<>(oldClass);
+        this.oldLayout = Layout.forClass(oldClass);
         this.oldClass = oldClass;
-        this.newLayout = new Layout<>(newClass);
+        this.newLayout = Layout.forClass(newClass);
         this.newClass = newClass;
         this.transformation = transformation;
 
@@ -67,8 +67,10 @@ public class LayoutMigration<A extends Event, B extends Event> {
         } else {
             newLayoutIntroductionUUID = newLayoutIntroduction.get().uuid();
         }
-        EntityLayoutReplaced replacement = new EntityLayoutReplaced().fingerprint(oldLayout.getHash())
-                                                                     .replacement(newLayoutIntroductionUUID);
+        EntityLayoutReplaced replacement = EntityLayoutReplaced.builder()
+                                                               .fingerprint(oldLayout.getHash())
+                                                               .replacement(newLayoutIntroductionUUID)
+                                                               .build();
         acc = Stream.concat(acc, Stream.of(replacement));
         ResultSet<EntityHandle<A>> resultSet = repository.query(oldClass, all(oldClass));
         Iterator<EntityHandle<A>> iterator = resultSet.iterator();
@@ -82,9 +84,9 @@ public class LayoutMigration<A extends Event, B extends Event> {
                                 .stream(Spliterators.spliterator(causality.iterator(), causality.size(),
                                                                  Spliterator.IMMUTABLE), false);
                         Function<EntityHandle<EventCausalityEstablished>, Event> entityHandleFunction = handle ->
-                                new EventCausalityEstablished()
+                                EventCausalityEstablished.builder()
                                         .event(transformed.uuid())
-                                        .command(handle.get().command());
+                                        .command(handle.get().command()).build();
                         return Stream.concat(Stream.of(transformed), causalityStream.map(entityHandleFunction));
                     }
                 });
@@ -108,11 +110,11 @@ public class LayoutMigration<A extends Event, B extends Event> {
     }
 
     private EntityLayoutIntroduced makeLayoutIntroduction(Layout<?> layout) {
-        EntityLayoutIntroduced introduction = new EntityLayoutIntroduced()
-                .fingerprint(layout.getHash());
+        EntityLayoutIntroduced.EntityLayoutIntroducedBuilder builder = EntityLayoutIntroduced.builder();
+        builder.fingerprint(layout.getHash());
         if (includeLayout) {
-            introduction.layout(Optional.of(layout));
+            builder.layout(Optional.of(layout));
         }
-        return introduction;
+        return builder.build();
     }
 }

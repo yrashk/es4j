@@ -8,11 +8,7 @@
 package com.eventsourcing.layout;
 
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
-import com.eventsourcing.layout.binary.ObjectBinarySerializer;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
@@ -26,105 +22,110 @@ import static org.testng.Assert.*;
 public class SerializerTest {
 
     public static final String PI = "3.14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706798214808651328230664709384460955058223172535940812848111745028410270193852110555964462294895493038196442881097566593344612847564823378678316527120190914564856692346034861045432664821339360726024914127372458700660631558817488152092096282925409171536436789259036001133053054882046652138414695194151160943305727036575959195309218611738193261179310511854807446237996274956735188575272489122793818301194912983367336244065664308602139494639522473719070217986094370277053921717629317675238467481846766940513200056812714526356082778577134275778960917363717872146844090122495343014654958537105079227968925892354201995611212902196086403441815981362977477130996051870721134999999837297804995105973173281609631859502445945534690830264252230825334468503526193118817101000313783875288658753320838142061717766914730359825349042875546873115956286388235378759375195778185778053217122680661300192787661119590921642019";
-    private Layout<TestBean> layout;
-    private ObjectSerializer<TestBean> serializer;
-    private ObjectDeserializer<TestBean> deserializer;
+    private Layout<TestClass> layout;
+    private ObjectSerializer<TestClass> serializer;
+    private ObjectDeserializer<TestClass> deserializer;
 
+    @Value
     @Accessors(fluent = true)
     public static class SomeValue {
-        @Getter @Setter
-        private String value;
+        private final String value;
     }
 
-    private static class TestBean {
+    @Value @Builder
+    public static class TestClass {
+        private final byte pByte;
+        private final Byte oByte;
 
-        @Getter @Setter
-        private byte pByte;
-        @Getter @Setter
-        private Byte oByte;
+        private final byte[] pByteArr;
+        private final Byte[] oByteArr;
 
-        @Getter @Setter
-        private byte[] pByteArr;
-        @Getter @Setter
-        private Byte[] oByteArr;
+        private final short pShort;
+        private final Short oShort;
 
-        @Getter @Setter
-        private short pShort;
-        @Getter @Setter
-        private Short oShort;
+        private final int pInt;
+        private final Integer oInt;
 
-        @Getter @Setter
-        private int pInt;
-        @Getter @Setter
-        private Integer oInt;
+        private final long pLong;
+        private final Long oLong;
 
-        @Getter @Setter
-        private long pLong;
-        @Getter @Setter
-        private Long oLong;
+        private final float pFloat;
+        private final Float oFloat;
 
-        @Getter @Setter
-        private float pFloat;
-        @Getter @Setter
-        private Float oFloat;
+        private final double pDouble;
+        private final Double oDouble;
 
-        @Getter @Setter
-        private double pDouble;
-        @Getter @Setter
-        private Double oDouble;
+        private final boolean pBoolean;
+        private final Boolean oBoolean;
 
-        @Getter @Setter
-        private boolean pBoolean;
-        @Getter @Setter
-        private Boolean oBoolean;
+        private final String str;
 
-        @Getter @Setter
-        private String str;
-
-        @Getter @Setter
-        private UUID uuid;
+        private final UUID uuid;
 
         public enum E {A, B}
 
-        @Getter @Setter
-        private E e;
+        private final E e;
 
-        @Getter @Setter
-        private SomeValue value;
+        private final SomeValue value;
 
-        @Getter @Setter
-        private List<List<String>> list;
+        private final List<List<String>> list;
 
-        @Getter @Setter
-        private Optional<String> optional;
+        private final Optional<String> optional;
 
-        @Getter @Setter
-        private BigDecimal bigDecimal;
+        private final BigDecimal bigDecimal;
 
-        @Getter @Setter
-        private Date date;
+        private final Date date;
+
+        public TestClass(byte pByte, Byte oByte, byte[] pByteArr, Byte[] oByteArr, short pShort, Short oShort, int pInt,
+                         Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
+                         Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
+                         E e, SomeValue value, List<List<String>> list, Optional<String> optional, BigDecimal bigDecimal,
+                         Date date) {
+            this.pByte = pByte;
+            this.oByte = oByte;
+            this.pByteArr = pByteArr;
+            this.oByteArr = oByteArr;
+            this.pShort = pShort;
+            this.oShort = oShort;
+            this.pInt = pInt;
+            this.oInt = oInt;
+            this.pLong = pLong;
+            this.oLong = oLong;
+            this.pFloat = pFloat;
+            this.oFloat = oFloat;
+            this.pDouble = pDouble;
+            this.oDouble = oDouble;
+            this.pBoolean = pBoolean;
+            this.oBoolean = oBoolean;
+            this.str = str;
+            this.uuid = uuid;
+            this.e = e;
+            this.value = value;
+            this.list = list;
+            this.optional = optional;
+            this.bigDecimal = bigDecimal;
+            this.date = date;
+        }
     }
 
     @BeforeClass
     @SneakyThrows
     public void setUp() {
-        layout = new Layout<>(TestBean.class);
+        layout = Layout.forClass(TestClass.class);
         BinarySerialization serialization = BinarySerialization.getInstance();
-        serializer = serialization.getSerializer(TestBean.class);
-        deserializer = serialization.getDeserializer(TestBean.class);
+        serializer = serialization.getSerializer(TestClass.class);
+        deserializer = serialization.getDeserializer(TestClass.class);
+        assertTrue(layout.getProperties().size() > 0);
     }
 
     @Test
     public void byteSerialization() {
-        TestBean test = new TestBean();
-        test.setPByte(Byte.MIN_VALUE);
-        test.setOByte(Byte.MAX_VALUE);
+        TestClass test = TestClass.builder().pByte(Byte.MIN_VALUE).oByte(Byte.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPByte(), Byte.MIN_VALUE);
         assertEquals(deserialized.getOByte(), (Byte) Byte.MAX_VALUE);
@@ -132,15 +133,14 @@ public class SerializerTest {
 
     @Test
     public void byteArraySerialization() {
-        TestBean test = new TestBean();
-        test.setPByteArr(new byte[]{Byte.MIN_VALUE});
-        test.setOByteArr(new Byte[]{Byte.MAX_VALUE});
+
+        TestClass test = TestClass.builder().pByteArr(new byte[]{Byte.MIN_VALUE}).oByteArr(new Byte[]{Byte.MAX_VALUE})
+                                  .build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPByteArr(), new byte[]{Byte.MIN_VALUE});
         assertEquals(deserialized.getOByteArr(), new Byte[]{Byte.MAX_VALUE});
@@ -148,15 +148,12 @@ public class SerializerTest {
 
     @Test
     public void shortSerialization() {
-        TestBean test = new TestBean();
-        test.setPShort(Short.MIN_VALUE);
-        test.setOShort(Short.MAX_VALUE);
+        TestClass test = TestClass.builder().pShort(Short.MIN_VALUE).oShort(Short.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPShort(), Short.MIN_VALUE);
         assertEquals(deserialized.getOShort(), (Short) Short.MAX_VALUE);
@@ -164,15 +161,12 @@ public class SerializerTest {
 
     @Test
     public void intSerialization() {
-        TestBean test = new TestBean();
-        test.setPInt(Integer.MIN_VALUE);
-        test.setOInt(Integer.MAX_VALUE);
+        TestClass test = TestClass.builder().pInt(Integer.MIN_VALUE).oInt(Integer.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPInt(), Integer.MIN_VALUE);
         assertEquals(deserialized.getOInt(), (Integer) Integer.MAX_VALUE);
@@ -180,15 +174,12 @@ public class SerializerTest {
 
     @Test
     public void longSerialization() {
-        TestBean test = new TestBean();
-        test.setPLong(Long.MIN_VALUE);
-        test.setOLong(Long.MAX_VALUE);
+        TestClass test = TestClass.builder().pLong(Long.MIN_VALUE).oLong(Long.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPLong(), Long.MIN_VALUE);
         assertEquals(deserialized.getOLong(), (Long) Long.MAX_VALUE);
@@ -196,15 +187,12 @@ public class SerializerTest {
 
     @Test
     public void floatSerialization() {
-        TestBean test = new TestBean();
-        test.setPFloat(Float.MIN_VALUE);
-        test.setOFloat(Float.MAX_VALUE);
+        TestClass test = TestClass.builder().pFloat(Float.MIN_VALUE).oFloat(Float.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPFloat(), Float.MIN_VALUE);
         assertEquals(deserialized.getOFloat(), Float.MAX_VALUE);
@@ -212,15 +200,12 @@ public class SerializerTest {
 
     @Test
     public void doubleSerialization() {
-        TestBean test = new TestBean();
-        test.setPDouble(Double.MIN_VALUE);
-        test.setODouble(Double.MAX_VALUE);
+        TestClass test = TestClass.builder().pDouble(Double.MIN_VALUE).oDouble(Double.MAX_VALUE).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getPDouble(), Double.MIN_VALUE);
         assertEquals(deserialized.getODouble(), Double.MAX_VALUE);
@@ -228,15 +213,12 @@ public class SerializerTest {
 
     @Test
     public void booleanSerialization() {
-        TestBean test = new TestBean();
-        test.setPBoolean(true);
-        test.setOBoolean(false);
+        TestClass test = TestClass.builder().pBoolean(true).oBoolean(false).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.isPBoolean(), true);
         assertEquals(deserialized.getOBoolean(), (Boolean) false);
@@ -244,70 +226,61 @@ public class SerializerTest {
 
     @Test
     public void stringSerialization() {
-        TestBean test = new TestBean();
-        test.setStr("test");
+        TestClass test = TestClass.builder().str("test").build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getStr(), "test");
     }
 
     @Test
     public void uuidSerialization() {
-        TestBean test = new TestBean();
         UUID uuid = UUID.randomUUID();
-        test.setUuid(uuid);
+        TestClass test = TestClass.builder().uuid(uuid).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getUuid(), uuid);
     }
 
     @Test
     public void enumSerialization() {
-        TestBean test = new TestBean();
-        test.setE(TestBean.E.A);
+        TestClass test = TestClass.builder().e(TestClass.E.A).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
 
-        assertEquals(deserialized.getE(), TestBean.E.A);
+        TestClass deserialized = deserializer.deserialize(buffer);
+
+        assertEquals(deserialized.getE(), TestClass.E.A);
     }
 
     @Test
     public void layoutSerialization() {
-        TestBean test = new TestBean();
-        test.setValue(new SomeValue().value("test"));
+        TestClass test = TestClass.builder().value(new SomeValue("test")).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getValue().value(), "test");
     }
 
     @Test
     public void nullLayoutSerialization() {
-        TestBean test = new TestBean();
+        TestClass test = TestClass.builder().build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getValue().value(),
                      ""); // it is an empty string because we don't preserve String nullity
@@ -316,46 +289,43 @@ public class SerializerTest {
 
     @Test
     public void listSerialization() {
-        TestBean test = new TestBean();
         LinkedList<List<String>> list = new LinkedList<>();
         list.add(new LinkedList<>(Arrays.asList("Hello")));
-        test.setList(list);
+        TestClass test = TestClass.builder().list(list).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getList().get(0).get(0), "Hello");
     }
 
     @Test
     public void optionalSerialization() {
-        TestBean test = new TestBean();
+        TestClass test = TestClass.builder().build();
         assertNull(test.getOptional());
+
         ByteBuffer buffer = serializer.serialize(test);
-        TestBean deserialized = new TestBean();
         buffer.rewind();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
         assertFalse(deserialized.getOptional().isPresent());
 
-        test.setOptional(Optional.empty());
+        test = TestClass.builder().optional(Optional.empty()).build();
 
         buffer = serializer.serialize(test);
-
         buffer.rewind();
-        deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
 
+        deserialized = deserializer.deserialize(buffer);
         assertFalse(deserialized.getOptional().isPresent());
 
-        test.setOptional(Optional.of("hello"));
+        test = TestClass.builder().optional(Optional.of("hello")).build();
 
         buffer = serializer.serialize(test);
-
         buffer.rewind();
-        deserializer.deserialize(deserialized, buffer);
+
+        deserialized = deserializer.deserialize(buffer);
 
         assertTrue(deserialized.getOptional().isPresent());
         assertEquals(deserialized.getOptional().get(), "hello");
@@ -364,29 +334,25 @@ public class SerializerTest {
 
     @Test
     public void bigDecimalSerialization() {
-        TestBean test = new TestBean();
-        test.setBigDecimal(new BigDecimal(PI));
+        TestClass test = TestClass.builder().bigDecimal(new BigDecimal(PI)).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getBigDecimal(), new BigDecimal(PI));
     }
 
     @Test
     public void dateSerialization() {
-        TestBean test = new TestBean();
         Date date = new Date();
-        test.setDate(date);
+        TestClass test = TestClass.builder().date(date).build();
 
         ByteBuffer buffer = serializer.serialize(test);
-
         buffer.rewind();
-        TestBean deserialized = new TestBean();
-        deserializer.deserialize(deserialized, buffer);
+
+        TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getDate(), date);
     }

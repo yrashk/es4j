@@ -10,12 +10,14 @@ package com.eventsourcing.index;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.LocalLockProvider;
 import com.eventsourcing.repository.PackageCommandSetProvider;
 import com.eventsourcing.repository.PackageEventSetProvider;
 import com.googlecode.cqengine.resultset.ResultSet;
+import lombok.Builder;
 import lombok.SneakyThrows;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
@@ -48,14 +50,19 @@ public class EntityQueryFactoryTest {
         repository.stopAsync().awaitTerminated();
     }
 
-    public static class TestCommand extends StandardCommand<Void, Void> {}
+    public static class TestCommand extends StandardCommand<Void, Void> {
+        @Builder
+        public TestCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+    }
 
     @Test @SneakyThrows
     public void all() {
         ResultSet<EntityHandle<TestCommand>> resultSet = repository
                 .query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
         assertTrue(resultSet.isEmpty());
-        repository.publish(new TestCommand()).get();
+        repository.publish(TestCommand.builder().build()).get();
         resultSet = repository.query(TestCommand.class, EntityQueryFactory.all(TestCommand.class));
         assertTrue(resultSet.isNotEmpty());
         assertEquals(resultSet.size(), 1);

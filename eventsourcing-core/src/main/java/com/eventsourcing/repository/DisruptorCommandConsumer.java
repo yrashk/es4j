@@ -25,6 +25,7 @@ import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.reflect.Constructor;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadFactory;
@@ -36,7 +37,6 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
 
 
     private final Iterable<Class<? extends Command>> commandClasses;
-    private final PhysicalTimeProvider timeProvider;
     private final Repository repository;
     private final Journal journal;
     private final IndexEngine indexEngine;
@@ -57,7 +57,10 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         @SneakyThrows
         public CommandEvent(Iterable<Class<? extends Command>> classes) {
             for (Class<? extends Command> cmd : classes) {
-                commands.put(cmd, cmd.newInstance());
+                Layout<? extends Command> layout = Layout.forClass(cmd);
+                Constructor<?> constructor = layout.getConstructor();
+                Object[] args = layout.getDefaultConstructorArguments();
+                commands.put(cmd, (Command) constructor.newInstance(args));
             }
         }
 
@@ -205,14 +208,13 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
                                     Repository repository, Journal journal, IndexEngine indexEngine,
                                     LockProvider lockProvider) {
         this.commandClasses = commandClasses;
-        this.timeProvider = timeProvider;
         this.repository = repository;
         this.journal = journal;
         this.indexEngine = indexEngine;
         this.lockProvider = lockProvider;
         this.timestamp = new HybridTimestamp(timeProvider);
         for (Class<? extends Command> cmd : commandClasses) {
-            Layout<? extends Command> layout = new Layout<>(cmd);
+            Layout<? extends Command> layout = Layout.forClass(cmd);
             layouts.put(cmd, layout);
             deserializers.put(cmd, serialization.getDeserializer(cmd));
         }

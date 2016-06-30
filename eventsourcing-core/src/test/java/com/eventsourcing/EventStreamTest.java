@@ -18,7 +18,7 @@ import static org.testng.Assert.*;
 public class EventStreamTest {
     @Test
     public void testBuilder() throws Exception {
-        EventStream<String> test = EventStream.builder("test").add(new EventCausalityEstablished()).build();
+        EventStream<String> test = EventStream.builder("test").add(EventCausalityEstablished.builder().build()).build();
         assertEquals(test.getState(), "test");
         Event event = test.getStream().findFirst().get();
         assertTrue(event instanceof EventCausalityEstablished);
@@ -26,7 +26,7 @@ public class EventStreamTest {
 
     @Test
     public void testBuilder1() throws Exception {
-        EventStream<String> test = EventStream.<String>builder().add(new EventCausalityEstablished()).build();
+        EventStream<String> test = EventStream.<String>builder().add(EventCausalityEstablished.builder().build()).build();
         assertNull(test.getState());
         Event event = test.getStream().findFirst().get();
         assertTrue(event instanceof EventCausalityEstablished);
@@ -48,45 +48,43 @@ public class EventStreamTest {
 
     @Test
     public void testOf() throws Exception {
-        EventStream<Object> test = EventStream.of(new EventCausalityEstablished());
+        EventStream<Object> test = EventStream.of(EventCausalityEstablished.builder().build());
         assertNull(test.getState());
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 1);
     }
 
     @Test
     public void testOf1() throws Exception {
-        EventStream<String> test = EventStream.of(new EventCausalityEstablished(),
-                                                  new EventCausalityEstablished());
+        EventStream<String> test = EventStream.of(EventCausalityEstablished.builder().build(),
+                                                  EventCausalityEstablished.builder().build());
         assertNull(test.getState());
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 2);
     }
 
     @Test
     public void testOf2() throws Exception {
-        EventStream<String> test = EventStream.ofWithState("test", new EventCausalityEstablished());
+        EventStream<String> test = EventStream.ofWithState("test", EventCausalityEstablished.builder().build());
         assertEquals(test.getState(), "test");
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 1);
     }
 
     @Test
     public void testOf3() throws Exception {
-        EventStream<String> test = EventStream.ofWithState("test", new EventCausalityEstablished(), new EventCausalityEstablished());
+        EventStream<String> test = EventStream.ofWithState("test", EventCausalityEstablished.builder().build(), EventCausalityEstablished.builder().build());
         assertEquals(test.getState(), "test");
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 2);
     }
 
     @Test
     public void testOf4() throws Exception {
-        EventStream<String> test = EventStream.ofWithState("test", Stream.of(new EventCausalityEstablished(), new
-                EventCausalityEstablished()));
+        EventStream<String> test = EventStream.ofWithState("test", Stream.of(EventCausalityEstablished.builder().build(), EventCausalityEstablished.builder().build()));
         assertEquals(test.getState(), "test");
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 2);
     }
 
     @Test
     public void testOf5() throws Exception {
-        EventStream<String> test = EventStream.of(Stream.of(new EventCausalityEstablished(), new
-                EventCausalityEstablished()));
+        EventStream<String> test = EventStream.of(Stream.of(EventCausalityEstablished.builder().build(), EventCausalityEstablished.builder().build()));
         assertNull(test.getState());
         assertEquals(test.getStream().collect(Collectors.<Event>toSet()).size(), 2);
     }

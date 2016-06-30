@@ -12,10 +12,8 @@ import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
@@ -24,13 +22,11 @@ import java.util.UUID;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 @Accessors(fluent = true)
-@AllArgsConstructor
-@NoArgsConstructor
 public class PriceChanged extends StandardEvent {
-    @Getter @Setter
-    private UUID id;
-    @Getter @Setter
-    private BigDecimal price;
+    @Getter
+    private final UUID id;
+    @Getter
+    private final BigDecimal price;
 
     @Index({EQ})
     public static final SimpleAttribute<PriceChanged, UUID> REFERENCE_ID = new SimpleAttribute<PriceChanged, UUID>(
@@ -47,4 +43,11 @@ public class PriceChanged extends StandardEvent {
             return priceChanged.timestamp();
         }
     };
+
+    @Builder
+    public PriceChanged(HybridTimestamp timestamp, UUID id, BigDecimal price) {
+        super(timestamp);
+        this.id = id;
+        this.price = price;
+    }
 }

@@ -12,12 +12,19 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.OrderCreated;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 
 public class CreateOrder extends StandardCommand<Order, OrderCreated> {
 
+    @Builder
+    public CreateOrder(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
+
     @Override
     public EventStream<OrderCreated> events(Repository repository) throws Exception {
-        OrderCreated orderCreated = new OrderCreated();
+        OrderCreated orderCreated = OrderCreated.builder().build();
         return EventStream.ofWithState(orderCreated, orderCreated);
     }
 

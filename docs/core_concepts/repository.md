@@ -23,5 +23,5 @@ repository.startAsync().awaitRunning();
 Now we're ready to publish the command:
 
 ```java
-User result = repository.publish(new CreateUser().email("foo@bar.com")).get();
+User result = repository.publish(CreateUser.builder().email("foo@bar.com").build()).get();
 ```

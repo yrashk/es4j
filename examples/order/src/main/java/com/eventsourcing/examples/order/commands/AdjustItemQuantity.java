@@ -11,23 +11,31 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.ItemQuantityAdjusted;
-import lombok.*;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-@RequiredArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class AdjustItemQuantity extends StandardCommand<Void, Void> {
-    @Getter @Setter @NonNull
-    private UUID itemId;
+    @Getter @NonNull
+    private final UUID itemId;
 
-    @Getter @Setter @NonNull
-    private Integer quantity;
+    @Getter @NonNull
+    private final Integer quantity;
+
+    @Builder
+    public AdjustItemQuantity(HybridTimestamp timestamp, UUID itemId, Integer quantity) {
+        super(timestamp);
+        this.itemId = itemId;
+        this.quantity = quantity;
+    }
 
     @Override
     public EventStream<Void> events(Repository repository) throws Exception {
-        return EventStream.of(new ItemQuantityAdjusted(itemId, quantity));
+        return EventStream.of(ItemQuantityAdjusted.builder().itemId(itemId).quantity(quantity).build());
     }
 }

@@ -22,28 +22,31 @@ import java.util.UUID;
 public class Car extends StandardEntity {
     public enum Color {RED, GREEN, BLUE, BLACK, WHITE}
 
-    @Getter @Setter
+    @Getter
     int carId;
-    @Getter @Setter
+    @Getter
     String manufacturer;
-    @Getter @Setter
+    @Getter
     String model;
+    @Getter
     Color color;
-    @Getter @Setter
+    @Getter
     int doors;
-    @Getter @Setter
+    @Getter
     double price;
-    @Getter @Setter
+    @Getter
     List<String> features;
 
     @Getter @Setter
     private UUID uuid = UUID.randomUUID();
 
     public Car() {
+        super(null);
     }
 
     public Car(int carId, String manufacturer, String model, Color color, int doors, double price,
                List<String> features) {
+        super(null);
         this.carId = carId;
         this.manufacturer = manufacturer;
         this.model = model;

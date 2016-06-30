@@ -12,8 +12,4 @@ import com.eventsourcing.layout.types.ObjectTypeHandler;
 import java.nio.ByteBuffer;
 
 public interface ObjectDeserializer<T> extends Deserializer<T, ObjectTypeHandler>  {
-    void deserialize(ObjectTypeHandler typeHandler, T object, ByteBuffer buffer);
-    default void deserialize(T object, ByteBuffer buffer) {
-        throw new UnsupportedOperationException();
-    }
 }

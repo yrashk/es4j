@@ -9,18 +9,20 @@ Lets start with an example:
 
 ```java
 public class User {
-  private String email;
+  private final String email;
   public String getEmail() { return email; }
-  public void setEmail(String email) { this.email = email; }
+  public User(String email) {
+    this.email = email;
+  }
 }
 ```
 
-This class defines one property (`email`) by having both accessors (JavaBean, chain and fluent naming conventions are supported).
+This class defines one property (`email`) by a one-parameter constructor and a getter (JavaBean, chain and fluent naming conventions are supported).
 
 Implemented in the `eventsourcing-layout` package, `com.eventsourcing.layout.Layout` is the main class used to create layouts:
 
 ```java
-Layout<User> layout = new Layout(User.class);
+Layout<User> layout = Layout.forClass(User.class);
 ```
 
 In this `layout` object, two main methods are available: `getProperties()`
@@ -29,17 +31,11 @@ layout hash.
 
 Layout defines following rules for property inclusion:
 
-* Every property should have both getter and setter accessors
-  (or a getter and a matching constructor for all properties)
-* Accessors must be public
-* Neither of accessors should be annotated with `@LayoutIgnore`
+* Every property must have a getter
 * Property must be of a supported type (see below)
+* Property must have a matching parameter in the constructor (same parameter name or same name through `@PropertyName` parameter annotation)
 
-Inheritance can also be used to build hierarchies that share fragments of
-their layout. In fact, it is even possible to use interfaces to create layouts.
-
-Note: Since ES4J requires the use of accessors, using code generation tools like Lombok is advisable. In fact, most of ES4J's documentation
-will be using Lombok annotations for brevity.
+Note: Since ES4J requires the use of accessors, using code generation tools like Lombok is advisable.
 
 ## Hash
 
@@ -50,6 +46,8 @@ Every layout has a hash which is a unique fingerprint of such a class. It is com
 1. For each property:
   1. Property name encoded to bytes using platform's default charset and digested
   1. Property type's fingerprint (short byte sequence) is digested.
+
+This process is described in [RFC1/ELF](http://rfc.eventsourcing.com/spec:1/ELF)
 
 ## Supported Property Types
 
@@ -83,15 +81,15 @@ variable length integers or any other compression methods so it is not extremely
 You can get a serializer and a deserializer very easily:
 
 ```java
-Serializer<User> serializer = new Serializer<>(layout);
-Deserializer<User> deserializer = new Deserializer<>(layout);
+Serialization serialization = BinarySerialization.getInstance();
+Serializer<User> serializer = serialization.getSerializer(User.class);
+Deserializer<User> deserializer = serialization.getDeserializer(User.class);
 ```
 
-There's one important requirement for object to be deserializable: it has
-to have an empty constructor. Otherwise, creating a deserializer will fail.
 
 ### `null` values
 
 It is important to note that ES4J does not support a notion of a `null`
 property value. While the instances you pass for serialization *can* contain
-nulls, they will be treated as "empty" values (for example, empty String, nil UUID, zero number, false boolean, etc.)
+nulls, they will be treated as "empty" values (for example, empty String, nil UUID, zero number, false boolean, etc.). The default values for these are
+specified in [RFC1/ELF](http://rfc.eventsourcing.com/spec:1/ELF/)

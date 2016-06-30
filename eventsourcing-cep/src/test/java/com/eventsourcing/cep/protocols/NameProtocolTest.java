@@ -10,6 +10,7 @@ package com.eventsourcing.cep.protocols;
 import com.eventsourcing.*;
 import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -31,14 +32,21 @@ public class NameProtocolTest extends RepositoryTest {
     @Accessors(fluent = true)
     public static class Rename extends StandardCommand<String, Void> {
 
-        @Getter @Setter
-        private UUID id;
-        @Getter @Setter
-        private String name;
+        @Getter
+        private final UUID id;
+        @Getter
+        private final String name;
+
+        @Builder
+        public Rename(HybridTimestamp timestamp, UUID id, String name) {
+            super(timestamp);
+            this.id = id;
+            this.name = name;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
-            return EventStream.of(new NameChanged().reference(id).name(name).timestamp(timestamp()));
+            return EventStream.of(NameChanged.builder().reference(id).name(name).timestamp(timestamp()).build());
         }
 
         @Override
@@ -71,17 +79,17 @@ public class NameProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        Rename rename = new Rename().id(model.id()).name("Name #1");
+        Rename rename = Rename.builder().id(model.id()).name("Name #1").build();
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #1");
 
-        Rename renameBefore = (Rename) new Rename().id(model.id()).name("Name #0").timestamp(timestamp);
+        Rename renameBefore = Rename.builder().id(model.id()).name("Name #0").timestamp(timestamp).build();
         assertTrue(renameBefore.timestamp().compareTo(rename.timestamp()) < 0);
         repository.publish(renameBefore).get();
         assertEquals(model.name(), "Name #1"); // earlier change shouldn't affect the name
 
 
-        rename = new Rename().id(model.id()).name("Name #2");
+        rename = Rename.builder().id(model.id()).name("Name #2").build();
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #2");
     }

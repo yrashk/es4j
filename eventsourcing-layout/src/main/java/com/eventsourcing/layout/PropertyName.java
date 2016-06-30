@@ -7,7 +7,13 @@
  */
 package com.eventsourcing.layout;
 
-import com.eventsourcing.layout.types.ObjectTypeHandler;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-public interface ObjectSerializer<T> extends Serializer<T, ObjectTypeHandler<T>> {
+@Target(ElementType.PARAMETER)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface PropertyName {
+    String value();
 }

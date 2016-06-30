@@ -29,6 +29,10 @@ allprojects {
     apply plugin: 'idea'
     apply plugin: 'license'
 
+    tasks.withType(JavaCompile) {
+        options.compilerArgs << "-parameters"
+    }
+
     license {
         header rootProject.file('LICENSE-HEADER')
     }

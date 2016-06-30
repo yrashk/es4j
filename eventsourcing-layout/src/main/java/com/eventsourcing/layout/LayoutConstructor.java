@@ -7,19 +7,16 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.Getter;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * When used with a getter or a setter, makes {@link Layout} ignore
- * the corresponding property. When using with Lombok, {@link Getter#onMethod()}
- * should be used.
+ * Use this annotation to indicate a constructor to be used to
+ * construct a layout
  */
-@Target({ElementType.METHOD})
+@Target(ElementType.CONSTRUCTOR)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface LayoutIgnore {
+public @interface LayoutConstructor {
 }

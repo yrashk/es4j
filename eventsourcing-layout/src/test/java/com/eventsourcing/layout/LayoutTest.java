@@ -7,13 +7,10 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.experimental.Accessors;
+import lombok.*;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Parameter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -22,224 +19,158 @@ import static org.testng.Assert.*;
 
 public class LayoutTest {
 
-    private interface InterfaceTest {
-        String getTest();
-
-        void setTest(String test);
+    public static class NoConstructor {
+        private NoConstructor() {}
     }
 
-    @Test
-    @SneakyThrows
-    public void testInterface() {
-        Layout<InterfaceTest> layout = new Layout<>(InterfaceTest.class);
-        List<Property<InterfaceTest>> properties = layout.getProperties();
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("test")));
+    @Test(expectedExceptions = IllegalArgumentException.class) @SneakyThrows
+    public void noConstructor() {
+        Layout.forClass(NoConstructor.class);
     }
 
-    private static class BaseVisibilityTest {
-        @Getter @Setter
-        private String inherited;
-        @Getter @Setter
-        private String base;
-    }
-
-    private static class VisibilityTest extends BaseVisibilityTest {
-        @Getter @SuppressWarnings("unused")
-        private String privateOnlyGetter;
-        @Getter @Setter
-        private String privateGetterAndSetter;
-        @SuppressWarnings("unused")
-        private String noGetterOrSetter;
-        @Getter(onMethod = @__({@LayoutIgnore})) @Setter
-        private String ignored;
-
-        @Override @LayoutIgnore
-        public String getBase() {
-            return super.getBase();
+    public static class ConflictingConstructors {
+        public ConflictingConstructors(String a, String b) {
         }
-
+        public ConflictingConstructors(Integer a, String b) {
+        }
     }
 
-    @Test
-    @SneakyThrows
-    public void propertyVisibility() {
-        Layout<VisibilityTest> layout = new Layout<>(VisibilityTest.class);
-        List<Property<VisibilityTest>> properties = layout.getProperties();
-        // Inherited
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("inherited")));
-        // Inherited properties can be ignored
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("base")));
-        // LayoutIgnore
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("ignored")));
-        // Properties without a getter should be ignored
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("privateOnlyGetter")));
-        // Properties without both a getter and a setter should be ignored
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("noGetterOrSetter")));
-        // Accessible properties should not be ignored
-        assertTrue(
-                properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
+    @Test(expectedExceptions = IllegalArgumentException.class) @SneakyThrows
+    public void conflictingConstructors() {
+        Layout.forClass(ConflictingConstructors.class);
     }
 
-    @Accessors(fluent = true)
-    private static class VisibilityTestChained {
-        @Getter @SuppressWarnings("unused")
-        private String privateOnlyGetter;
-        @Getter @Setter
-        private String privateGetterAndSetter;
-        @SuppressWarnings("unused")
-        private String noGetterOrSetter;
+    public static class ExplicitConstructor {
+        @Getter private Integer a;
+        @Getter private String b;
+        public ExplicitConstructor(String a, String b) {
+        }
+        @LayoutConstructor
+        public ExplicitConstructor(Integer a, String b) {
+        }
     }
 
-    @Test
-    @SneakyThrows
-    public void fluentPropertyVisibility() {
-        Layout<VisibilityTestChained> layout = new Layout<>(VisibilityTestChained.class);
-        List<Property<VisibilityTestChained>> properties = layout.getProperties();
-        // Properties without a getter should be ignored
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("privateOnlyGetter")));
-        // Properties without both a getter and a setter should be ignored
-        assertFalse(properties.stream().anyMatch(property -> property.getName().contentEquals("noGetterOrSetter")));
-        // Accessible properties should not be ignored
-        assertTrue(
-                properties.stream().anyMatch(property -> property.getName().contentEquals("privateGetterAndSetter")));
-    }
-
-    private static class ReadonlyTest {
-        @Getter
-        private String getter;
-        @Getter @Setter
-        private String getterAndSetter;
-    }
-
-    @Test(expectedExceptions = IllegalAccessError.class)
-    @SneakyThrows
-    public void readonly() {
-        Layout<ReadonlyTest> layout = new Layout<>(ReadonlyTest.class, true);
-        assertTrue(layout.isReadOnly());
-        List<Property<ReadonlyTest>> properties = layout.getProperties();
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter")));
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getterAndSetter")));
-        Property<ReadonlyTest> getter = properties.stream()
-                                                  .filter(property -> property.getName().contentEquals("getter"))
-                                                  .findFirst().get();
-        getter.set(new ReadonlyTest(), "hello");
-    }
-
-    @AllArgsConstructor
-    private static class ConstructorTest {
-        @Getter
-        private String getter1;
-        @Getter
-        private String getter2;
-    }
-
-    @Test(expectedExceptions = IllegalAccessError.class)
-    @SneakyThrows
-    public void constructor() {
-        Layout<ConstructorTest> layout = new Layout<>(ConstructorTest.class);
-        assertFalse(layout.isReadOnly());
-        List<Property<ConstructorTest>> properties = layout.getProperties();
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter1")));
-        assertTrue(properties.stream().anyMatch(property -> property.getName().contentEquals("getter2")));
-        Property<ConstructorTest> getter = properties.stream()
-                                                     .filter(property -> property.getName().contentEquals("getter1"))
-                                                     .findFirst().get();
-        getter.set(new ConstructorTest("test1", "test2"), "hello");
-    }
-
-    private static class MismatchedConstructorsTest {
-        @Getter
-        private String getter1;
-        @Getter
-        private String getter2;
-
-        public MismatchedConstructorsTest(String a, int b) {}
-
-        public MismatchedConstructorsTest(int a, String b) {}
-    }
-
-    @Test(expectedExceptions = IllegalArgumentException.class)
-    @SneakyThrows
-    public void mismatchedConstructors() {
-        new Layout<>(MismatchedConstructorsTest.class);
-    }
-
-    private static class NamingTest {
-        @Getter @Setter
-        private boolean third;
-        @Getter @Setter
-        private int first;
-        @Getter @Setter
-        private String second;
-    }
-
-    @Test
-    @SneakyThrows
-    public void lexicographicalSorting() {
-        Layout<NamingTest> layout = new Layout<>(NamingTest.class);
-        List<Property<NamingTest>> properties = layout.getProperties();
-        assertTrue(properties.get(0).getName().contentEquals("first"));
-        assertTrue(properties.get(1).getName().contentEquals("second"));
-        assertTrue(properties.get(2).getName().contentEquals("third"));
-    }
-
-    @Test
-    @SneakyThrows
-    public void accessingProperties() {
-        Layout<NamingTest> layout = new Layout<>(NamingTest.class);
-        List<Property<NamingTest>> properties = layout.getProperties();
-
-        NamingTest namingTest = new NamingTest();
-
-        // Setting and retrieving values works as expected:
-
-        properties.get(0).set(namingTest, 1);
-        assertEquals(1, namingTest.getFirst());
-        assertEquals((Integer) namingTest.getFirst(), properties.get(0).get(namingTest));
-
-        properties.get(1).set(namingTest, "value");
-        assertEquals("value", namingTest.getSecond());
-        assertEquals(namingTest.getSecond(), properties.get(1).get(namingTest));
-
-        properties.get(2).set(namingTest, true);
-        assertEquals(true, namingTest.isThird());
-        assertEquals((Boolean) namingTest.isThird(), properties.get(2).get(namingTest));
-
+    @Test @SneakyThrows
+    public void explicitConstructor() {
+        Layout<ExplicitConstructor> layout = Layout.forClass(ExplicitConstructor.class);
+        Parameter[] parameters = layout.getConstructor().getParameters();
+        assertEquals(parameters[0].getName(), "a");
+        assertEquals(parameters[0].getType(), Integer.class);
+        assertEquals(parameters[1].getName(), "b");
+        assertEquals(parameters[1].getType(), String.class);
     }
 
 
+    public static class MissingPropertyGetter {
+        public MissingPropertyGetter(String a) {
+        }
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class) @SneakyThrows
+    public void missingPropertyGetter() {
+        Layout.forClass(MissingPropertyGetter.class);
+    }
+
+    public static class MismatchedPropertyType {
+        @Getter private Integer a;
+        public MismatchedPropertyType(String a) {
+        }
+    }
+
+    @Test(expectedExceptions = IllegalArgumentException.class) @SneakyThrows
+    public void mismatchedPropertyType() {
+        Layout.forClass(MismatchedPropertyType.class);
+    }
+
+    public static class RenamedProperty {
+        @Getter private String abc;
+        public RenamedProperty(@PropertyName("abc") String a) {
+        }
+    }
+
+    @Test @SneakyThrows
+    public void renamedProperty() {
+        Layout<RenamedProperty> layout = Layout.forClass(RenamedProperty.class);
+        List<Property<RenamedProperty>> properties = layout.getProperties();
+        assertEquals(properties.size(), 1);
+        assertEquals(properties.get(0).getName(), "abc");
+    }
+
+    public static class Properties {
+        @Getter private final String a;
+        @Getter private final int b;
+        @Getter private final boolean c;
+        public Properties(boolean c, String a, int b) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+    }
+
+    @Test @SneakyThrows
+    public void properties() {
+        Layout<Properties> layout = Layout.forClass(Properties.class);
+        List<Property<Properties>> properties = layout.getProperties();
+        assertEquals(properties.size(), 3);
+        // Lexicographically sorted:
+        assertEquals(properties.get(0).getName(), "a");
+        assertEquals(properties.get(1).getName(), "b");
+        assertEquals(properties.get(2).getName(), "c");
+        // Constructor properties retain the order:
+        List<Property<Properties>> constructorProperties = layout.getConstructorProperties();
+        assertEquals(constructorProperties.size(), 3);
+        assertEquals(constructorProperties.get(0).getName(), "c");
+        assertEquals(constructorProperties.get(1).getName(), "a");
+        assertEquals(constructorProperties.get(2).getName(), "b");
+    }
+
+    @Test @SneakyThrows
+    public void getters() {
+        Layout<Properties> layout = Layout.forClass(Properties.class);
+        List<Property<Properties>> properties = layout.getProperties();
+        Properties test = new Properties(true, "hello", 1);
+        assertEquals(properties.get(0).get(test), "hello");
+        assertEquals((int)properties.get(1).get(test), 1);
+        assertEquals((boolean)properties.get(2).get(test), true);
+    }
+
+
+
+    @LayoutName("DigestTest")
+    @Value
     private static class DigestTest1 {
-        @Getter @Setter
         private String x;
     }
 
+    @Value
     private static class DigestTest1Name {
-        @Getter @Setter
         private String x;
     }
 
-    @LayoutName("com.eventsourcing.layout.LayoutTest$DigestTest1")
+    @LayoutName("DigestTest")
+    @Value
     private static class DigestTest1SameName {
-        @Getter @Setter
         private String x;
     }
 
+    @LayoutName("DigestTest")
+    @Value
     private static class DigestTest1PropName {
-        @Getter @Setter
         private String y;
     }
 
+    @LayoutName("DigestTest")
+    @Value
     private static class DigestTest1Type {
-        @Getter @Setter
         private int x;
     }
 
     @Test
     @SneakyThrows
     public void hashDifferentClassName() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class);
-        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class);
-        Layout<DigestTest1SameName> layout1SameName = new Layout<>(DigestTest1SameName.class);
+        Layout<DigestTest1> layout1 = Layout.forClass(DigestTest1.class);
+        Layout<DigestTest1Name> layout1Name = Layout.forClass(DigestTest1Name.class);
+        Layout<DigestTest1SameName> layout1SameName = Layout.forClass(DigestTest1SameName.class);
 
         assertNotEquals(layout1, layout1Name);
         assertFalse(Arrays.equals(layout1.getHash(), layout1Name.getHash()));
@@ -251,18 +182,18 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashSameContent() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
-        Layout<DigestTest1Name> layout1Name = new Layout<>(DigestTest1Name.class, false, false);
+        Layout<DigestTest1> layout1 = Layout.forClass(DigestTest1.class);
+        Layout<DigestTest1SameName> layout1SameName = Layout.forClass(DigestTest1SameName.class);
 
-        assertEquals(layout1, layout1Name);
-        assertEquals(layout1.getHash(), layout1Name.getHash());
+        assertEquals(layout1, layout1SameName);
+        assertEquals(layout1.getHash(), layout1SameName.getHash());
     }
 
     @Test
     @SneakyThrows
     public void hashDifferentPropName() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
-        Layout<DigestTest1PropName> layout1Name = new Layout<>(DigestTest1PropName.class, false, false);
+        Layout<DigestTest1> layout1 = Layout.forClass(DigestTest1.class);
+        Layout<DigestTest1PropName> layout1Name = Layout.forClass(DigestTest1PropName.class);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
@@ -271,70 +202,88 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void hashDifferentType() {
-        Layout<DigestTest1> layout1 = new Layout<>(DigestTest1.class, false, false);
-        Layout<DigestTest1Type> layout1Name = new Layout<>(DigestTest1Type.class, false, false);
+        Layout<DigestTest1> layout1 = Layout.forClass(DigestTest1.class);
+        Layout<DigestTest1Type> layout1Name = Layout.forClass(DigestTest1Type.class);
 
         assertNotEquals(layout1, layout1Name);
         assertNotEquals(layout1.getHash(), layout1Name.getHash());
     }
 
+    @LayoutName("boxing")
+    @Value
     private static class DigestTest1Unboxed {
-        @Getter @Setter
-        private int x;
+        private short a;
+        private int b;
+        private long c;
+        private float d;
+        private double e;
+        private boolean f;
+        private byte g;
     }
 
+    @LayoutName("boxing")
+    @Value
     private static class DigestTest1Boxed {
-        @Getter @Setter
-        private Integer x;
+        private Short a;
+        private Integer b;
+        private Long c;
+        private Float d;
+        private Double e;
+        private Boolean f;
+        private Byte g;
     }
 
     @Test
     @SneakyThrows
     public void hashBoxed() {
-        Layout<DigestTest1Unboxed> layout1 = new Layout<>(DigestTest1Unboxed.class, false, false);
-        Layout<DigestTest1Boxed> layout1Name = new Layout<>(DigestTest1Boxed.class, false, false);
+        Layout<DigestTest1Unboxed> layout1 = Layout.forClass(DigestTest1Unboxed.class);
+        Layout<DigestTest1Boxed> layout1Name = Layout.forClass(DigestTest1Boxed.class);
 
         assertEquals(layout1, layout1Name);
         assertEquals(layout1.getHash(), layout1Name.getHash());
     }
 
+    @LayoutName("ListParametrizedTest")
+    @Value
     private static class ListParametrizedTest1 {
-        @Getter @Setter
         private List<Integer> x;
 
     }
 
+    @LayoutName("ListParametrizedTest")
+    @Value
     private static class ListParametrizedTest2 {
-        @Getter @Setter
         private List<String> x;
     }
 
     @Test
     @SneakyThrows
     public void respectsParametrizedList() {
-        Layout<ListParametrizedTest1> layout1 = new Layout<>(ListParametrizedTest1.class, false, false);
-        Layout<ListParametrizedTest2> layout2 = new Layout<>(ListParametrizedTest2.class, false, false);
+        Layout<ListParametrizedTest1> layout1 = Layout.forClass(ListParametrizedTest1.class);
+        Layout<ListParametrizedTest2> layout2 = Layout.forClass(ListParametrizedTest2.class);
 
         assertNotEquals(layout1, layout2, "Should be different");
         assertFalse(Arrays.equals(layout1.getHash(), layout2.getHash()));
     }
 
+    @LayoutName("OptionalParametrizedTest")
+    @Value
     private static class OptionalParametrizedTest1 {
-        @Getter @Setter
         private Optional<Integer> y;
 
     }
 
+    @LayoutName("OptionalParametrizedTest")
+    @Value
     private static class OptionalParametrizedTest2 {
-        @Getter @Setter
         private Optional<String> y;
     }
 
     @Test
     @SneakyThrows
     public void respectsParametrizedOptional() {
-        Layout<OptionalParametrizedTest1> layout1 = new Layout<>(OptionalParametrizedTest1.class, false, false);
-        Layout<OptionalParametrizedTest2> layout2 = new Layout<>(OptionalParametrizedTest2.class, false, false);
+        Layout<OptionalParametrizedTest1> layout1 = Layout.forClass(OptionalParametrizedTest1.class);
+        Layout<OptionalParametrizedTest2> layout2 = Layout.forClass(OptionalParametrizedTest2.class);
 
         assertNotEquals(layout1, layout2, "Should be different");
         assertFalse(Arrays.equals(layout1.getHash(), layout2.getHash()));
@@ -343,10 +292,26 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void layoutLayout() {
-        Layout<Layout> layout = new Layout<>(Layout.class);
+        Layout<Layout> layout = Layout.forClass(Layout.class);
         assertEquals(layout.getName(), "rfc.eventsourcing.com/spec:7/LDL/#Layout");
         assertEquals(layout.getProperties().size(), 2);
         assertTrue(layout.getProperties().stream().anyMatch(p -> p.getName().contentEquals("name")));
         assertTrue(layout.getProperties().stream().anyMatch(p -> p.getName().contentEquals("properties")));
+    }
+
+    @Value
+    public static class DefaultConstructor {
+        private final String a;
+        private boolean b;
+    }
+
+    @Test
+    @SneakyThrows
+    public void defaultConstructor() {
+        Layout<DefaultConstructor> layout = Layout.forClass(DefaultConstructor.class);
+        Object[] args = layout.getDefaultConstructorArguments();
+        DefaultConstructor instance = layout.getConstructor().newInstance(args);
+        assertEquals(instance.getA(), "");
+        assertFalse(instance.isB());
     }
 }

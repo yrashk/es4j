@@ -82,7 +82,7 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     @SneakyThrows
     public MVStoreJournal() {
-        layoutInformationLayout = new Layout<>(LayoutInformation.class);
+        layoutInformationLayout = Layout.forClass(LayoutInformation.class);
         layoutInformationSerializer = serialization.getSerializer(LayoutInformation.class);
         layoutInformationDeserializer = serialization.getDeserializer(LayoutInformation.class);
     }
@@ -263,7 +263,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             long count = actualEvents.peek(new Consumer<Event>() {
                 @Override public void accept(Event event) {
                     eventConsumer.accept(event);
-                    eventConsumer.accept(new EventCausalityEstablished().event(event.uuid()).command(command.uuid()));
+                    eventConsumer.accept(EventCausalityEstablished.builder()
+                                                                  .event(event.uuid())
+                                                                  .command(command.uuid())
+                                                                  .build());
                 }
             }).count();
 
@@ -304,8 +307,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
             Layout<Command<?, ?>> layout = layoutsByHash.get(encodedHash);
-            Command command = layout.getLayoutClass().newInstance().uuid(uuid);
-            serialization.getDeserializer(layout.getLayoutClass()).deserialize(command, payload);
+            Command command = (Command) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
+            command.uuid(uuid);
             return Optional.of((T) command);
         }
         if (eventPayloads.containsKey(uuid)) {
@@ -313,8 +316,8 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             payload.rewind();
             String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
             Layout<Event> layout = layoutsByHash.get(encodedHash);
-            Event event = layout.getLayoutClass().newInstance().uuid(uuid);
-            serialization.getDeserializer(layout.getLayoutClass()).deserialize(event, payload);
+            Event event = (Event) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
+            event.uuid(uuid);
             return Optional.of((T) event);
         }
         return Optional.empty();
@@ -373,22 +376,34 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
 
     @Accessors(fluent = true)
     public static class PropertyInformation {
-        @Getter @Setter
-        private String name;
+        @Getter
+        private final String name;
 
-        @Getter @Setter
-        private String type;
+        @Getter
+        private final String type;
+
+        public PropertyInformation(String name, String type) {
+            this.name = name;
+            this.type = type;
+        }
     }
 
     @Accessors(fluent = true)
     public static class LayoutInformation {
-        @Getter @Setter
-        private byte[] hash;
+        @Getter
+        private final byte[] hash;
 
-        @Getter @Setter
-        private String className;
-        @Getter @Setter
-        private List<PropertyInformation> properties;
+        @Getter
+        private final String className;
+        @Getter
+        private final List<PropertyInformation> properties;
+
+        public LayoutInformation(byte[] hash, String className,
+                                 List<PropertyInformation> properties) {
+            this.hash = hash;
+            this.className = className;
+            this.properties = properties;
+        }
     }
 
     private final Layout<LayoutInformation> layoutInformationLayout;
@@ -401,23 +416,18 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
         @Override
         @SneakyThrows
         public void accept(Class<? extends Entity> aClass) {
-            Layout<? extends Entity> layout = new Layout<>(aClass);
+            Layout<? extends Entity> layout = Layout.forClass(aClass);
             byte[] hash = layout.getHash();
             String encodedHash = BaseEncoding.base16().encode(hash);
             layoutsByHash.put(encodedHash, layout);
             layoutsByClass.put(aClass.getName(), layout);
 
-            List<PropertyInformation> properties = layout.getProperties().stream().
-                    map(property -> new PropertyInformation().
-                                                                     name(property.getName()).
-                                                                     type(property.getType().getBriefDescription())).
-                                                                 collect(Collectors.toList());
+            List<PropertyInformation> properties = layout.getProperties().stream()
+                    .map(property -> new PropertyInformation(property.getName(), property.getType()
+                                                                                        .getBriefDescription()))
+                     .collect(Collectors.toList());
 
-            LayoutInformation layoutInformation = new LayoutInformation().
-                                                                                 className(aClass.getName()).
-                                                                                 hash(hash).
-                                                                                 properties(properties);
-
+            LayoutInformation layoutInformation = new LayoutInformation(hash, aClass.getName(), properties);
             layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
         }
 

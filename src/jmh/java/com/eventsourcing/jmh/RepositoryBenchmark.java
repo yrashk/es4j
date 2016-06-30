@@ -64,7 +64,7 @@ public abstract class RepositoryBenchmark {
     @Benchmark
     @BenchmarkMode(Mode.All)
     public void basicPublish() throws ExecutionException, InterruptedException {
-        repository.publish(new TestCommand()).get();
+        repository.publish(TestCommand.builder().build()).get();
     }
 
 

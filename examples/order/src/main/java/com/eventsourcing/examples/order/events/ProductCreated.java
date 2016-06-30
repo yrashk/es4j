@@ -9,8 +9,10 @@ package com.eventsourcing.examples.order.events;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 
 import java.util.UUID;
 
@@ -26,4 +28,8 @@ public class ProductCreated extends StandardEvent {
         }
     };
 
+    @Builder
+    public ProductCreated(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
 }

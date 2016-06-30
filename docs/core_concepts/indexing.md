@@ -7,7 +7,6 @@ private String email;
 
 @Index({EQ})
 public String email() { return email; }
-public UserCreated email(String email) { this.email = email; return this; }
 
 public static Attribute<UserCreated, String> EMAIL = Indexing.getAttribute(UserCreated.class, "email");
 ```

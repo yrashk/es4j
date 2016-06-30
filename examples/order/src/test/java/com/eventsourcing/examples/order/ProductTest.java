@@ -21,7 +21,7 @@ public class ProductTest extends EventsourcingTest {
 
     @Test @SneakyThrows
     public void create() {
-        CreateProduct widget = new CreateProduct("Widget", new BigDecimal("100.50"));
+        CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
         assertEquals(product.name(), "Widget");
         assertEquals(product.price(), new BigDecimal("100.50"));
@@ -29,17 +29,17 @@ public class ProductTest extends EventsourcingTest {
 
     @Test @SneakyThrows
     public void renaming() {
-        CreateProduct widget = new CreateProduct("Widget", new BigDecimal("100.50"));
+        CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
-        repository.publish(new Rename(product.id(), "New Widget")).get();
+        repository.publish(Rename.builder().id(product.id()).name("New Widget").build()).get();
         assertEquals(product.name(), "New Widget");
     }
 
     @Test @SneakyThrows
     public void changingPrice() {
-        CreateProduct widget = new CreateProduct("Widget", new BigDecimal("100.50"));
+        CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
-        repository.publish(new ChangePrice(product.id(), new BigDecimal("699.99"))).get();
+        repository.publish(ChangePrice.builder().id(product.id()).price(new BigDecimal("699.99")).build()).get();
         assertEquals(product.price(), new BigDecimal("699.99"));
     }
 

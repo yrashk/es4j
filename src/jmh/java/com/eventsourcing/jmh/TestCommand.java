@@ -10,11 +10,18 @@ package com.eventsourcing.jmh;
 import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 
 public class TestCommand extends StandardCommand<String, Void> {
+    @Builder
+    public TestCommand(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
+
     @Override
     public EventStream<Void> events(Repository repository) {
-        return EventStream.of(new TestEvent().string("test"));
+        return EventStream.of(TestEvent.builder().string("test").build());
     }
 
     @Override

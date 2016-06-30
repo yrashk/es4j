@@ -9,13 +9,15 @@ package com.eventsourcing.jmh;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
 public class TestEvent extends StandardEvent {
-    private String string;
+    private final String string;
 
     @Index({EQ})
     public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>("attr") {
@@ -25,6 +27,12 @@ public class TestEvent extends StandardEvent {
         }
     };
 
+    @Builder
+    public TestEvent(HybridTimestamp timestamp, String string) {
+        super(timestamp);
+        this.string = string;
+    }
+
     public String toString() {
         return "RepositoryBenchmark.TestEvent(string=" + this.string + ")";
     }
@@ -33,8 +41,4 @@ public class TestEvent extends StandardEvent {
         return this.string;
     }
 
-    public TestEvent string(String string) {
-        this.string = string;
-        return this;
-    }
 }

@@ -12,9 +12,8 @@ import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 
@@ -23,18 +22,15 @@ import java.util.UUID;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 @Accessors(fluent = true)
-@AllArgsConstructor
-@NoArgsConstructor
 public class ProductAddedToOrder extends StandardEvent {
     @Getter
-    @Setter
-    private UUID orderId;
+    private final UUID orderId;
 
-    @Getter @Setter
-    private UUID productId;
+    @Getter
+    private final UUID productId;
 
-    @Getter @Setter
-    private int quantity;
+    @Getter
+    private final int quantity;
 
     @Index({EQ, UNIQUE})
     public static final SimpleAttribute<ProductAddedToOrder, UUID> ID = new SimpleAttribute<ProductAddedToOrder, UUID>(
@@ -67,4 +63,12 @@ public class ProductAddedToOrder extends StandardEvent {
             return productAddedToOrder.timestamp();
         }
     };
+
+    @Builder
+    public ProductAddedToOrder(HybridTimestamp timestamp, UUID orderId, UUID productId, int quantity) {
+        super(timestamp);
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+    }
 }

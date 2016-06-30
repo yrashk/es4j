@@ -8,7 +8,13 @@ Defining an event is quite similar to command, by subclassing `Event`:
 
 ```java
 public class UserCreated extends StandardEvent {
-  @Getter @Setter
-  private String email;
+  @Getter
+  private final String email;
+
+  @Builder
+  public UserCreated(HybridTimestamp timestamp, String email) {
+    super(timestamp);
+    this.email = email;
+  }
 }
 ```

@@ -9,8 +9,9 @@ package com.eventsourcing.h2;
 
 import com.eventsourcing.PersistentJournalTest;
 import com.eventsourcing.StandardEvent;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.AfterClass;
@@ -74,8 +75,14 @@ public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJ
     }
 
     public static class TestEvent extends StandardEvent {
-        @Getter @Setter
-        private String value;
+        @Getter
+        private final String value;
+
+        @Builder
+        public TestEvent(HybridTimestamp timestamp, String value) {
+            super(timestamp);
+            this.value = value;
+        }
     }
 
     @Test

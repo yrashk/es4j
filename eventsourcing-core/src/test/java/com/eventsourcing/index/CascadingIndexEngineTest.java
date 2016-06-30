@@ -9,6 +9,7 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardEntity;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.Journal;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -41,7 +42,11 @@ public class CascadingIndexEngineTest {
         }
     }
 
-    private static class MyEntity extends StandardEntity {}
+    private static class MyEntity extends StandardEntity {
+        public MyEntity(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+    }
 
     private static SimpleAttribute<MyEntity, UUID> INDEX = new SimpleAttribute<MyEntity, UUID>("idx") {
         @Override

@@ -12,7 +12,11 @@ import com.eventsourcing.layout.types.ObjectTypeHandler;
 import lombok.SneakyThrows;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
  * Layout deserializer
@@ -22,48 +26,23 @@ import java.util.function.Function;
 public class ObjectBinaryDeserializer<T> implements Deserializer.RequiresTypeHandler<T, ObjectTypeHandler>,
                                                     ObjectDeserializer<T> {
 
-    protected void checkLayout(Layout<T> layout) throws NoEmptyConstructorException {
-        if (layout.isReadOnly()) {
-            throw new IllegalArgumentException("Read-only layout");
-        }
-        if (layout.getConstructor() == null && layout.getLayoutClass().getConstructors().length > 0) {
-            try {
-                layout.getLayoutClass().getConstructor();
-            } catch (NoSuchMethodException e) {
-                throw new NoEmptyConstructorException();
-            }
-        }
-    }
-
-    @SneakyThrows
-    public void deserialize(ObjectTypeHandler typeHandler, T object, ByteBuffer buffer) {
-        BinarySerialization serialization = BinarySerialization.getInstance();
-        Layout<T> layout = (Layout<T>)typeHandler.getLayout();
-        checkLayout(layout);
-        for (Property<T> property : layout.getProperties()) {
-            property.set(object, serialization.getDeserializer(property.getTypeHandler()).
-                    deserialize(property.getTypeHandler(), buffer));
-        }
-    }
 
     @Override
     @SneakyThrows
     public T deserialize(ObjectTypeHandler typeHandler, ByteBuffer buffer) {
+        @SuppressWarnings("unchecked")
         Layout<T> layout = (Layout<T>)typeHandler.getLayout();
-        checkLayout(layout);
-        if (layout.getConstructor() != null) {
-            return (T) layout.getConstructor().newInstance(
-                    layout.getProperties().stream().map(new PropertyFunction<>(buffer)).toArray());
-        } else {
-            T value = layout.getLayoutClass().newInstance();
-            deserialize(typeHandler, value, buffer);
-            return value;
-        }
+        List<Property<T>> properties = layout.getProperties();
+        int[] order = layout.getConstructorProperties().stream()
+                           .mapToInt(properties::indexOf).toArray();
+
+        List<T> values = layout.getProperties().stream().map(new PropertyFunction<>(buffer))
+                                .collect(Collectors.toList());
+
+       return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
     }
 
-    public static class NoEmptyConstructorException extends Exception {}
-
-    private class PropertyFunction<T> implements Function<Property<T>, T> {
+    private static class PropertyFunction<T> implements Function<Property<T>, T> {
         private final ByteBuffer buffer;
 
         public PropertyFunction(ByteBuffer buffer) {

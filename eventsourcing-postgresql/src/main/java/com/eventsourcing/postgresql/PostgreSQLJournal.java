@@ -30,6 +30,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
+import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
@@ -40,6 +41,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 @Component(property = "type=PostgreSQLJournal")
@@ -99,7 +101,10 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             long count = actualEvents.peek(new Consumer<Event>() {
                 @Override public void accept(Event event) {
                     eventConsumer.accept(event);
-                    eventConsumer.accept(new EventCausalityEstablished().event(event.uuid()).command(command.uuid()));
+                    eventConsumer.accept(EventCausalityEstablished.builder()
+                                                                  .event(event.uuid())
+                                                                  .command(command.uuid())
+                                                                  .build());
                 }
             }).count();
 
@@ -123,7 +128,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             // if we are having an exception NOT when journalling CommandTerminatedExceptionally
             if (events == null) {
                 journal(command, listener, lockProvider,
-                        Stream.of((Event) new CommandTerminatedExceptionally(command.uuid(), e)));
+                        Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
             }
 
             throw e;
@@ -354,13 +359,17 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
         @SneakyThrows
         @Override public Object apply(ResultSet resultSet) {
-            Object o = layout.getLayoutClass().newInstance();
             AtomicInteger i = new AtomicInteger(1);
-            for (Property property : layout.getProperties()) {
+            List<? extends Property<?>> properties = layout.getProperties();
+            List<Object> values = new ArrayList<>();
+            for (Property property : properties) {
                 TypeHandler typeHandler = property.getTypeHandler();
-                property.set(o, getValue(resultSet, i, typeHandler));
+                values.add(getValue(resultSet, i, typeHandler));
             };
-            return o;
+            int[] order = layout.getConstructorProperties().stream()
+                                .mapToInt(properties::indexOf).toArray();
+
+            return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
         }
 
         @SneakyThrows
@@ -402,8 +411,9 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             if (typeHandler instanceof ListTypeHandler) {
                 if (((ListTypeHandler) typeHandler).getWrappedHandler() instanceof ObjectTypeHandler) {
                     ObjectTypeHandler handler = (ObjectTypeHandler) ((ListTypeHandler) typeHandler).getWrappedHandler();
-                    List<? extends Property<?>> properties = handler.getLayout().getProperties();
-                    List list = new ArrayList();
+                    Layout<?> objectLayout = handler.getLayout();
+                    List<? extends Property<?>> properties = objectLayout.getProperties();
+                    List<Map<String, Object>> list = new ArrayList();
                     for (Property p : properties) {
                         Array array = resultSet.getArray(i.getAndIncrement());
                         ResultSet arrayResultSet = array.getResultSet();
@@ -411,13 +421,13 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                         while (arrayResultSet.next()) {
                             j++;
                             if (list.size() < j) {
-                                list.add(handler.getLayout().getLayoutClass().newInstance());
+                                list.add(new HashMap<>());
                             }
-                            Object o = list.get(j - 1);
-                            p.set(o, getValue(arrayResultSet, new AtomicInteger(2), p.getTypeHandler()));
+                            Map<String, Object> o = list.get(j - 1);
+                            o.put(p.getName(), getValue(arrayResultSet, new AtomicInteger(2), p.getTypeHandler()));
                         }
                     }
-                    return list;
+                    return list.stream().map(new ObjectArrayCollector(objectLayout, properties)).collect(Collectors.toList());
                 } else {
                     Array array = resultSet.getArray(i.getAndIncrement());
                     ResultSet arrayResultSet = array.getResultSet();
@@ -433,14 +443,17 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                 return resultSet.getLong(i.getAndIncrement());
             }
             if (typeHandler instanceof ObjectTypeHandler) {
-                List<? extends Property<?>> properties = ((ObjectTypeHandler) typeHandler).getLayout().getProperties();
-                Object obj = ((ObjectTypeHandler) typeHandler).getLayout().getLayoutClass().newInstance();
+                Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
+                List<? extends Property<?>> properties = layout.getProperties();
+                List<Object> values = new ArrayList<>();
                 for (Property p : properties) {
                     Object value = getValue(resultSet, i, p.getTypeHandler());
-                    p.set(obj, value);
+                    values.add(value);
                 }
+                int[] order = layout.getConstructorProperties().stream()
+                                         .mapToInt(properties::indexOf).toArray();
 
-                return obj;
+                return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
             }
             if (typeHandler instanceof OptionalTypeHandler) {
                 return Optional.ofNullable(getValue(resultSet, i, ((OptionalTypeHandler) typeHandler)
@@ -457,7 +470,30 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             }
             throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
         }
+
     }
+
+    private static class ObjectArrayCollector implements Function<Map<String,Object>, Object> {
+        private final Layout<?> objectLayout;
+        private final List<? extends Property<?>> properties;
+
+        public ObjectArrayCollector(Layout<?> objectLayout, List<? extends Property<?>> properties) {
+            this.objectLayout = objectLayout;
+            this.properties = properties;
+        }
+
+        @SneakyThrows
+        @Override public Object apply(Map<String, Object> map) {
+            int[] order = objectLayout.getConstructorProperties().stream()
+                                      .mapToInt(properties::indexOf).toArray();
+
+            Constructor<?> constructor = objectLayout.getConstructor();
+            return constructor.newInstance(IntStream.of(order)
+                                                    .mapToObj(i -> map.get(properties.get(i).getName()))
+                                                    .toArray());
+        }
+    }
+
     private class InsertFunction implements BiFunction<Object, Connection, UUID> {
         private final Layout<?> layout;
         private final String table;
@@ -469,14 +505,20 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             properties = layout.getProperties();
         }
 
+        @SneakyThrows
         private String getParameter(Connection connection, TypeHandler typeHandler, Object object) {
             if (typeHandler instanceof UUIDTypeHandler) {
                 return "?::UUID";
             } else if (typeHandler instanceof ObjectTypeHandler) {
-                List<? extends Property> properties = ((ObjectTypeHandler) typeHandler).getLayout().getProperties();
+                Layout layout = ((ObjectTypeHandler) typeHandler).getLayout();
+                final Object o = object == null ?
+                        layout.getConstructor().newInstance(layout.getDefaultConstructorArguments()) : object;
+                @SuppressWarnings("unchecked")
+                List<? extends Property> properties = layout.getProperties();
+                @SuppressWarnings("unchecked")
                 String rowParameters = Joiner.on(",").join(
-                        properties.stream().map(p1 -> getParameter(connection, p1.getTypeHandler(), p1.get(object)))
-                                  .collect(Collectors.toList()));
+                        properties.stream().map(p1 -> getParameter(connection, p1.getTypeHandler(), p1.get(o))
+                ).collect(Collectors.toList()));
                 return "ROW(" + rowParameters + ")";
             } else if (typeHandler instanceof ListTypeHandler) {
                 TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
@@ -572,7 +614,8 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             } else
             if (typeHandler instanceof ObjectTypeHandler) {
                 Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
-                Object value_ = value == null ? layout.getLayoutClass().newInstance() : value;
+                Constructor<?> constructor = layout.getConstructor();
+                Object value_ = value == null ? constructor.newInstance(layout.getDefaultConstructorArguments()) : value;
                 List<? extends Property<?>> properties = layout.getProperties();
                 int j=i;
                 for (Property p : properties) {
@@ -610,7 +653,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
     private class LayoutExtractor implements Consumer<Class<?>> {
         @SneakyThrows
         @Override public void accept(Class<?> aClass) {
-            Layout<?> layout = new Layout<>(aClass);
+            Layout<?> layout = Layout.forClass(aClass);
             layoutsByClass.put(aClass.getName(), layout);
             byte[] fingerprint = layout.getHash();
             String encoded = BaseEncoding.base16().encode(fingerprint);
