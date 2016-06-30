@@ -284,11 +284,10 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             listener.onAbort(e);
 
 
-            try {
+            // if we are having an exception NOT when journalling CommandTerminatedExceptionally
+            if (events == null) {
                 journal(command, listener, lockProvider,
-                        Stream.of((Event)new CommandTerminatedExceptionally(command.uuid(), e)));
-            } catch (Exception e1) {
-                throw e1;
+                        Stream.of((Event) new CommandTerminatedExceptionally(command.uuid(), e)));
             }
 
             throw e;
