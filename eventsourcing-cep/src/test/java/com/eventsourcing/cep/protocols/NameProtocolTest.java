@@ -50,7 +50,7 @@ public class NameProtocolTest extends RepositoryTest {
         }
 
         @Override
-        public String onCompletion() {
+        public String result() {
             return name;
         }
     }

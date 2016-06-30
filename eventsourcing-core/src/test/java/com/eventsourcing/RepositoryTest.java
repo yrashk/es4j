@@ -119,7 +119,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public String onCompletion() {
+        public String result() {
             return "hello, world";
         }
 
@@ -230,7 +230,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public String onCompletion() {
+        public String result() {
             return "hello, world";
         }
     }
@@ -425,7 +425,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public String onCompletion(String state) {
+        public String result(String state) {
             return state;
         }
     }
@@ -449,7 +449,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public Boolean onCompletion(Boolean passed) {
+        public Boolean result(Boolean passed) {
             return passed;
         }
     }

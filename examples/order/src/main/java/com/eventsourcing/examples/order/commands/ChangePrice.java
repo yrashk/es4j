@@ -42,7 +42,7 @@ public class ChangePrice extends StandardCommand<BigDecimal, Void> {
     }
 
     @Override
-    public BigDecimal onCompletion() {
+    public BigDecimal result() {
         return price;
     }
 }

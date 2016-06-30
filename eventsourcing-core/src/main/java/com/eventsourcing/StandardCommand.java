@@ -15,7 +15,7 @@ import com.eventsourcing.repository.LockProvider;
  * @param <R> result type
  * @param <S> state type
  */
-public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>> implements Command<R, S> {
+public abstract class StandardCommand<R, S> extends StandardEntity<Command<S, R>> implements Command<S, R> {
 
     public StandardCommand(HybridTimestamp timestamp) {
         super(timestamp);
@@ -42,43 +42,43 @@ public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>
     /**
      * Once all events are recorded, this callback will be invoked.
      *
-     * By default, it calls {@link #onCompletion(Object, Repository)}
+     * By default, it calls {@link #result(Object, Repository)}
      *
      * @param state
      * @param repository
      * @param lockProvider
      * @return result
      */
-    @Override public R onCompletion(S state, Repository repository, LockProvider lockProvider) {
-        return onCompletion(state, repository);
+    @Override public R result(S state, Repository repository, LockProvider lockProvider) {
+        return result(state, repository);
     }
 
     /**
-     * By default, calls {@link #onCompletion(Object)}
+     * By default, calls {@link #result(Object)}
      *
      * @param state
      * @param repository
      * @return result
      */
-    public R onCompletion(S state, Repository repository) {
-        return onCompletion(state);
+    public R result(S state, Repository repository) {
+        return result(state);
     }
 
     /**
-     * By default, it calls {@link #onCompletion()}
+     * By default, it calls {@link #result()}
      *
      * @param state
      * @return result
      */
-    public R onCompletion(S state) {
-        return onCompletion();
+    public R result(S state) {
+        return result();
     }
 
     /**
      * By default, does nothing (returns <code>null</code>)
      * @return result
      */
-    public R onCompletion() {
+    public R result() {
         return null;
     }
 }

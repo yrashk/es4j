@@ -48,7 +48,7 @@ public class CreateProduct extends StandardCommand<Product, ProductCreated> {
     }
 
     @Override
-    public Product onCompletion(ProductCreated productCreated, Repository repository) {
+    public Product result(ProductCreated productCreated, Repository repository) {
         return Product.lookup(repository, productCreated.uuid()).get();
     }
 }

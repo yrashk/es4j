@@ -92,7 +92,7 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         private final CommandEvent disruptorEvent;
         private final IndexEngine indexEngine;
         private final Journal journal;
-        private final Command<?,?> command;
+        private final Command<?, ?> command;
         private final HybridTimestamp timestamp;
         private HybridTimestamp lastTimestamp;
 
@@ -239,14 +239,14 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
 
     private void complete(CommandEvent event) throws Exception {
         if (!event.completed.isCompletedExceptionally()) {
-            event.completed.complete(event.getCommand().onCompletion(event.getState(), repository, event.lockProvider));
+            event.completed.complete(event.getCommand().result(event.getState(), repository, event.lockProvider));
             event.lockProvider.release();
         }
     }
 
-    private <T, C extends Command<T, ?>> void translate(CommandEvent event, long sequence, C command,
-                                                             Collection<EntitySubscriber> subscribers,
-                                                             CompletableFuture<T> completed) {
+    private <T, C extends Command<?, T>> void translate(CommandEvent event, long sequence, C command,
+                                                        Collection<EntitySubscriber> subscribers,
+                                                        CompletableFuture<T> completed) {
         event.setEntitySubscribers(subscribers);
         event.setCommandClass((Class<Command>) command.getClass());
         event.commands.put(command.getClass(), command);
@@ -254,7 +254,7 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
     }
 
     @Override
-    public <T, C extends Command<T, ?>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber>
+    public <T, C extends Command<?, T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber>
             subscribers) {
         CompletableFuture<T> future = new CompletableFuture<>();
         ringBuffer.publishEvent(this::translate, command, subscribers, future);

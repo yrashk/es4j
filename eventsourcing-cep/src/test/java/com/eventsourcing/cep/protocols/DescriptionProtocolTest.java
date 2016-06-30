@@ -52,7 +52,7 @@ public class DescriptionProtocolTest extends RepositoryTest {
         }
 
         @Override
-        public String onCompletion() {
+        public String result() {
             return description;
         }
     }
