@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -300,7 +301,7 @@ public class LayoutTest {
     }
 
     @Value
-    public static class DefaultConstructor {
+    public static class Initializer {
         private final String a;
         private boolean b;
     }
@@ -308,10 +309,22 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void defaultConstructor() {
-        Layout<DefaultConstructor> layout = Layout.forClass(DefaultConstructor.class);
-        Object[] args = layout.getDefaultConstructorArguments();
-        DefaultConstructor instance = layout.getConstructor().newInstance(args);
+        Layout<Initializer> layout = Layout.forClass(Initializer.class);
+        Initializer instance = layout.instantiate();
         assertEquals(instance.getA(), "");
         assertFalse(instance.isB());
     }
+
+    @Test
+    @SneakyThrows
+    public void partialConstructor() {
+        Layout<Initializer> layout = Layout.forClass(Initializer.class);
+        HashMap<Property<Initializer>, Object> properties = new HashMap<>();
+        properties.put(layout.getProperty("a"), "hello");
+        Initializer instance = layout.instantiate(properties);
+        assertEquals(instance.getA(), "hello");
+        assertFalse(instance.isB());
+    }
+
+
 }

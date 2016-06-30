@@ -512,7 +512,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             } else if (typeHandler instanceof ObjectTypeHandler) {
                 Layout layout = ((ObjectTypeHandler) typeHandler).getLayout();
                 final Object o = object == null ?
-                        layout.getConstructor().newInstance(layout.getDefaultConstructorArguments()) : object;
+                        layout.instantiate() : object;
                 @SuppressWarnings("unchecked")
                 List<? extends Property> properties = layout.getProperties();
                 @SuppressWarnings("unchecked")
@@ -614,8 +614,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             } else
             if (typeHandler instanceof ObjectTypeHandler) {
                 Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
-                Constructor<?> constructor = layout.getConstructor();
-                Object value_ = value == null ? constructor.newInstance(layout.getDefaultConstructorArguments()) : value;
+                Object value_ = value == null ? layout.instantiate() : value;
                 List<? extends Property<?>> properties = layout.getProperties();
                 int j=i;
                 for (Property p : properties) {

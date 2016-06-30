@@ -58,9 +58,7 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         public CommandEvent(Iterable<Class<? extends Command>> classes) {
             for (Class<? extends Command> cmd : classes) {
                 Layout<? extends Command> layout = Layout.forClass(cmd);
-                Constructor<?> constructor = layout.getConstructor();
-                Object[] args = layout.getDefaultConstructorArguments();
-                commands.put(cmd, (Command) constructor.newInstance(args));
+                commands.put(cmd, layout.instantiate());
             }
         }
 

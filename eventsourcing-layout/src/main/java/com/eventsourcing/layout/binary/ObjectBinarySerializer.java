@@ -27,9 +27,7 @@ public class ObjectBinarySerializer<T> implements Serializer.RequiresTypeHandler
     public void serialize(ObjectTypeHandler<T> typeHandler, T value, ByteBuffer buffer) {
         Layout<T> layout = typeHandler.getLayout();
         if (value == null) {
-            Constructor<?> constructor = layout.getConstructor();
-            Object[] args = layout.getDefaultConstructorArguments();
-            serialize(typeHandler, (T) constructor.newInstance(args), buffer);
+            serialize(typeHandler, layout.instantiate(), buffer);
         } else {
             BinarySerialization serialization = BinarySerialization.getInstance();
             for (Property<T> property : layout.getProperties()) {
@@ -45,9 +43,7 @@ public class ObjectBinarySerializer<T> implements Serializer.RequiresTypeHandler
     public int size(ObjectTypeHandler<T> typeHandler, T value) {
         Layout<T> layout = typeHandler.getLayout();
         if (value == null) {
-            Constructor<?> constructor = typeHandler.getLayout().getConstructor();
-            Object[] args = layout.getDefaultConstructorArguments();
-            return size(typeHandler, (T) constructor.newInstance(args));
+            return size(typeHandler, layout.instantiate());
         }
         int sz = 0;
         BinarySerialization serialization = BinarySerialization.getInstance();

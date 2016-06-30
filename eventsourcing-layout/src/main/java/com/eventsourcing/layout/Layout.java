@@ -234,22 +234,69 @@ public class Layout<T> {
         return input.substring(0, 1).toUpperCase() + input.substring(1);
     }
 
+
     /**
-     * @return default constructor arguments
+     * Get a property by name
+     * @param name property name
+     * @return
+     * @throws NoSuchElementException if no such property is defined
      */
-    public Object[] getDefaultConstructorArguments() {
+    public Property<T> getProperty(String name) throws NoSuchElementException {
+        for (Property<T> property : properties) {
+            if (property.getName().contentEquals(name)) {
+                return property;
+            }
+        }
+        throw new NoSuchElementException();
+    }
+
+    /**
+     * Instantiate the layout class with default properties
+     * @return
+     * @throws IllegalAccessException
+     * @throws InstantiationException
+     * @throws InvocationTargetException
+     */
+    public T instantiate() throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        return instantiate(new HashMap<>());
+    }
+
+    /**
+     * Instantiate the layout class with fully or partially supplied property values
+     * @param properties property values
+     * @return
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     * @throws InstantiationException
+     */
+    public T instantiate(Map<Property<T>, Object> properties)
+            throws IllegalAccessException, InvocationTargetException, InstantiationException {
         Object[] args = new Object[constructor.getParameterCount()];
         BinarySerialization serialization = BinarySerialization.getInstance();
         for (int i = 0; i < args.length; i++) {
-            Property<T> property = properties.get(i);
-            TypeHandler typeHandler = property.getTypeHandler();
-            ByteBuffer buffer = serialization.getSerializer(typeHandler).serialize(typeHandler, args[i]);
-            buffer.rewind();
-            Object o = serialization.getDeserializer(typeHandler).deserialize(typeHandler, buffer);
-            args[i] = o;
+            Property<T> property = this.properties.get(i);
+            Optional<Object> suppliedProperty = findProperty(properties, property.getName());
+            if (suppliedProperty.isPresent()) {
+                args[i] = suppliedProperty.get();
+            } else {
+                TypeHandler typeHandler = property.getTypeHandler();
+                ByteBuffer buffer = serialization.getSerializer(typeHandler).serialize(typeHandler, args[i]);
+                buffer.rewind();
+                Object o = serialization.getDeserializer(typeHandler).deserialize(typeHandler, buffer);
+                args[i] = o;
+            }
         }
-        int[] order = getConstructorProperties().stream().mapToInt(properties::indexOf).toArray();
-        return IntStream.of(order).mapToObj(i -> args[i]).toArray();
+        int[] order = getConstructorProperties().stream().mapToInt(this.properties::indexOf).toArray();
+        return constructor.newInstance(IntStream.of(order).mapToObj(i -> args[i]).toArray());
+    }
+
+    private Optional<Object> findProperty(Map<Property<T>, Object> properties, String name) {
+        for (Map.Entry<Property<T>, Object> entry : properties.entrySet()) {
+            if (entry.getKey().getName().contentEquals(name)) {
+                return Optional.of(entry.getValue());
+            }
+        }
+        return Optional.empty();
     }
 
 
