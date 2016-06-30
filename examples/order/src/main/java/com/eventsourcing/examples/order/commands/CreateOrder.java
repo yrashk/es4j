@@ -29,7 +29,7 @@ public class CreateOrder extends StandardCommand<Order, OrderCreated> {
     }
 
     @Override
-    public Order onCompletion(OrderCreated orderCreated, Repository repository) {
+    public Order result(OrderCreated orderCreated, Repository repository) {
         return Order.lookup(repository, orderCreated.uuid()).get();
     }
 }

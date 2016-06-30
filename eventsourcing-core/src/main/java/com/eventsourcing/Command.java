@@ -16,10 +16,10 @@ import com.eventsourcing.repository.LockProvider;
  * For example, ConfirmOrder command may or may not result in an
  * OrderConfirmed event being produced.
  *
- * @param <R> result type
  * @param <S> state type
+ * @param <R> result type
  */
-public interface Command<R,S> extends Entity<Command<R,S>> {
+public interface Command<S, R> extends Entity<Command<S, R>> {
 
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
@@ -29,7 +29,7 @@ public interface Command<R,S> extends Entity<Command<R,S>> {
      * <p>
      * <ul>
      * <li>{@link #events(Repository, LockProvider)} threw an exception</li>
-     * <li>{@link #onCompletion(Object, Repository, LockProvider)} did not release any locks</li>
+     * <li>{@link #result(Object, Repository, LockProvider)} did not release any locks</li>
      * </ul>
      *
      * @param repository   Configured repository
@@ -51,7 +51,7 @@ public interface Command<R,S> extends Entity<Command<R,S>> {
      *
      * @return Result
      */
-    default R onCompletion(S state, Repository repository, LockProvider lockProvider) {
+    default R result(S state, Repository repository, LockProvider lockProvider) {
         return null;
     }
 }

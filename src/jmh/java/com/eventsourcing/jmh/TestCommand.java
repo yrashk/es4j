@@ -25,7 +25,7 @@ public class TestCommand extends StandardCommand<String, Void> {
     }
 
     @Override
-    public String onCompletion() {
+    public String result() {
         return "hello, world";
     }
 }

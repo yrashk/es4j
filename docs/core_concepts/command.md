@@ -17,12 +17,12 @@ public class CreateUser extends StandardCommand<User, Void> {
 ```
 
 The type parameter signifies an optional "result" type that can be returned
-once the command is successfully executed, by overriding the `onCompletion()`
+once the command is successfully executed, by overriding the `result()`
 method:
 
 ```java
 @Override
-public User onCompletion() {
+public User result() {
   return User.lookup(email);
 }
 ```

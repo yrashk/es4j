@@ -16,10 +16,10 @@ import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 
 public interface CommandConsumer extends Service {
-    default <T, C extends Command<T, ?>> CompletableFuture<T> publish(C command) {
+    default <T, C extends Command<?, T>> CompletableFuture<T> publish(C command) {
         return publish(command, Collections.emptyList());
     }
-    <T, C extends Command<T, ?>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers);
+    <T, C extends Command<?, T>> CompletableFuture<T> publish(C command, Collection<EntitySubscriber> subscribers);
 
     HybridTimestamp getTimestamp();
 }

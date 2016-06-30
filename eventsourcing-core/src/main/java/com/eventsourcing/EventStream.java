@@ -17,7 +17,7 @@ import java.util.stream.Stream;
  * a typed state.
  *
  * It is used for event generation and passing of state from {@link Command#events(Repository, LockProvider)}
- * to {@link Command#onCompletion(Object, Repository, LockProvider)}
+ * to {@link Command#result(Object, Repository, LockProvider)}
  *
  * @param <S> state type
  */

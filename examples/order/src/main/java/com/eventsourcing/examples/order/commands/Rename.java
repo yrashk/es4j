@@ -39,7 +39,7 @@ public class Rename extends StandardCommand<String, Void> {
     }
 
     @Override
-    public String onCompletion() {
+    public String result() {
         return name;
     }
 }

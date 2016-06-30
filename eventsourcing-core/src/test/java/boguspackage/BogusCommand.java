@@ -26,7 +26,7 @@ public class BogusCommand extends StandardCommand<String, Void> {
     }
 
     @Override
-    public String onCompletion() {
+    public String result() {
         return "bogus";
     }
 }

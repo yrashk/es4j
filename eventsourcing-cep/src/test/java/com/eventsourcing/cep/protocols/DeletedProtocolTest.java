@@ -55,7 +55,7 @@ public class DeletedProtocolTest extends RepositoryTest {
         }
 
         @Override
-        public Void onCompletion() {
+        public Void result() {
             return null;
         }
     }
@@ -78,7 +78,7 @@ public class DeletedProtocolTest extends RepositoryTest {
         }
 
         @Override
-        public Void onCompletion() {
+        public Void result() {
             return null;
         }
     }

@@ -221,7 +221,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     }
 
     @Override
-    public <T extends Command<C, ?>, C> CompletableFuture<C> publish(T command) {
+    public <T extends Command<?, C>, C> CompletableFuture<C> publish(T command) {
         return this.commandConsumer.publish(command, entitySubscribers);
     }
 

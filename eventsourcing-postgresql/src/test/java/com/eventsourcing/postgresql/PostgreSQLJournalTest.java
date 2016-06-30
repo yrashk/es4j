@@ -192,7 +192,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             return EventStream.ofWithState(serializationEvent, serializationEvent);
         }
 
-        @Override public UUID onCompletion(SerializationEvent state) {
+        @Override public UUID result(SerializationEvent state) {
             return state.uuid();
         }
     }
