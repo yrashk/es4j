@@ -93,7 +93,10 @@ public class MemoryJournal extends AbstractService implements Journal {
             count = events.peek(new Consumer<Event>() {
                 @Override public void accept(Event event) {
                     eventConsumer.accept(event);
-                    eventConsumer.accept(new EventCausalityEstablished().event(event.uuid()).command(command.uuid()));
+                    eventConsumer.accept(EventCausalityEstablished.builder()
+                                                                  .event(event.uuid())
+                                                                  .command(command.uuid())
+                                                                  .build());
                 }
             }).count();
             events_ = eventConsumer.getEvents();
@@ -102,7 +105,7 @@ public class MemoryJournal extends AbstractService implements Journal {
             listener.onAbort(e);
             exception = e;
             try {
-                count = Stream.of((Event)new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer)
+                count = Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)).peek(eventConsumer)
                               .count();
             } catch (Exception e1) {
                 events_.clear();
@@ -117,9 +120,10 @@ public class MemoryJournal extends AbstractService implements Journal {
 
         ByteBuffer buffer = serializer.serialize(command);
         buffer.rewind();
-        deserializer.deserialize(command, buffer);
+        Command command1 = deserializer.deserialize(buffer);
+        command1.uuid(command.uuid());
 
-        commands.put(command.uuid(), command);
+        commands.put(command1.uuid(), command1);
 
         listener.onCommit();
 
@@ -215,10 +219,11 @@ public class MemoryJournal extends AbstractService implements Journal {
 
             ByteBuffer buffer = serializer.serialize(event);
             buffer.rewind();
-            deserializer.deserialize(event, buffer);
+            Event event1 = deserializer.deserialize(buffer);
+            event1.uuid(event.uuid());
 
-            events.put(event.uuid(), event);
-            listener.onEvent(event);
+            events.put(event1.uuid(), event1);
+            listener.onEvent(event1);
         }
     }
 }

@@ -7,7 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.layout.LayoutIgnore;
 import com.eventsourcing.repository.LockProvider;
 
 /**
@@ -52,7 +51,7 @@ public interface Command<R,S> extends Entity<Command<R,S>> {
      *
      * @return Result
      */
-    @LayoutIgnore default R onCompletion(S state, Repository repository, LockProvider lockProvider) {
+    default R onCompletion(S state, Repository repository, LockProvider lockProvider) {
         return null;
     }
 }

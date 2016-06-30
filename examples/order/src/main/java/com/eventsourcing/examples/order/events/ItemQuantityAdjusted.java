@@ -9,6 +9,7 @@ package com.eventsourcing.examples.order.events;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.*;
@@ -18,15 +19,13 @@ import java.util.UUID;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
-@RequiredArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class ItemQuantityAdjusted extends StandardEvent {
-    @Getter @Setter @NonNull
-    private UUID itemId;
+    @Getter @NonNull
+    private final UUID itemId;
 
-    @Getter @Setter @NonNull
-    private Integer quantity;
+    @Getter @NonNull
+    private final Integer quantity;
 
     @Index({EQ})
     public static final SimpleAttribute<ItemQuantityAdjusted, UUID> ITEM_ID = new SimpleAttribute<ItemQuantityAdjusted, UUID>(
@@ -35,4 +34,11 @@ public class ItemQuantityAdjusted extends StandardEvent {
             return itemQuantityAdjusted.itemId();
         }
     };
+
+    @Builder
+    public ItemQuantityAdjusted(HybridTimestamp timestamp, UUID itemId, Integer quantity) {
+        super(timestamp);
+        this.itemId = itemId;
+        this.quantity = quantity;
+    }
 }

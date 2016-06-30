@@ -17,14 +17,12 @@ import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -84,8 +82,8 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Accessors(fluent = true) @ToString
     public static class TestEvent extends StandardEvent {
-        @Getter @Setter
-        private String string;
+        @Getter
+        private final String string;
 
         @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC})
         public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
@@ -94,24 +92,30 @@ public abstract class RepositoryTest<T extends Repository> {
                 return object.string();
             }
         };
+
+        @Builder
+        public TestEvent(HybridTimestamp timestamp, String string) {
+            super(timestamp);
+            this.string = string;
+        }
     }
 
     @ToString
     public static class RepositoryTestCommand extends StandardCommand<String, Void> {
 
-        @Getter @Setter
-        private String value = "test";
+        @Getter
+        private final String value;
 
-        public RepositoryTestCommand(String value) {
-            this.value = value;
+        @Builder
+        public RepositoryTestCommand(HybridTimestamp timestamp, String value) {
+            super(timestamp);
+            this.value = value == null ? "test" : value;
         }
 
-        public RepositoryTestCommand() {
-        }
 
         @Override
         public EventStream<Void> events(Repository repository) {
-            return EventStream.of(new TestEvent().string(value));
+            return EventStream.of(TestEvent.builder().string(value).build());
         }
 
         @Override
@@ -138,7 +142,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void basicPublish() {
-        assertEquals("hello, world", repository.publish(new RepositoryTestCommand()).get());
+        assertEquals("hello, world", repository.publish(RepositoryTestCommand.builder().build()).get());
     }
 
     @Test
@@ -156,7 +160,7 @@ public abstract class RepositoryTest<T extends Repository> {
                 gotCommand.set(journal.get(entity.uuid()).isPresent());
             }
         });
-        repository.publish(new RepositoryTestCommand()).get();
+        repository.publish(RepositoryTestCommand.builder().build()).get();
         assertTrue(gotEvent.get());
         assertTrue(gotCommand.get());
     }
@@ -164,7 +168,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void timestamping() {
-        repository.publish(new RepositoryTestCommand()).get();
+        repository.publish(RepositoryTestCommand.builder().build()).get();
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
         assertNotNull(test.timestamp());
@@ -182,9 +186,10 @@ public abstract class RepositoryTest<T extends Repository> {
     public void commandTimestamping() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        RepositoryTestCommand command1 = (RepositoryTestCommand) new RepositoryTestCommand("forced").timestamp
-                (timestamp);
-        RepositoryTestCommand command2 = new RepositoryTestCommand();
+        RepositoryTestCommand command1 = RepositoryTestCommand.builder().value("forced")
+                                                              .timestamp(timestamp)
+                                                              .build();
+        RepositoryTestCommand command2 = RepositoryTestCommand.builder().build();
         IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
                 .getIndexedCollection(RepositoryTestCommand.class);
 
@@ -202,20 +207,26 @@ public abstract class RepositoryTest<T extends Repository> {
     @ToString
     public static class TimestampingEventCommand extends StandardCommand<String, Void> {
 
-        private HybridTimestamp timestamp;
+        private final HybridTimestamp eventTimestamp;
 
-        public TimestampingEventCommand() {
-        }
-
+        @LayoutConstructor
         public TimestampingEventCommand(HybridTimestamp timestamp) {
-            this.timestamp = timestamp;
+            super(timestamp);
+            eventTimestamp = null;
         }
+
+        @Builder
+        public TimestampingEventCommand(HybridTimestamp timestamp, HybridTimestamp eventTimestamp) {
+            super(timestamp);
+            this.eventTimestamp = eventTimestamp;
+        }
+
 
         @Override
         public EventStream<Void> events(Repository repository) {
             return EventStream.of(new Event[]{
-                                  new TestEvent().string("test").timestamp(timestamp),
-                                  new TestEvent().string("followup")});
+                                  TestEvent.builder().string("test").timestamp(eventTimestamp).build(),
+                                  TestEvent.builder().string("followup").build()});
         }
 
         @Override
@@ -229,7 +240,7 @@ public abstract class RepositoryTest<T extends Repository> {
     public void eventTimestamping() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        TimestampingEventCommand command = new TimestampingEventCommand(timestamp);
+        TimestampingEventCommand command = TimestampingEventCommand.builder().eventTimestamp(timestamp).build();
 
         repository.publish(command).get();
 
@@ -250,7 +261,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void indexing() {
-        repository.publish(new RepositoryTestCommand()).get();
+        repository.publish(RepositoryTestCommand.builder().build()).get();
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
@@ -271,7 +282,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{BogusEvent.class.getPackage()}));
         assertTrue(repository.getCommands().contains(BogusCommand.class));
         assertTrue(repository.getEvents().contains(BogusEvent.class));
-        assertEquals("bogus", repository.publish(new BogusCommand()).get());
+        assertEquals("bogus", repository.publish(BogusCommand.builder().build()).get());
         // testing its indexing
         IndexedCollection<EntityHandle<BogusEvent>> coll = indexEngine.getIndexedCollection(BogusEvent.class);
         assertTrue(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).isNotEmpty());
@@ -280,6 +291,11 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     public static class LockCommand extends StandardCommand<Void, Void> {
+        @Builder
+        public LockCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+
         @Override
         public EventStream<Void> events(Repository repository, LockProvider lockProvider) {
             lockProvider.lock("LOCK");
@@ -289,13 +305,18 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test(timeOut = 1000) @SneakyThrows
     public void lockTracking() {
-        repository.publish(new LockCommand()).get();
+        repository.publish(LockCommand.builder().build()).get();
         Lock lock = lockProvider.lock("LOCK");
         assertTrue(lock.isLocked());
         lock.unlock();
     }
 
     public static class ExceptionalLockCommand extends StandardCommand<Void, Void> {
+        @Builder
+        public ExceptionalLockCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+
         @Override
         public EventStream<Void> events(Repository repository, LockProvider lockProvider) {
             lockProvider.lock("LOCK");
@@ -305,7 +326,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test(timeOut = 1000) @SneakyThrows
     public void exceptionalLockTracking() {
-        repository.publish(new ExceptionalLockCommand()).exceptionally(throwable -> null).get();
+        repository.publish(ExceptionalLockCommand.builder().build()).exceptionally(throwable -> null).get();
         Lock lock = lockProvider.lock("LOCK");
         assertTrue(lock.isLocked());
         lock.unlock();
@@ -313,6 +334,11 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
     public static class ExceptionalCommand extends StandardCommand<Object, Void> {
+        @Builder
+        public ExceptionalCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+
         @Override
         public EventStream<Void> events(Repository repository) {
             throw new IllegalStateException();
@@ -321,7 +347,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test @SneakyThrows
     public void exceptionalCommand() {
-        ExceptionalCommand command = new ExceptionalCommand();
+        ExceptionalCommand command = ExceptionalCommand.builder().build();
         Object o = repository.publish(command).exceptionally(throwable -> throwable).get();
         assertTrue(o instanceof IllegalStateException);
         Optional<Entity> commandLookup = journal.get(command.uuid());
@@ -338,19 +364,26 @@ public abstract class RepositoryTest<T extends Repository> {
     @ToString
     public static class StreamExceptionCommand extends StandardCommand<Void, Void> {
 
-        private UUID eventUUID = UUID.randomUUID();
+        private final UUID eventUUID;
 
-        public StreamExceptionCommand() {
+
+        @LayoutConstructor
+        public StreamExceptionCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+            eventUUID = null;
         }
 
-        public StreamExceptionCommand(UUID eventUUID) {
-            this.eventUUID = eventUUID;
+        @Builder
+        public StreamExceptionCommand(HybridTimestamp timestamp, UUID eventUUID) {
+            super(timestamp);
+            this.eventUUID = eventUUID == null ? UUID.randomUUID() : eventUUID;
         }
+
 
         @Override
         public EventStream<Void> events(Repository repository) {
             return EventStream.of(Stream.concat(Stream.of(
-                    new TestEvent().string("test").uuid(eventUUID)),
+                    TestEvent.builder().string("test").build().uuid(eventUUID)),
                                  Stream.generate(() -> {
                                      throw new IllegalStateException();
                                  })));
@@ -363,7 +396,7 @@ public abstract class RepositoryTest<T extends Repository> {
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         coll.clear();
         UUID eventUUID = UUID.randomUUID();
-        StreamExceptionCommand command = new StreamExceptionCommand(eventUUID);
+        StreamExceptionCommand command = StreamExceptionCommand.builder().eventUUID(eventUUID).build();
         CompletableFuture<Void> future = repository.publish(command);
         while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
         assertTrue(future.isCompletedExceptionally());
@@ -381,6 +414,11 @@ public abstract class RepositoryTest<T extends Repository> {
 
     public static class StatePassageCommand extends StandardCommand<String, String> {
 
+        @Builder
+        public StatePassageCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+
         @Override
         public EventStream<String> events(Repository repository, LockProvider lockProvider) throws Exception {
             return EventStream.empty("hello");
@@ -394,11 +432,16 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test @SneakyThrows
     public void statePassage() {
-        String s = repository.publish(new StatePassageCommand()).get();
+        String s = repository.publish(StatePassageCommand.builder().build()).get();
         assertEquals(s, "hello");
     }
 
     public static class PassingLockProvider extends StandardCommand<Boolean, Boolean> {
+
+        @Builder
+        public PassingLockProvider(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
 
         @Override
         public EventStream<Boolean> events(Repository repository, LockProvider lockProvider) throws Exception {
@@ -413,13 +456,13 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test @SneakyThrows
     public void passingLock() {
-        assertTrue(repository.publish(new PassingLockProvider()).get());
+        assertTrue(repository.publish(PassingLockProvider.builder().build()).get());
     }
 
     @Accessors(fluent = true) @ToString
     public static class TestOptionalEvent extends StandardEvent {
-        @Getter @Setter
-        private Optional<String> optional;
+        @Getter
+        private final Optional<String> optional;
 
         @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.UNIQUE})
         public static SimpleAttribute<TestOptionalEvent, UUID> ATTR = new SimpleAttribute<TestOptionalEvent, UUID>() {
@@ -428,17 +471,29 @@ public abstract class RepositoryTest<T extends Repository> {
                 return object.uuid();
             }
         };
+
+        @Builder
+        public TestOptionalEvent(HybridTimestamp timestamp, Optional<String> optional) {
+            super(timestamp);
+            this.optional = optional;
+        }
     }
 
     @Accessors(fluent = true)
     @ToString
     public static class TestOptionalCommand extends StandardCommand<Void, Void> {
-        @Getter @Setter
-        private Optional<String> optional;
+        @Getter
+        private final Optional<String> optional;
+
+        @Builder
+        public TestOptionalCommand(HybridTimestamp timestamp, Optional<String> optional) {
+            super(timestamp);
+            this.optional = optional;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) {
-            return EventStream.of(new TestOptionalEvent());
+            return EventStream.of(TestOptionalEvent.builder().optional(optional).build());
         }
 
         @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.UNIQUE})
@@ -453,7 +508,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test @SneakyThrows
     public void goesThroughLayoutSerialization() {
-        TestOptionalCommand command = new TestOptionalCommand();
+        TestOptionalCommand command = TestOptionalCommand.builder().build();
         repository.publish(command).get();
 
         TestOptionalCommand test = repository
@@ -467,7 +522,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @Test @SneakyThrows
     public void causalRelationship() {
-        RepositoryTestCommand command = new RepositoryTestCommand();
+        RepositoryTestCommand command = RepositoryTestCommand.builder().build();
         repository.publish(command).get();
         try (ResultSet<EntityHandle<EventCausalityEstablished>> resultSet = repository
                 .query(EventCausalityEstablished.class, equal(EventCausalityEstablished.COMMAND, command.uuid()))) {

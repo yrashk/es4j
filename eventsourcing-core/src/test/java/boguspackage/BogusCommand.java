@@ -10,12 +10,19 @@ package boguspackage;
 import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 
 public class BogusCommand extends StandardCommand<String, Void> {
 
+    @Builder
+    public BogusCommand(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
+
     @Override
     public EventStream<Void> events(Repository repository) throws Exception {
-        return EventStream.of(new BogusEvent());
+        return EventStream.of(BogusEvent.builder().build());
     }
 
     @Override

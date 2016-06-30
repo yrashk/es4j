@@ -18,6 +18,6 @@ public interface PriceProtocol extends Protocol, QueryUtilities {
     default BigDecimal price() {
         return last(getRepository(), PriceChanged.class, equal(PriceChanged.REFERENCE_ID, id()), PriceChanged.TIMESTAMP)
                 .
-                        orElse(new PriceChanged(null, BigDecimal.ZERO)).price();
+                        orElse(PriceChanged.builder().price(BigDecimal.ZERO).build()).price();
     }
 }

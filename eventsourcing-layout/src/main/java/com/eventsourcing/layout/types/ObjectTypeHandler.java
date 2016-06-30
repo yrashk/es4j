@@ -12,26 +12,22 @@ import com.eventsourcing.layout.TypeHandler;
 import lombok.Getter;
 import lombok.SneakyThrows;
 
-public class ObjectTypeHandler implements TypeHandler {
+public class ObjectTypeHandler<T> implements TypeHandler {
 
     @Getter
     private final Class wrappedClass;
     @Getter
-    private final Layout<?> layout;
+    private final Layout<T> layout;
 
     public ObjectTypeHandler() {
         wrappedClass = Object.class;
         layout = null;
     }
 
-    public ObjectTypeHandler(Class wrappedClass) {
-        this(wrappedClass, false);
-    }
-
     @SneakyThrows
-    public ObjectTypeHandler(Class<?> wrappedClass, boolean allowReadonly) {
+    public ObjectTypeHandler(Class<T> wrappedClass) {
         this.wrappedClass = wrappedClass;
-        layout = new Layout<>(wrappedClass, allowReadonly);
+        layout = Layout.forClass(wrappedClass);
     }
 
     @Override

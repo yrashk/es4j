@@ -13,9 +13,9 @@ import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.repository.*;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -70,26 +70,35 @@ public abstract class JournalTest<T extends Journal> {
         journal.clear();
     }
 
-    public static class TestEvent extends StandardEvent {}
+    public static class TestEvent extends StandardEvent {
+        @Builder
+        public TestEvent(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+    }
 
-    public static class AnotherTestEvent extends StandardEvent {}
+    public static class AnotherTestEvent extends StandardEvent {
+        @Builder
+        public AnotherTestEvent(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+    }
 
     @EqualsAndHashCode(callSuper = false)
     public static class TestCommand extends StandardCommand<Void, Void> {
-        @Getter @Setter
-        private boolean events;
+        @Getter
+        private final boolean events;
 
-        public TestCommand() {
-        }
-
-        public TestCommand(boolean events) {
+        @Builder
+        public TestCommand(HybridTimestamp timestamp, boolean events) {
+            super(timestamp);
             this.events = events;
         }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
             if (events) {
-                return EventStream.of(new TestEvent());
+                return EventStream.of(TestEvent.builder().build());
             } else {
                 return super.events(repository);
             }
@@ -97,6 +106,11 @@ public abstract class JournalTest<T extends Journal> {
     }
 
     public static class ExceptionalTestCommand extends StandardCommand<Void, Void> {
+        @Builder
+        public ExceptionalTestCommand(HybridTimestamp timestamp) {
+            super(timestamp);
+        }
+
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
             return EventStream.of(Stream.generate(() -> {
@@ -110,9 +124,9 @@ public abstract class JournalTest<T extends Journal> {
     public void journalCounting() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        assertEquals(journal.journal(new TestCommand(true).timestamp(timestamp)), 1);
+        assertEquals(journal.journal(TestCommand.builder().events(true).timestamp(timestamp).build()), 1);
         timestamp.update();
-        assertEquals(journal.journal(new TestCommand(false).timestamp(timestamp)), 0);
+        assertEquals(journal.journal(TestCommand.builder().events(false).timestamp(timestamp).build()), 0);
     }
 
     @Test
@@ -124,7 +138,7 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
 
         assertEquals(1,
-                     journal.journal(new TestCommand(true).timestamp(timestamp), new Journal.Listener() {
+                     journal.journal(TestCommand.builder().events(true).timestamp(timestamp).build(), new Journal.Listener() {
                          @Override
                          public void onEvent(Event event) {
                              onEvent.incrementAndGet();
@@ -148,7 +162,7 @@ public abstract class JournalTest<T extends Journal> {
         timestamp.update();
 
         try {
-            assertEquals(1, journal.journal(new ExceptionalTestCommand().timestamp(timestamp),
+            assertEquals(1, journal.journal(ExceptionalTestCommand.builder().timestamp(timestamp).build(),
                                             new Journal.Listener() {
                                                 @Override
                                                 public void onAbort(Throwable throwable) {
@@ -168,7 +182,7 @@ public abstract class JournalTest<T extends Journal> {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         List<Event> events = new ArrayList<>();
-        TestCommand command = new TestCommand(true);
+        TestCommand command = TestCommand.builder().events(true).build();
         journal.journal(command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
@@ -193,8 +207,8 @@ public abstract class JournalTest<T extends Journal> {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         List<Event> events = new ArrayList<>();
-        TestCommand command1 = new TestCommand(true);
-        TestCommand command2 = new TestCommand(true);
+        TestCommand command1 = TestCommand.builder().events(true).build();
+        TestCommand command2 = TestCommand.builder().events(true).build();
         journal.journal(command1.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {

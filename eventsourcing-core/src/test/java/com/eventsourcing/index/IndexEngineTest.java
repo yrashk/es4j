@@ -14,10 +14,7 @@ import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.*;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.javatuples.Pair;
 import org.testng.annotations.AfterClass;
@@ -27,7 +24,6 @@ import org.testng.annotations.Test;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
@@ -77,18 +73,18 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
 
     @EqualsAndHashCode(callSuper = false)
     public static class TestEvent extends StandardEvent {
-        @Getter @Setter
-        private String string;
+        @Getter
+        private final String string;
 
-        public TestEvent() {
-        }
-
-        public TestEvent(String string) {
+        @Builder
+        public TestEvent(String string, HybridTimestamp timestamp, String anotherString) {
+            super(timestamp);
             this.string = string;
+            this.anotherString = anotherString;
         }
 
-        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Setter @Accessors(chain = true)
-        private String anotherString;
+        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Accessors(chain = true)
+        private final String anotherString;
 
         public static Attribute<TestEvent, String> ANOTHER_ATTR = Indexing.getAttribute(TestEvent.class, "anotherString");
 
@@ -105,12 +101,18 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
 
     @Accessors(fluent = true)
     public static class TestCommand extends StandardCommand<Void, Void> {
-        @Getter @Setter
-        private String string;
+        @Getter
+        private final String string;
+
+        @Builder
+        public TestCommand(HybridTimestamp timestamp, String string) {
+            super(timestamp);
+            this.string = string;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) {
-            return EventStream.of(new TestEvent(string));
+            return EventStream.of(TestEvent.builder().string(string).build());
         }
     }
 
@@ -123,14 +125,14 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
                 .getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         List<Event> events = new ArrayList<>();
-        TestCommand command = (TestCommand) new TestCommand().string("test").timestamp(timestamp);
+        TestCommand command = TestCommand.builder().string("test").timestamp(timestamp).build();
         journal.journal(command, new Journal.Listener() {
             @Override
             public void onEvent(Event event) {
                 events.add(event);
             }
         });
-        Event event = events.get(0);
+        TestEvent event = (TestEvent) events.get(0);
         coll.add(new JournalEntityHandle<>(journal, event.uuid()));
 
         EntityHandle<TestEvent> handle = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult();
@@ -160,7 +162,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     @SneakyThrows
     public void getterIndex() {
         assertNotNull(TestEvent.ANOTHER_ATTR);
-        TestEvent event = new TestEvent().setAnotherString("test");
+        TestEvent event = TestEvent.builder().anotherString("test").build();
         EntityHandle<TestEvent> handle = new EntityHandle<TestEvent>() {
             @Override public Optional<TestEvent> getOptional() {
                 return Optional.of(event);

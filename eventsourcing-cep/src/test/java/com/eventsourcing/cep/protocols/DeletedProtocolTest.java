@@ -13,6 +13,8 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.cep.events.Undeleted;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -34,13 +36,20 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Accessors(fluent = true)
     public static class Delete extends StandardCommand<Void, Void> {
 
-        @Getter @Setter
-        private UUID id;
+        @Getter
+        final private UUID id;
         private UUID eventId;
+
+        @Builder
+        public Delete(UUID id, HybridTimestamp timestamp) {
+            super(timestamp);
+            this.id = id;
+        }
+
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
-            Deleted reference = new Deleted().reference(id);
+            Deleted reference = Deleted.builder().reference(id).build();
             eventId = reference.uuid();
             return EventStream.of(reference);
         }
@@ -54,12 +63,18 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Accessors(fluent = true)
     public static class Undelete extends StandardCommand<Void, Void> {
 
-        @Getter @Setter
-        private UUID id;
+        @Getter
+        private final UUID id;
+
+        @Builder
+        public Undelete(UUID id, HybridTimestamp timestamp) {
+            super(timestamp);
+            this.id = id;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
-            return EventStream.of(new Undeleted().deleted(id));
+            return EventStream.of(Undeleted.builder().deleted(id).build());
         }
 
         @Override
@@ -88,7 +103,7 @@ public class DeletedProtocolTest extends RepositoryTest {
     public void deletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
         assertFalse(model.deleted().isPresent());
-        Delete delete = new Delete().id(model.id());
+        Delete delete = Delete.builder().id(model.id()).build();
         repository.publish(delete).get();
         assertTrue(model.deleted().isPresent());
     }
@@ -96,9 +111,9 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Test @SneakyThrows
     public void undeletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
-        Delete delete = new Delete().id(model.id());
+        Delete delete = Delete.builder().id(model.id()).build();
         repository.publish(delete).get();
-        Undelete undelete = new Undelete().id(delete.eventId);
+        Undelete undelete = Undelete.builder().id(delete.eventId).build();
         repository.publish(undelete).get();
         assertFalse(model.deleted().isPresent());
     }

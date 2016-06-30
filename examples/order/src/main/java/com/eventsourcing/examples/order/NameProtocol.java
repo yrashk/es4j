@@ -15,10 +15,9 @@ import static com.googlecode.cqengine.query.QueryFactory.equal;
 public interface NameProtocol extends Protocol, QueryUtilities {
 
     default String name() {
-        return last(getRepository(), NameChanged.class, equal(NameChanged.REFERENCE_ID, id()), NameChanged.TIMESTAMP).
-                                                                                                                             orElse(new NameChanged(
-                                                                                                                                     null,
-                                                                                                                                     "Unnamed"))
-                                                                                                                     .name();
+        return last(getRepository(),
+                    NameChanged.class,
+                    equal(NameChanged.REFERENCE_ID, id()), NameChanged.TIMESTAMP)
+                .orElse(NameChanged.builder().name("Unnamed").build()).name();
     }
 }

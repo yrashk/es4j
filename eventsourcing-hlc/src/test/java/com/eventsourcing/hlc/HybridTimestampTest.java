@@ -72,7 +72,7 @@ public class HybridTimestampTest {
 
     @Test @SneakyThrows
     public void layout() {
-        Layout<HybridTimestamp> layout = new Layout<>(HybridTimestamp.class);
+        Layout<HybridTimestamp> layout = Layout.forClass(HybridTimestamp.class);
         List<Property<HybridTimestamp>> properties = layout.getProperties();
         assertEquals(properties.size(), 2);
         assertTrue(properties.stream().anyMatch(p -> p.getName().contentEquals("logicalTime")));

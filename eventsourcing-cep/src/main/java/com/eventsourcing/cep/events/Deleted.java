@@ -15,8 +15,8 @@ import com.eventsourcing.index.Indexing;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutName;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
@@ -30,8 +30,8 @@ import java.util.UUID;
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#Deleted")
 public class Deleted extends StandardEvent {
-    @Getter(onMethod = @__(@Index)) @Setter
-    UUID reference;
+    @Getter(onMethod = @__(@Index))
+    final UUID reference;
 
     @Index
     public static SimpleAttribute<Deleted, UUID> ID = new SimpleAttribute<Deleted, UUID>
@@ -51,4 +51,9 @@ public class Deleted extends StandardEvent {
         }
     };
 
+    @Builder
+    public Deleted(UUID reference, HybridTimestamp timestamp) {
+        super(timestamp);
+        this.reference = reference;
+    }
 }

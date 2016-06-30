@@ -34,12 +34,13 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
     public abstract <A, O> UniqueIndex onAttribute(Attribute<O, A> attribute);
 
     public static class Car {
-        @Getter @Setter
+        @Getter
         public int carId;
-        @Getter @Setter
+        @Getter
         public String name;
-        @Getter @Setter
+        @Getter
         public String description;
+        @Getter
         public List<String> features;
 
         public Car() {}

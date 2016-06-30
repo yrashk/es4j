@@ -15,28 +15,36 @@ import com.eventsourcing.examples.order.Product;
 import com.eventsourcing.examples.order.events.NameChanged;
 import com.eventsourcing.examples.order.events.PriceChanged;
 import com.eventsourcing.examples.order.events.ProductCreated;
-import lombok.*;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 
 @Accessors(fluent = true)
-@RequiredArgsConstructor
-@NoArgsConstructor
 public class CreateProduct extends StandardCommand<Product, ProductCreated> {
 
-    @Getter @Setter @NonNull
-    private String name;
+    @Getter @NonNull
+    private final String name;
 
-    @Getter @Setter @NonNull
-    private BigDecimal price;
+    @Getter @NonNull
+    private final BigDecimal price;
+
+    @Builder
+    public CreateProduct(HybridTimestamp timestamp, String name, BigDecimal price) {
+        super(timestamp);
+        this.name = name;
+        this.price = price;
+    }
 
     @Override
     public EventStream<ProductCreated> events(Repository repository) throws Exception {
-        ProductCreated productCreated = new ProductCreated();
-        NameChanged nameChanged = new NameChanged(productCreated.uuid(), name);
-        PriceChanged priceChanged = new PriceChanged(productCreated.uuid(), price);
-        return EventStream.ofWithState(productCreated, new Event[]{productCreated, nameChanged, priceChanged});
+        ProductCreated productCreated = ProductCreated.builder().build();
+        NameChanged nameChanged = NameChanged.builder().id(productCreated.uuid()).name(name).build();
+        PriceChanged priceChanged = PriceChanged.builder().id(productCreated.uuid()).price(price).build();
+        return EventStream.ofWithState(productCreated, productCreated, nameChanged, priceChanged);
     }
 
     @Override

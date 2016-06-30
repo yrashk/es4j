@@ -11,21 +11,28 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.ItemRemovedFromOrder;
-import lombok.*;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-@RequiredArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class RemoveItemFromOrder extends StandardCommand<Void, Void> {
 
-    @Getter @Setter @NonNull
-    private UUID itemId;
+    @Getter @NonNull
+    private final UUID itemId;
+
+    @Builder
+    public RemoveItemFromOrder(HybridTimestamp timestamp, UUID itemId) {
+        super(timestamp);
+        this.itemId = itemId;
+    }
 
     @Override
     public EventStream<Void> events(Repository repository) throws Exception {
-        return EventStream.of(new ItemRemovedFromOrder(itemId));
+        return EventStream.of(ItemRemovedFromOrder.builder().itemId(itemId).build());
     }
 }

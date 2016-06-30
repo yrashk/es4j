@@ -22,12 +22,10 @@ import java.util.function.Function;
  *
  * @param <T>
  */
-@NoArgsConstructor
-@RequiredArgsConstructor
 @LayoutName("rfc.eventsourcing.com/spec:7/LDL/#Property")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:7/LDL/", revision = "Jun 18, 2016")
 public class Property<T> {
-    @Getter @Setter @NonNull
+    @Getter @NonNull
     private String name;
     @Setter
     private byte[] fingerprint;
@@ -35,8 +33,6 @@ public class Property<T> {
     private ResolvedType type;
     @Getter @NonNull
     private TypeHandler typeHandler;
-    @Getter @NonNull
-    private BiConsumer<T, Object> setter;
     @Getter @NonNull
     private Function<T, Object> getter;
 
@@ -47,17 +43,9 @@ public class Property<T> {
      * @return property value
      */
     public <Y> Y get(T object) {
-        return (Y) getter.apply(object);
-    }
-
-    /**
-     * Sets property value to the object
-     *
-     * @param object
-     * @param value
-     */
-    public void set(T object, Object value) {
-        setter.accept(object, value);
+        @SuppressWarnings("unchecked")
+        Y v = (Y) getter.apply(object);
+        return v;
     }
 
     public String toString() {
@@ -72,5 +60,19 @@ public class Property<T> {
             return fingerprint;
         }
         throw new RuntimeException("fingerprint or typeHandler expected to be non-null");
+    }
+
+
+    public Property(String name, byte[] fingerprint) {
+        this.name = name;
+        this.fingerprint = fingerprint;
+    }
+
+
+    Property(String name, ResolvedType type, TypeHandler typeHandler, Function<T, Object> getter) {
+        this.name = name;
+        this.type = type;
+        this.typeHandler = typeHandler;
+        this.getter = getter;
     }
 }

@@ -9,10 +9,11 @@ package boguspackage;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
@@ -20,8 +21,8 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.SC;
 
 @Accessors(fluent = true)
 public class BogusEvent extends StandardEvent {
-    @Getter @Setter
-    private String string = "bogus";
+    @Getter
+    private final String string;
 
     @Index({EQ, SC})
     public static SimpleAttribute<BogusEvent, String> ATTR = new SimpleAttribute<BogusEvent, String>() {
@@ -30,4 +31,10 @@ public class BogusEvent extends StandardEvent {
             return object.string();
         }
     };
+
+    @Builder
+    public BogusEvent(HybridTimestamp timestamp, String string) {
+        super(timestamp);
+        this.string = string == null ? "bogus" : string;
+    }
 }

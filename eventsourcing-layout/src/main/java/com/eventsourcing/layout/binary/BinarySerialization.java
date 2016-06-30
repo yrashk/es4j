@@ -79,7 +79,7 @@ public class BinarySerialization extends Serialization {
         @SuppressWarnings("unchecked")
         ObjectDeserializer<T> objectDeserializer = objectDeserializers
                 .computeIfAbsent(klass.getName() + (allowReadonly ? "(r/o)": ""),
-                                 (k) -> new RootObjectBinaryDeserializer<>(new ObjectTypeHandler(klass, allowReadonly)));
+                                 (k) -> new RootObjectBinaryDeserializer<>(new ObjectTypeHandler(klass)));
         return objectDeserializer;
     }
 
@@ -111,8 +111,5 @@ public class BinarySerialization extends Serialization {
             return super.deserialize(typeHandler, buffer);
         }
 
-        @Override public void deserialize(T object, ByteBuffer buffer) {
-            super.deserialize(typeHandler, object, buffer);
-        }
     }
 }

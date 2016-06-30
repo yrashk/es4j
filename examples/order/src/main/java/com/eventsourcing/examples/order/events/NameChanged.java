@@ -12,10 +12,8 @@ import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
@@ -23,13 +21,11 @@ import java.util.UUID;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 @Accessors(fluent = true)
-@AllArgsConstructor
-@NoArgsConstructor
 public class NameChanged extends StandardEvent {
-    @Getter @Setter
-    private UUID id;
-    @Getter @Setter
-    private String name;
+    @Getter
+    private final UUID id;
+    @Getter
+    private final String name;
 
     @Index({EQ})
     public static final SimpleAttribute<NameChanged, UUID> REFERENCE_ID = new SimpleAttribute<NameChanged, UUID>(
@@ -47,4 +43,10 @@ public class NameChanged extends StandardEvent {
         }
     };
 
+    @Builder
+    public NameChanged(HybridTimestamp timestamp, UUID id, String name) {
+        super(timestamp);
+        this.id = id;
+        this.name = name;
+    }
 }

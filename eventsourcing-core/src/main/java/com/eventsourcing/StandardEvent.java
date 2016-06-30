@@ -7,8 +7,13 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
+
 /**
  * Standard {@link Event} implementation. Doesn't add any functionality.
  */
 public abstract class StandardEvent extends StandardEntity<Event> implements Event {
+    public StandardEvent(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
 }

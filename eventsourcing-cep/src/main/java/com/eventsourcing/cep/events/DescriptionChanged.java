@@ -13,8 +13,8 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutName;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
@@ -30,15 +30,14 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#DescriptionChanged")
 public class DescriptionChanged extends StandardEvent {
-    @Getter @Setter
-    UUID reference;
-    @Getter @Setter
-    String description;
+    @Getter
+    final UUID reference;
+    @Getter
+    final String description;
 
-    public DescriptionChanged() {
-    }
-
-    public DescriptionChanged(UUID reference, String description) {
+    @Builder
+    public DescriptionChanged(UUID reference, String description, HybridTimestamp timestamp) {
+        super(timestamp);
         this.reference = reference;
         this.description = description;
     }

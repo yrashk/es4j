@@ -12,28 +12,38 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.ProductAddedToOrder;
-import lombok.*;
+import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
 
-@RequiredArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class AddProductToOrder extends StandardCommand<Order.Item, ProductAddedToOrder> {
 
-    @Getter @Setter @NonNull
-    private UUID orderId;
+    @Getter @NonNull
+    private final UUID orderId;
 
-    @Getter @Setter @NonNull
-    private UUID productId;
+    @Getter @NonNull
+    private final UUID productId;
 
-    @Getter @Setter @NonNull
-    private Integer quantity;
+    @Getter @NonNull
+    private final Integer quantity;
+
+    @Builder
+    public AddProductToOrder(HybridTimestamp timestamp, UUID orderId, UUID productId, Integer quantity) {
+        super(timestamp);
+        this.orderId = orderId;
+        this.productId = productId;
+        this.quantity = quantity;
+    }
 
     @Override
     public EventStream<ProductAddedToOrder> events(Repository repository) throws Exception {
-        ProductAddedToOrder addedToOrder = new ProductAddedToOrder(orderId, productId, quantity);
+        ProductAddedToOrder addedToOrder = ProductAddedToOrder.builder()
+                .orderId(orderId).productId(productId).quantity(quantity).build();
         return EventStream.ofWithState(addedToOrder, addedToOrder);
     }
 

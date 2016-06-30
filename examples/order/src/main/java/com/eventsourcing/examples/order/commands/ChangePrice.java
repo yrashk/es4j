@@ -11,29 +11,34 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.PriceChanged;
+import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@AllArgsConstructor
-@NoArgsConstructor
 @Accessors(fluent = true)
 public class ChangePrice extends StandardCommand<BigDecimal, Void> {
     @Getter
-    @Setter
-    private UUID id;
+    private final UUID id;
 
-    @Getter @Setter
-    private BigDecimal price;
+    @Getter
+    private final BigDecimal price;
+
+    @Builder
+    public ChangePrice(HybridTimestamp timestamp, UUID id, BigDecimal price) {
+        super(timestamp);
+        this.id = id;
+        this.price = price;
+    }
 
     @Override
     public EventStream<Void> events(Repository repository) throws Exception {
-        return EventStream.of(new PriceChanged(id, price));
+        return EventStream.of(PriceChanged.builder().id(id).price(price).build());
     }
 
     @Override

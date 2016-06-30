@@ -7,41 +7,31 @@
  */
 package com.eventsourcing.layout;
 
+import com.eventsourcing.layout.binary.BinarySerialization;
 import com.fasterxml.classmate.*;
-import com.fasterxml.classmate.members.RawConstructor;
-import com.fasterxml.classmate.members.ResolvedMethod;
-import com.fasterxml.classmate.types.ResolvedPrimitiveType;
 import com.google.common.io.BaseEncoding;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
-import java.lang.annotation.Annotation;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
-import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
+import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiConsumer;
+import java.util.*;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 /**
- * Layout is a snapshot of a POJO for the purpose of versioning, serialization and deserialization.
+ * Layout is a snapshot of a class for the purpose of versioning, serialization and deserialization.
  * <p>
- * Class name, property names and property types are used to deterministically calculate POJO's hash (used for versioning).
+ * Layout name, property names and property types are used to deterministically calculate hash (used for versioning).
  * <p>
  * <h1>Property qualification</h1>
  * <p>
@@ -49,244 +39,86 @@ import java.util.stream.Collectors;
  * <p>
  * <ul>
  * <li>Has a getter (fluent or JavaBean style)</li>
- * <li>Has a setter (fluent or JavaBean style), or a matching constructor for all properties</li>
- * <li>Doesn't have a {@link LayoutIgnore} annotation attached to either a getter or a setter</li>
+ * <li>Has a matching parameter in the constructor (same parameter name or same name through {@link PropertyName}
+ *     parameter annotation)</li>
  * <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
  * </ul>
  * <p>
- * Inherited properties from superclasses will also be included.
  *
  * @param <T> Bean's class
  */
 @LayoutName("rfc.eventsourcing.com/spec:7/LDL/#Layout")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:7/LDL/", revision = "Jun 18, 2016")
+@Slf4j
 public class Layout<T> {
 
     public static final String DIGEST_ALGORITHM = "SHA-1";
     /**
-     * Qualified POJO properties. See {@link Layout for definition}
+     * Qualified properties. See {@link Layout} for definition
      */
-    @Getter @Setter
-    private List<Property<T>> properties;
+    @Getter
+    private final List<Property<T>> properties;
+    @Getter
+    private final List<Property<T>> constructorProperties;
 
+    /**
+     * Layout name (derived from class or overriden with {@link LayoutName})
+     */
+    @Getter
+    private final String name;
+
+    /**
+     * Layout's hash (fingerprint)
+     */
     @Getter
     private byte[] hash;
 
     @Getter
-    private boolean readOnly = false;
+    private Constructor<T> constructor;
 
     @Getter
-    private Constructor constructor;
+    private Class<T> layoutClass;
 
-    @Getter @Setter
-    private String name;
+    private TypeResolver typeResolver;
+    private MethodHandles.Lookup methodHandles;
 
-    protected boolean setConstructor(Constructor constructor) {
-        if (this.constructor == null || this.constructor.equals(constructor)) {
-            this.constructor = constructor;
-            return true;
-        } else {
-            return false;
-        }
-    }
 
-    private Class<T> klass;
-
-    public Class<T> getLayoutClass() {
-        return klass;
-    }
-
-    public Layout() {
+    @LayoutConstructor
+    public Layout(String name, List<Property<T>> properties) {
+        this.name = name;
+        this.properties = properties;
+        this.constructorProperties = new ArrayList<>();
     }
 
     /**
-     * Creates POJO's class layout
+     * Creates a Layout for a class. The class MUST define a constructor with properties. If multiple public
+     * constructors are defined, one must be chosen with {@link LayoutConstructor}. Otherwise, by default,
+     * a preference is given to the widest constructor (the one with most parameters).
      *
-     * @param klass Bean's class
+     * @param klass         Type
      * @throws IntrospectionException
+     * @throws NoSuchAlgorithmException
+     * @throws IllegalAccessException
+     * @throws com.eventsourcing.layout.TypeHandler.TypeHandlerException
      */
-    public Layout(Class<T> klass) throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
-                                         TypeHandler.TypeHandlerException {
-        this(klass, false);
+    public static <T>  Layout<T> forClass(Class<T> klass)
+            throws TypeHandler.TypeHandlerException, IntrospectionException, NoSuchAlgorithmException,
+                   IllegalAccessException {
+        return new Layout<>(klass);
     }
 
-    /**
-     * Creates POJO's class layout
-     *
-     * @param klass         Bean's class
-     * @param allowReadonly Allow readonly layouts (no setters required)
-     * @throws IntrospectionException
-     */
-    public Layout(Class<T> klass, boolean allowReadonly)
+    private Layout(Class<T> klass)
             throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
                    TypeHandler.TypeHandlerException {
-        this(klass, allowReadonly, true);
-    }
+        typeResolver = new TypeResolver();
+        methodHandles = MethodHandles.lookup();
 
-    // This version of the constructor is only meant to be used in tests to
-    // build layouts in slightly different ways to facilitate creation of various
-    // scenarios
-    Layout(Class<T> klass, boolean allowReadonly, boolean hashClassName)
-            throws IntrospectionException, NoSuchAlgorithmException, IllegalAccessException,
-                   TypeHandler.TypeHandlerException {
-        this.klass = klass;
-        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        layoutClass = klass;
+        properties = new ArrayList<>();
+        constructorProperties = new ArrayList<>();
 
-        TypeResolver typeResolver = new TypeResolver();
-        ResolvedType klassType = typeResolver.resolve(klass);
-
-        List<Property<T>> props = new ArrayList<>();
-
-        MemberResolver getterResolver = new MemberResolver(typeResolver);
-        getterResolver.setMethodFilter(element -> {
-            Method member = element.getRawMember();
-            if (member.getAnnotation(LayoutIgnore.class) != null || shouldMethodBeIgnored(klass, member)) {
-                return false;
-            }
-
-            ResolvedType resolvedType = typeResolver.resolve(member.getReturnType());
-
-            // Getter (JavaBean)
-            boolean beanGetter = member.getParameterCount() == 0 &&
-                    !(resolvedType == ResolvedPrimitiveType.voidType()) &&
-                    (member.getName().matches("^get[A-Z][A-za-z_0-9]*") ||
-                            (resolvedType.isPrimitive() && resolvedType.getErasedType() == Boolean.TYPE && member
-                                    .getName().matches("^is[A-Z][A-za-z_0-9]*")));
-
-            // Getter (fluent)
-            boolean getter = member.getParameterCount() == 0 &&
-                    !member.getName().matches("^(get|is)[A-Z][A-za-z_0-9]*") &&
-                    !(resolvedType == ResolvedPrimitiveType.voidType());
-
-            return Modifier.isPublic(member.getModifiers()) && !Modifier.isStatic(member.getModifiers()) &&
-                    (beanGetter || getter);
-        });
-        ResolvedTypeWithMembers getters = getterResolver.resolve(klassType, new LayoutAnnotationConfiguration(), null);
-
-        MemberResolver setterResolver = new MemberResolver(typeResolver);
-        setterResolver.setMethodFilter(element -> {
-            Method member = element.getRawMember();
-            if (member.getAnnotation(LayoutIgnore.class) != null || shouldMethodBeIgnored(klass, member)) {
-                return false;
-            }
-            // Setter (JavaBean)
-            boolean beanSetter = member.getParameterCount() == 1 &&
-                    member.getName().matches("set[A-Z][A-za-z_0-9]*");
-
-            // Setter (fluent)
-            boolean setter = member.getParameterCount() == 1 &&
-                    member.getReturnType().isAssignableFrom(klass);
-
-            return Modifier.isPublic(member.getModifiers()) && !Modifier.isStatic(member.getModifiers()) &&
-                    (beanSetter || setter);
-        });
-        ResolvedTypeWithMembers setters = setterResolver.resolve(klassType, new LayoutAnnotationConfiguration(), null);
-
-        int getterIndex = 0;
-
-        ResolvedMethod[] getterMembers = getters.getMemberMethods();
-
-        int numberOfGetters = getterMembers.length;
-
-        List<RawConstructor> matchingConstructors = klassType.getConstructors().stream().
-                filter(constructor -> constructor.getRawMember().getParameterCount() == numberOfGetters).
-                                                                     collect(Collectors.toList());
-
-        for (ResolvedMethod method : getterMembers) {
-            String propertyName = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
-            String capitalizedPropertyName = propertyName.substring(0, 1).toUpperCase() + propertyName.substring(1);
-
-            Method getter = method.getRawMember();
-
-            Optional<ResolvedMethod> matchingSetter = Arrays.asList(setters.getMemberMethods()).stream().
-                    filter(member -> member.getName().contentEquals(propertyName) ||
-                            member.getName().contentEquals("set" + capitalizedPropertyName)).findFirst();
-
-            final int finalGetterIndex = getterIndex;
-            Predicate<RawConstructor> matchingConstructorPredicate = constructor -> constructor.getRawMember()
-                                                                                               .getGenericParameterTypes()[finalGetterIndex]
-                    .equals(getter.getGenericReturnType());
-
-            boolean hasAMatchingConstructor = matchingConstructors.stream().anyMatch(matchingConstructorPredicate);
-
-            if (allowReadonly || matchingSetter.isPresent() || hasAMatchingConstructor) {
-
-                if (matchingSetter.isPresent()) {
-                    Method setter = matchingSetter.get().getRawMember();
-
-                    MethodHandle getterHandler = lookup.unreflect(getter);
-                    MethodHandle setterHandler = lookup.unreflect(setter);
-
-                    Property<T> property = new Property<>(propertyName,
-                                                          method.getReturnType(),
-                                                          TypeHandler.<T>lookup(method.getReturnType(),
-                                                                                method.getRawMember()
-                                                                                      .getAnnotatedReturnType()),
-                                                          new BiConsumer<T, Object>() {
-                                                              @Override
-                                                              @SneakyThrows
-                                                              public void accept(T t, Object o) {
-                                                                  setterHandler.invoke(t, o);
-                                                              }
-                                                          },
-                                                          new Function<T, Object>() {
-                                                              @Override
-                                                              @SneakyThrows
-                                                              public Object apply(T t) {
-                                                                  if (t == null) {
-                                                                      return null;
-                                                                  }
-                                                                  return getterHandler.invoke(t);
-                                                              }
-                                                          });
-                    props.add(property);
-                } else {
-                    readOnly = !hasAMatchingConstructor;
-                    MethodHandle getterHandler = lookup.unreflect(getter);
-
-                    if (hasAMatchingConstructor) {
-                        Optional<RawConstructor> matchingConstructor = matchingConstructors.stream().
-                                filter(matchingConstructorPredicate).
-                                                                                                   filter(constructor -> setConstructor(
-                                                                                                           constructor
-                                                                                                                   .getRawMember()))
-                                                                                           .
-                                                                                                   findFirst();
-                        if (!matchingConstructor.isPresent()) {
-                            throw new IllegalArgumentException("getter " + getter
-                                    .getName() + " doesn't have a matching argument in a common constructor");
-                        }
-                    }
-
-                    Property<T> property = new Property<>(propertyName,
-                                                          method.getReturnType(),
-                                                          TypeHandler.<T>lookup(method.getReturnType(),
-                                                                                method.getRawMember()
-                                                                                      .getAnnotatedReturnType()),
-                                                          new BiConsumer<T, Object>() {
-                                                              @Override
-                                                              @SneakyThrows
-                                                              public void accept(T t, Object o) {
-                                                                  throw new IllegalAccessError();
-                                                              }
-                                                          },
-                                                          new Function<T, Object>() {
-                                                              @Override
-                                                              @SneakyThrows
-                                                              public Object apply(T t) {
-                                                                  return getterHandler.invoke(t);
-                                                              }
-                                                          });
-                    props.add(property);
-                }
-            }
-            getterIndex++;
-        }
-
-        // Sort properties lexicographically (by default, they seem to be sorted anyway,
-        // however, no such guarantee was found in the documentation upon brief inspection)
-        properties = props.stream().
-                sorted((x, y) -> x.getName().compareTo(y.getName())).collect(Collectors.toList());
+        constructor = findLayoutConstructor();
+        deriveProperties();
 
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
@@ -297,9 +129,7 @@ public class Layout<T> {
         // It is important to include class name into the hash as there could be situations
         // when POJOs have indistinguishable layouts, and therefore it is impossible to
         // guarantee that we'd pick the right class
-        if (hashClassName) {
-            digest.update(name.getBytes());
-        }
+        digest.update(name.getBytes());
 
         for (Property<T> property : properties) {
             digest.update(property.getName().getBytes());
@@ -309,57 +139,144 @@ public class Layout<T> {
         this.hash = digest.digest();
     }
 
-    // Used for making sure @LayoutIgnore at the target class in the hierarchy
-    // overrides the inclusion behaviour
-    private boolean shouldMethodBeIgnored(Class<T> klass, Method member) {
+    private Constructor<T> findLayoutConstructor() {
+        @SuppressWarnings("unchecked")
+        Constructor<T>[] constructors = (Constructor<T>[]) layoutClass.getConstructors();
+
+        // Must have at least one public constructor
+        if (constructors.length == 0) {
+            throw new IllegalArgumentException(layoutClass + " doesn't have any public constructors");
+        }
+
+        // Prefer wider constructors
+        List<Constructor<T>> constructorList = Arrays.asList(constructors);
+        constructorList.sort((o1, o2) -> Integer.compare(o2.getParameterCount(), o1.getParameterCount()));
+
+        // Pick the first constructor by default (if there will be only one)
+        Constructor<T> constructor = constructorList.get(0);
+
+        boolean ambiguityDetected = false;
+
+        for (Constructor<T> c : constructorList) {
+            // If annotated as a layout constructor, pick it, end of story
+            if (c.isAnnotationPresent(LayoutConstructor.class)) {
+                return c;
+            }
+
+            // If a non-annotated constructor of the same width is found,
+            // when there's no annotated constructor, it might cause an
+            // ambiguity
+            if (c != constructor && c.getParameterCount() == constructor.getParameterCount()) {
+                ambiguityDetected = true;
+            }
+        }
+
+        if (ambiguityDetected) {
+            throw new IllegalArgumentException(layoutClass + "has more than one constructor with " +
+                                               constructor.getParameterCount() +
+                                               " parameters and no @LayoutConstructor-annotated constructor");
+        }
+
+        return constructor;
+    }
+
+    private void deriveProperties() throws TypeHandler.TypeHandlerException, IllegalAccessException {
+        Parameter[] parameters = constructor.getParameters();
+        // Require parameter names
+        for (Parameter parameter : parameters) {
+            if (parameter.getName().contentEquals("arg" + properties.size()) &&
+                    !parameter.isAnnotationPresent(PropertyName.class)) {
+                throw new IllegalArgumentException("arg" + properties.size() + " parameter name detected. " +
+                                                   "You must run javac with  -parameters argument or " +
+                                                   "use @PropertyName annotation");
+            }
+            String name = parameter.isAnnotationPresent(PropertyName.class) ?
+                    parameter.getAnnotation(PropertyName.class).value() : parameter.getName();
+            Optional<Method> fluent = retrieveGetter(name, parameter.getType());
+            String capitalizedName = capitalizeFirstLetter(name);
+            Optional<Method> getX = retrieveGetter("get" + capitalizedName, parameter.getType());
+            Optional<Method> isX = (parameter.getType() == Boolean.TYPE || parameter.getType() == Boolean.class)
+                    ? retrieveGetter("is" + capitalizedName, parameter.getType()) : Optional.empty();
+            // prefer in this order: getX, isX, fluent
+            Optional<Optional<Method>> getter = Stream.of(getX, isX, fluent).filter(Optional::isPresent).findFirst();
+            if (!getter.isPresent()) {
+                throw new IllegalArgumentException("No getter found for " + layoutClass.getName() + "." + name);
+            }
+            Method method = getter.get().get();
+            ResolvedType resolvedType = typeResolver.resolve(method.getReturnType());
+            MethodHandle getterHandler = methodHandles.unreflect(method);
+            Property<T> property = new Property<>(name, resolvedType,
+                                                   TypeHandler.lookup(resolvedType, method.getAnnotatedReturnType()),
+                                                   new GetterFunction<T>(getterHandler));
+            properties.add(property);
+            constructorProperties.add(property);
+        }
+        // Sort properties lexicographically (by default, they seem to be sorted anyway,
+        // however, no such guarantee was found in the documentation upon brief inspection)
+        properties.sort((x, y) -> x.getName().compareTo(y.getName()));
+    }
+
+    private Optional<Method> retrieveGetter(String name, Class<?> type) {
         try {
-            Method declaredMethod = klass.getDeclaredMethod(member.getName(), member.getParameterTypes());
-            if (declaredMethod.getAnnotation(LayoutIgnore.class) != null) {
-                return true;
+            Method method = layoutClass.getMethod(name);
+            if (Modifier.isPublic(method.getModifiers()) &&
+                    method.getReturnType() == type)  {
+                return Optional.of(method);
+            } else {
+                return Optional.empty();
             }
         } catch (NoSuchMethodException e) {
+            return Optional.empty();
         }
-        return false;
     }
+
+    private String capitalizeFirstLetter(String input) {
+        return input.substring(0, 1).toUpperCase() + input.substring(1);
+    }
+
+    /**
+     * @return default constructor arguments
+     */
+    public Object[] getDefaultConstructorArguments() {
+        Object[] args = new Object[constructor.getParameterCount()];
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        for (int i = 0; i < args.length; i++) {
+            Property<T> property = properties.get(i);
+            TypeHandler typeHandler = property.getTypeHandler();
+            ByteBuffer buffer = serialization.getSerializer(typeHandler).serialize(typeHandler, args[i]);
+            buffer.rewind();
+            Object o = serialization.getDeserializer(typeHandler).deserialize(typeHandler, buffer);
+            args[i] = o;
+        }
+        int[] order = getConstructorProperties().stream().mapToInt(properties::indexOf).toArray();
+        return IntStream.of(order).mapToObj(i -> args[i]).toArray();
+    }
+
 
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Layout && Arrays.equals(getHash(), ((Layout) obj).getHash());
     }
 
-    private static class LayoutAnnotationConfiguration extends AnnotationConfiguration {
-        @Override
-        public AnnotationInclusion getInclusionForClass(Class<? extends Annotation> annotationType) {
-            return AnnotationInclusion.DONT_INCLUDE;
-        }
-
-        @Override
-        public AnnotationInclusion getInclusionForConstructor(Class<? extends Annotation> annotationType) {
-            return AnnotationInclusion.DONT_INCLUDE;
-        }
-
-        @Override
-        public AnnotationInclusion getInclusionForField(Class<? extends Annotation> annotationType) {
-            return AnnotationInclusion.DONT_INCLUDE;
-        }
-
-        @Override
-        public AnnotationInclusion getInclusionForMethod(Class<? extends Annotation> annotationType) {
-            return AnnotationInclusion.INCLUDE_AND_INHERIT;
-        }
-
-        @Override
-        public AnnotationInclusion getInclusionForParameter(Class<? extends Annotation> annotationType) {
-            return AnnotationInclusion.DONT_INCLUDE;
-        }
-    }
-
     public String toString() {
-        StringBuilder builder = new StringBuilder().append(klass.getName() + " " + BaseEncoding.base16().encode(hash))
+        StringBuilder builder = new StringBuilder().append(
+                layoutClass.getName() + " " + BaseEncoding.base16().encode(hash))
                                                    .append("\n");
         for (Property<T> property : properties) {
             builder.append("    ").append(property.toString()).append("\n");
         }
         return builder.toString();
+    }
+
+    private static class GetterFunction<T> implements Function<T, Object> {
+        private final MethodHandle getterHandler;
+
+        public GetterFunction(MethodHandle getterHandler) {this.getterHandler = getterHandler;}
+
+        @Override
+        @SneakyThrows
+        public Object apply(T t) {
+            return getterHandler.invoke(t);
+        }
     }
 }

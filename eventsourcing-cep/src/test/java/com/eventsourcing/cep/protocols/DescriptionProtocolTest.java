@@ -10,6 +10,7 @@ package com.eventsourcing.cep.protocols;
 import com.eventsourcing.*;
 import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -17,7 +18,6 @@ import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -31,17 +31,24 @@ public class DescriptionProtocolTest extends RepositoryTest {
     @Accessors(fluent = true)
     public static class ChangeDescription extends StandardCommand<String, Void> {
 
-        @Getter @Setter
-        private UUID id;
-        @Getter @Setter
-        private String description;
+        @Getter
+        private final UUID id;
+        @Getter
+        private final String description;
+
+        @Builder
+        public ChangeDescription(HybridTimestamp timestamp, UUID id, String description) {
+            super(timestamp);
+            this.id = id;
+            this.description = description;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
-            return EventStream.of(new DescriptionChanged()
+            return EventStream.of(DescriptionChanged.builder()
                     .reference(id)
                     .description(description)
-                    .timestamp(timestamp()));
+                    .timestamp(timestamp()).build());
         }
 
         @Override
@@ -74,18 +81,23 @@ public class DescriptionProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        ChangeDescription changeDescription = new ChangeDescription().id(model.id()).description("Description #1");
+        ChangeDescription changeDescription = ChangeDescription.builder()
+                                                               .id(model.id())
+                                                               .description("Description #1").build();
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #1");
 
-        ChangeDescription changeBefore = (ChangeDescription) new ChangeDescription().id(model.id()).description("Description #0")
-                                                                                    .timestamp(timestamp);
+        ChangeDescription changeBefore = ChangeDescription.builder()
+                                                          .id(model.id()).description("Description #0")
+                                                          .timestamp(timestamp).build();
         assertTrue(changeBefore.timestamp().compareTo(changeDescription.timestamp()) < 0);
         repository.publish(changeBefore).get();
         assertEquals(model.description(), "Description #1"); // earlier change shouldn't affect the description
 
 
-        changeDescription = new ChangeDescription().id(model.id()).description("Description #2");
+        changeDescription = ChangeDescription.builder()
+                                             .id(model.id())
+                                             .description("Description #2").build();
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #2");
     }

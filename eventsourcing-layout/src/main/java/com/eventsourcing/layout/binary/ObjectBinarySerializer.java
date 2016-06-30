@@ -9,7 +9,9 @@ package com.eventsourcing.layout.binary;
 
 import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.types.ObjectTypeHandler;
+import lombok.SneakyThrows;
 
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 
 /**
@@ -17,27 +19,38 @@ import java.nio.ByteBuffer;
  *
  * @param <T>
  */
-public class ObjectBinarySerializer<T> implements Serializer.RequiresTypeHandler<T, ObjectTypeHandler>,
+public class ObjectBinarySerializer<T> implements Serializer.RequiresTypeHandler<T, ObjectTypeHandler<T>>,
                                                   ObjectSerializer<T> {
 
     @Override
-    public void serialize(ObjectTypeHandler typeHandler, T value, ByteBuffer buffer) {
-        BinarySerialization serialization = BinarySerialization.getInstance();
-        @SuppressWarnings("unchecked")
-        Layout<T> layout = (Layout<T>)typeHandler.getLayout();
-        for (Property<T> property : layout.getProperties()) {
-            TypeHandler propertyTypeHandler = property.getTypeHandler();
-            serialization.<T, TypeHandler>getSerializer(propertyTypeHandler)
-                    .serialize(propertyTypeHandler, property.get(value), buffer);
+    @SneakyThrows
+    public void serialize(ObjectTypeHandler<T> typeHandler, T value, ByteBuffer buffer) {
+        Layout<T> layout = typeHandler.getLayout();
+        if (value == null) {
+            Constructor<?> constructor = layout.getConstructor();
+            Object[] args = layout.getDefaultConstructorArguments();
+            serialize(typeHandler, (T) constructor.newInstance(args), buffer);
+        } else {
+            BinarySerialization serialization = BinarySerialization.getInstance();
+            for (Property<T> property : layout.getProperties()) {
+                TypeHandler propertyTypeHandler = property.getTypeHandler();
+                serialization.<T, TypeHandler>getSerializer(propertyTypeHandler)
+                        .serialize(propertyTypeHandler, property.get(value), buffer);
+            }
         }
     }
 
     @Override
-    public int size(ObjectTypeHandler typeHandler, T value) {
+    @SneakyThrows
+    public int size(ObjectTypeHandler<T> typeHandler, T value) {
+        Layout<T> layout = typeHandler.getLayout();
+        if (value == null) {
+            Constructor<?> constructor = typeHandler.getLayout().getConstructor();
+            Object[] args = layout.getDefaultConstructorArguments();
+            return size(typeHandler, (T) constructor.newInstance(args));
+        }
         int sz = 0;
         BinarySerialization serialization = BinarySerialization.getInstance();
-        @SuppressWarnings("unchecked")
-        Layout<T> layout = (Layout<T>)typeHandler.getLayout();
         for (Property<T> property : layout.getProperties()) {
             TypeHandler propertyTypeHandler = property.getTypeHandler();
             sz += serialization.<T, TypeHandler>getSerializer(propertyTypeHandler)

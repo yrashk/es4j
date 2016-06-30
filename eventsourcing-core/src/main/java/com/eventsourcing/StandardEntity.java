@@ -8,7 +8,6 @@
 package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.layout.LayoutIgnore;
 
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -39,7 +38,7 @@ public abstract class StandardEntity<E extends Entity> implements Entity<E> {
      *
      * @return Entity UUID
      */
-    @Override @LayoutIgnore
+    @Override
     public UUID uuid() {
         while (uuid == null) {
             try {
@@ -62,5 +61,9 @@ public abstract class StandardEntity<E extends Entity> implements Entity<E> {
     public E timestamp(HybridTimestamp timestamp) {
         this.timestamp = timestamp;
         return (E)this;
+    }
+
+    public StandardEntity(HybridTimestamp timestamp) {
+        this.timestamp = timestamp;
     }
 }

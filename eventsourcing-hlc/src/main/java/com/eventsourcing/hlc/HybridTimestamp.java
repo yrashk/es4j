@@ -7,10 +7,9 @@
  */
 package com.eventsourcing.hlc;
 
-import com.eventsourcing.layout.LayoutIgnore;
+import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
 import lombok.Getter;
-import lombok.Setter;
 import org.apache.commons.net.ntp.TimeStamp;
 
 /**
@@ -22,10 +21,10 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     private final PhysicalTimeProvider physicalTimeProvider;
 
-    @Getter @Setter
-    long logicalTime = 0;
-    @Getter @Setter
-    long logicalCounter = 0;
+    @Getter
+    long logicalTime;
+    @Getter
+    long logicalCounter;
 
     public HybridTimestamp() {
         this(null, 0, 0);
@@ -41,6 +40,13 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
 
     public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider, long logicalTime, long logicalCounter) {
         this.physicalTimeProvider = physicalTimeProvider;
+        this.logicalTime = logicalTime;
+        this.logicalCounter = logicalCounter;
+    }
+
+    @LayoutConstructor
+    public HybridTimestamp(long logicalTime, long logicalCounter) {
+        physicalTimeProvider = null;
         this.logicalTime = logicalTime;
         this.logicalCounter = logicalCounter;
     }
@@ -93,7 +99,6 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
      *
      * @return updated timestamp
      */
-    @LayoutIgnore
     public long update() {
         long physicalTime = physicalTimeProvider.getPhysicalTime();
         if (compare(logicalTime, physicalTime) < 0) {
@@ -146,13 +151,11 @@ public class HybridTimestamp implements Comparable<HybridTimestamp> {
     /**
      * @return 64-bit timestamp
      */
-    @LayoutIgnore
     public long timestamp() {
         return (logicalTime >> 16 << 16) | (logicalCounter << 48 >> 48);
     }
 
 
-    @LayoutIgnore
     public String toString() {
         String logical = TimeStamp.getNtpTime(logicalTime).toUTCString();
         TimeStamp timeStamp = new TimeStamp(timestamp());

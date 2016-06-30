@@ -40,10 +40,12 @@ public class Car extends StandardEntity {
     private UUID uuid = UUID.randomUUID();
 
     public Car() {
+        super(null);
     }
 
     public Car(int carId, String manufacturer, String model, Color color, int doors, double price,
                List<String> features) {
+        super(null);
         this.carId = carId;
         this.manufacturer = manufacturer;
         this.model = model;

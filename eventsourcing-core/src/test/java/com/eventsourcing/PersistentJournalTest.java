@@ -49,7 +49,7 @@ public abstract class PersistentJournalTest<T extends Journal> extends JournalTe
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         List<Event> events = new ArrayList<>();
-        TestCommand command = new TestCommand(true);
+        TestCommand command = TestCommand.builder().events(true).build();
         journal.journal(command.timestamp(timestamp), new Journal.Listener() {
             @Override
             public void onEvent(Event event) {

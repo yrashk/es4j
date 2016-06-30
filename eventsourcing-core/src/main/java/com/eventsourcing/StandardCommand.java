@@ -7,7 +7,7 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.layout.LayoutIgnore;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.repository.LockProvider;
 
 /**
@@ -16,6 +16,10 @@ import com.eventsourcing.repository.LockProvider;
  * @param <S> state type
  */
 public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>> implements Command<R, S> {
+
+    public StandardCommand(HybridTimestamp timestamp) {
+        super(timestamp);
+    }
 
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
@@ -56,7 +60,6 @@ public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>
      * @param repository
      * @return result
      */
-    @LayoutIgnore
     public R onCompletion(S state, Repository repository) {
         return onCompletion(state);
     }
@@ -67,7 +70,6 @@ public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>
      * @param state
      * @return result
      */
-    @LayoutIgnore
     public R onCompletion(S state) {
         return onCompletion();
     }
@@ -76,7 +78,6 @@ public abstract class StandardCommand<R, S> extends StandardEntity<Command<R, S>
      * By default, does nothing (returns <code>null</code>)
      * @return result
      */
-    @LayoutIgnore
     public R onCompletion() {
         return null;
     }
