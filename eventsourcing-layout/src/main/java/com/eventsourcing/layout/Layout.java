@@ -127,8 +127,9 @@ public class Layout<T> {
         properties = new ArrayList<>();
         constructorProperties = new ArrayList<>();
 
-        constructor = findLayoutConstructor(layoutClass);
-        deriveProperties(layoutClass, constructor, false);
+        ClassAnalyzer.Constructor analyzerConstructor = findLayoutConstructor(layoutClass);
+        constructor = analyzerConstructor.getConstructor();
+        deriveProperties(layoutClass, analyzerConstructor, false);
 
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
@@ -149,9 +150,13 @@ public class Layout<T> {
         this.hash = digest.digest();
     }
 
-    private <X> Constructor<X> findLayoutConstructor(Class<X> klass) {
-        @SuppressWarnings("unchecked")
-        Constructor<?>[] constructors = klass.getConstructors();
+    @SneakyThrows
+    private <X> ClassAnalyzer.Constructor findLayoutConstructor(Class<X> klass) {
+        ClassAnalyzer analyzer = new JavaClassAnalyzer();
+        if (klass.isAnnotationPresent(UseClassAnalyzer.class)) {
+            analyzer = klass.getAnnotation(UseClassAnalyzer.class).value().newInstance();
+        }
+        ClassAnalyzer.Constructor[] constructors = analyzer.getConstructors(klass);
 
         // Must have at least one public constructor
         if (constructors.length == 0) {
@@ -159,59 +164,53 @@ public class Layout<T> {
         }
 
         // Prefer wider constructors
-        List<Constructor<?>> constructorList = Arrays.asList(constructors);
-        constructorList.sort((o1, o2) -> Integer.compare(o2.getParameterCount(), o1.getParameterCount()));
+        List<ClassAnalyzer.Constructor> constructorList = Arrays.asList(constructors);
+        constructorList.sort((o1, o2) -> Integer.compare(o2.getParameters().length, o1.getParameters().length));
 
         // Pick the first constructor by default (if there will be only one)
-        Constructor<?> constructor = constructorList.get(0);
+        ClassAnalyzer.Constructor constructor = constructorList.get(0);
 
         boolean ambiguityDetected = false;
 
-        for (Constructor<?> c : constructorList) {
+        for (ClassAnalyzer.Constructor c : constructorList) {
             // If annotated as a layout constructor, pick it, end of story
-            if (c.isAnnotationPresent(LayoutConstructor.class)) {
-                return (Constructor<X>) c;
+            if (c.isLayoutConstructor()) {
+                return c;
             }
 
             // If a non-annotated constructor of the same width is found,
             // when there's no annotated constructor, it might cause an
             // ambiguity
-            if (c != constructor && c.getParameterCount() == constructor.getParameterCount()) {
+            if (c != constructor && c.getParameters().length == constructor.getParameters().length) {
                 ambiguityDetected = true;
             }
         }
 
         if (ambiguityDetected) {
             throw new IllegalArgumentException(klass + "has more than one constructor with " +
-                                               constructor.getParameterCount() +
+                                               constructor.getParameters().length +
                                                " parameters and no @LayoutConstructor-annotated constructor");
         }
 
-        return (Constructor<X>) constructor;
+        return constructor;
     }
 
-    private void deriveProperties(Class<?> klass, Constructor<T> constructor, boolean parentClass)
+    private void deriveProperties(Class<?> klass, ClassAnalyzer.Constructor constructor, boolean parentClass)
             throws TypeHandler.TypeHandlerException,
                    IllegalAccessException {
-        Parameter[] parameters = constructor.getParameters();
+        ClassAnalyzer.Parameter[] parameters = constructor.getParameters();
         // Require parameter names
-        for (Parameter parameter : parameters) {
-            if (parameter.getName().contentEquals("arg" + properties.size()) &&
-                    !parameter.isAnnotationPresent(PropertyName.class)) {
-                throw new IllegalArgumentException("arg" + properties.size() + " parameter name detected. " +
-                                                   "You must run javac with  -parameters argument or " +
-                                                   "use @PropertyName annotation");
-            }
-            String name = parameter.isAnnotationPresent(PropertyName.class) ?
-                    parameter.getAnnotation(PropertyName.class).value() : parameter.getName();
+        for (ClassAnalyzer.Parameter parameter : parameters) {
+            String name = parameter.getName();
 
             // if there's such property already, skip processing the parameter
             if (getNullableProperty(name) != null) {
                 continue;
             }
-
-            Optional<Method> fluent = retrieveGetter(name, parameter.getType());
             String capitalizedName = capitalizeFirstLetter(name);
+
+            // discover a getter
+            Optional<Method> fluent = retrieveGetter(name, parameter.getType());
             Optional<Method> getX = retrieveGetter("get" + capitalizedName, parameter.getType());
             Optional<Method> isX = (parameter.getType() == Boolean.TYPE || parameter.getType() == Boolean.class)
                     ? retrieveGetter("is" + capitalizedName, parameter.getType()) : Optional.empty();
@@ -222,6 +221,7 @@ public class Layout<T> {
             if (!getter.isPresent()) {
                 throw new IllegalArgumentException("No getter found for " + layoutClass.getName() + "." + name);
             }
+
             // Not a valid property if it doesn't have a setter and a setter is required
             if (parentClass && !setX.isPresent() && !fluentSetter.isPresent()) {
                 continue;
@@ -247,7 +247,7 @@ public class Layout<T> {
         }
         Class superclass = klass.getSuperclass();
         if (superclass != Object.class) {
-            Constructor parentConstructor = findLayoutConstructor(superclass);
+            ClassAnalyzer.Constructor parentConstructor = findLayoutConstructor(superclass);
             deriveProperties(superclass, parentConstructor, true);
         }
         // Sort properties lexicographically (by default, they seem to be sorted anyway,
