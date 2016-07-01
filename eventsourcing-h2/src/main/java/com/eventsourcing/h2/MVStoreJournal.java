@@ -16,20 +16,14 @@ import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.layout.Layout;
-import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.JournalEntityHandle;
-import com.eventsourcing.repository.JournalMBean;
-import com.eventsourcing.repository.LockProvider;
+import com.eventsourcing.repository.*;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.SneakyThrows;
+import lombok.*;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVMap;
@@ -53,9 +47,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component(
+        service = Journal.class,
         property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
 @Slf4j
-public class MVStoreJournal extends AbstractService implements Journal, JournalMBean {
+public class MVStoreJournal extends AbstractService implements Journal, AbstractJournal, JournalMBean {
+    @Getter @Setter
     private Repository repository;
 
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
@@ -220,81 +216,83 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
     private Map<String, Layout> layoutsByHash = new HashMap<>();
     private Map<String, Layout> layoutsByClass = new HashMap<>();
 
-    @Override
-    public void setRepository(Repository repository) {
-        this.repository = repository;
-    }
+    static class Transaction implements AbstractJournal.Transaction {
+        @Getter
+        final TransactionStore.Transaction tx;
 
-    @Override @SuppressWarnings("unchecked")
-    public long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
-        return journal(command, listener, lockProvider, null);
-    }
+        private final TransactionMap<UUID, byte[]> txEventHashes;
+        private final TransactionMap<byte[], Boolean> txHashEvents;
+        private final TransactionMap<UUID, ByteBuffer> txEventPayloads;
 
-    private long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider, Stream<? extends
-            Event> events)
-            throws Exception {
-        TransactionStore.Transaction tx = transactionStore.begin();
-        try {
-            Layout commandLayout = layoutsByClass.get(command.getClass().getName());
-
-            ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
-            hashBuffer.put(commandLayout.getHash());
-            hashBuffer.putLong(command.uuid().getMostSignificantBits());
-            hashBuffer.putLong(command.uuid().getLeastSignificantBits());
-
-            TransactionMap<UUID, ByteBuffer> txCommandPayloads = tx.openMap("commandPayloads", new ObjectDataType(),
-                                                                            new ByteBufferDataType());
-            TransactionMap<byte[], Boolean> txHashCommands = tx.openMap("hashCommands");
-            TransactionMap<UUID, byte[]> txCommandHashes = tx.openMap("commandHashes");
-
-            Stream<? extends Event> actualEvents;
-
-            if (events == null) {
-                EventStream<?> eventStream = command.events(repository, lockProvider);
-                listener.onCommandStateReceived(eventStream.getState());
-                actualEvents = eventStream.getStream();
-            } else {
-                actualEvents = events;
-            }
-
-            EventConsumer eventConsumer = new EventConsumer(tx, command, listener);
-            long count = actualEvents.peek(new Consumer<Event>() {
-                @Override public void accept(Event event) {
-                    eventConsumer.accept(event);
-                    eventConsumer.accept(EventCausalityEstablished.builder()
-                                                                  .event(event.uuid())
-                                                                  .command(command.uuid())
-                                                                  .build());
-                }
-            }).count();
-
-            ByteBuffer buffer = serialization.getSerializer(command.getClass()).serialize(command);
-            buffer.rewind();
-            txCommandPayloads.tryPut(command.uuid(), buffer);
-            txHashCommands.tryPut(hashBuffer.array(), true);
-            txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
-
-            tx.prepare();
-            tx.commit();
-
-            listener.onCommit();
-            
-            return count;
-        } catch (Exception e) {
-            tx.rollback();
-            listener.onAbort(e);
-
-
-            // if we are having an exception NOT when journalling CommandTerminatedExceptionally
-            if (events == null) {
-                journal(command, listener, lockProvider,
-                        Stream.of((Event) new CommandTerminatedExceptionally(command.uuid(), e)));
-            }
-
-            throw e;
+        Transaction(TransactionStore.Transaction tx) {
+            this.tx = tx;
+            txEventPayloads = tx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
+            txHashEvents = tx.openMap("hashEvents");
+            txEventHashes = tx.openMap("eventHashes");
         }
 
+        @Override public void commit() {
+            tx.prepare();
+            tx.commit();
+        }
+
+        @Override public void rollback() {
+            tx.rollback();
+        }
     }
+
+    @Override public AbstractJournal.Transaction beginTransaction() {
+        return new Transaction(transactionStore.begin());
+    }
+
+    @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+        TransactionStore.Transaction tx0 = ((Transaction) tx).getTx();
+        TransactionMap<UUID, ByteBuffer> txCommandPayloads = tx0.openMap("commandPayloads", new ObjectDataType(),
+                                                                        new ByteBufferDataType());
+        TransactionMap<byte[], Boolean> txHashCommands = tx0.openMap("hashCommands");
+        TransactionMap<UUID, byte[]> txCommandHashes = tx0.openMap("commandHashes");
+
+        Layout commandLayout = layoutsByClass.get(command.getClass().getName());
+
+        ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
+        hashBuffer.put(commandLayout.getHash());
+        hashBuffer.putLong(command.uuid().getMostSignificantBits());
+        hashBuffer.putLong(command.uuid().getLeastSignificantBits());
+
+
+        ByteBuffer buffer = serialization.getSerializer(command.getClass()).serialize(command);
+        buffer.rewind();
+        txCommandPayloads.tryPut(command.uuid(), buffer);
+        txHashCommands.tryPut(hashBuffer.array(), true);
+        txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
+    }
+
+    @Override public void record(AbstractJournal.Transaction tx, Event event) {
+        Transaction tx0 = ((Transaction) tx);
+        Layout layout = layoutsByClass.get(event.getClass().getName());
+
+        ObjectSerializer serializer = serialization.getSerializer(event.getClass());
+        int size = serializer.size(event);
+
+        ByteBuffer payloadBuffer = ByteBuffer.allocate(size);
+        serializer.serialize(event, payloadBuffer);
+        payloadBuffer.rewind();
+
+        tx0.txEventPayloads.tryPut(event.uuid(), payloadBuffer);
+
+        ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
+
+        hashBuffer.rewind();
+        hashBuffer.put(layout.getHash());
+        hashBuffer.putLong(event.uuid().getMostSignificantBits());
+        hashBuffer.putLong(event.uuid().getLeastSignificantBits());
+
+
+        tx0.txHashEvents.tryPut(hashBuffer.array(), true);
+        tx0.txEventHashes.tryPut(event.uuid(), layout.getHash());
+    }
+
+
 
     @Override
     @SneakyThrows @SuppressWarnings("unchecked")
@@ -482,62 +480,6 @@ public class MVStoreJournal extends AbstractService implements Journal, JournalM
             ByteBuffer buffer = ByteBuffer.wrap(bytes);
             UUID uuid = new UUID(buffer.getLong(hash.length), buffer.getLong(hash.length + 8));
             return new JournalEntityHandle<>(MVStoreJournal.this, uuid);
-        }
-    }
-
-    private class EventConsumer implements Consumer<Event> {
-        private final HybridTimestamp ts;
-        private final TransactionStore.Transaction tx;
-        private final Command<?, ?> command;
-        private final Journal.Listener listener;
-        private final TransactionMap<UUID, byte[]> txEventHashes;
-        private final TransactionMap<byte[], Boolean> txHashEvents;
-        private final TransactionMap<UUID, ByteBuffer> txEventPayloads;
-
-        public EventConsumer(TransactionStore.Transaction tx, Command<?, ?> command, Journal.Listener listener) {
-            this.tx = tx;
-            this.command = command;
-            this.listener = listener;
-            this.ts = command.timestamp().clone();
-            txEventPayloads = tx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
-            txHashEvents = tx.openMap("hashEvents");
-            txEventHashes = tx.openMap("eventHashes");
-        }
-
-        @Override
-        @SneakyThrows
-        public void accept(Event event) {
-
-            if (event.timestamp() == null) {
-                ts.update();
-                event.timestamp(ts.clone());
-            } else {
-                ts.update(event.timestamp().clone());
-            }
-
-            Layout layout = layoutsByClass.get(event.getClass().getName());
-
-            ObjectSerializer serializer = serialization.getSerializer(event.getClass());
-            int size = serializer.size(event);
-
-            ByteBuffer payloadBuffer = ByteBuffer.allocate(size);
-            serializer.serialize(event, payloadBuffer);
-            payloadBuffer.rewind();
-
-            txEventPayloads.tryPut(event.uuid(), payloadBuffer);
-
-            ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
-
-            hashBuffer.rewind();
-            hashBuffer.put(layout.getHash());
-            hashBuffer.putLong(event.uuid().getMostSignificantBits());
-            hashBuffer.putLong(event.uuid().getLeastSignificantBits());
-
-
-            txHashEvents.tryPut(hashBuffer.array(), true);
-            txEventHashes.tryPut(event.uuid(), layout.getHash());
-
-            listener.onEvent(event);
         }
     }
 }

@@ -8,29 +8,28 @@
 package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
-import com.eventsourcing.events.CommandTerminatedExceptionally;
-import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.types.*;
+import com.eventsourcing.repository.AbstractJournal;
 import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
-import com.eventsourcing.repository.LockProvider;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.Value;
 import org.flywaydb.core.Flyway;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
-import java.lang.reflect.Constructor;
 import java.math.BigDecimal;
 import java.sql.*;
 import java.time.Instant;
@@ -41,18 +40,16 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
-@Component(property = "type=PostgreSQLJournal")
-public class PostgreSQLJournal extends AbstractService implements Journal {
+@Component(property = "type=PostgreSQLJournal", service = Journal.class)
+public class PostgreSQLJournal extends AbstractService implements Journal, AbstractJournal {
 
     @Reference
     protected DataSourceProvider dataSourceProvider;
 
     private DataSource dataSource;
 
-    @Setter
+    @Getter @Setter
     private Repository repository;
 
     @Activate
@@ -74,69 +71,50 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
         events.forEach(new LayoutExtractor());
     }
 
-    @Override @SuppressWarnings("unchecked")
-    public long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider) throws Exception {
-        return journal(command, listener, lockProvider, null);
-    }
+    @Value
+    static class Transaction implements AbstractJournal.Transaction {
+        private final Connection connection;
+        private final Savepoint savepoint;
 
-    private long journal(Command<?, ?> command, Journal.Listener listener, LockProvider lockProvider, Stream<? extends
-            Event> events)
-            throws Exception {
-        Connection connection = dataSource.getConnection();
-        connection.setAutoCommit(false);
-        Savepoint savepoint = connection.setSavepoint();
-        try {
+        @SneakyThrows
+        public Transaction(DataSource dataSource) {
+            connection = dataSource.getConnection();
+            connection.setAutoCommit(false);
+            savepoint = connection.setSavepoint();
+        }
 
-            Stream<? extends Event> actualEvents;
 
-            if (events == null) {
-                EventStream<?> eventStream = command.events(repository, lockProvider);
-                listener.onCommandStateReceived(eventStream.getState());
-                actualEvents = eventStream.getStream();
-            } else {
-                actualEvents = events;
-            }
-
-            EventConsumer eventConsumer = new EventConsumer(connection, command, listener);
-            long count = actualEvents.peek(new Consumer<Event>() {
-                @Override public void accept(Event event) {
-                    eventConsumer.accept(event);
-                    eventConsumer.accept(EventCausalityEstablished.builder()
-                                                                  .event(event.uuid())
-                                                                  .command(command.uuid())
-                                                                  .build());
-                }
-            }).count();
-
-            Layout layout = layoutsByClass.get(command.getClass().getName());
-            String encoded = BaseEncoding.base16().encode(layout.getHash());
-            insertFunctions.get(encoded).apply(command, connection);
-
+        @SneakyThrows
+        @Override public void commit() {
             connection.releaseSavepoint(savepoint);
             connection.commit();
             connection.close();
-
-            listener.onCommit();
-
-            return count;
-        } catch (Exception e) {
-            connection.rollback(savepoint);
-            connection.releaseSavepoint(savepoint);
-            listener.onAbort(e);
-            connection.close();
-
-            // if we are having an exception NOT when journalling CommandTerminatedExceptionally
-            if (events == null) {
-                journal(command, listener, lockProvider,
-                        Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
-            }
-
-            throw e;
         }
 
+        @SneakyThrows
+        @Override public void rollback() {
+            connection.rollback(savepoint);
+            connection.releaseSavepoint(savepoint);
+            connection.close();
+        }
     }
 
+    @Override public AbstractJournal.Transaction beginTransaction() {
+        return new Transaction(dataSource);
+    }
 
+    @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+        Layout layout = layoutsByClass.get(command.getClass().getName());
+        String encoded = BaseEncoding.base16().encode(layout.getHash());
+        insertFunctions.get(encoded).apply(command, ((Transaction)tx).getConnection());
+    }
+
+    @Override public void record(AbstractJournal.Transaction tx, Event event) {
+        Layout layout = layoutsByClass.get(event.getClass().getName());
+        String encoded = BaseEncoding.base16().encode(layout.getHash());
+        InsertFunction insert = insertFunctions.get(encoded);
+        insert.apply(event, ((Transaction)tx).getConnection());
+    }
 
     private String getParameter(Property p, boolean topLevel) {
         if (p.getTypeHandler() instanceof ObjectTypeHandler) {
@@ -822,34 +800,4 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
         throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
     }
 
-    private class EventConsumer implements Consumer<Event> {
-        private final HybridTimestamp ts;
-        private final Journal.Listener listener;
-        private final Connection connection;
-
-        public EventConsumer(Connection connection, Command<?, ?> command, Journal.Listener listener) {
-            this.connection = connection;
-            this.listener = listener;
-            this.ts = command.timestamp().clone();
-        }
-
-        @Override
-        @SneakyThrows
-        public void accept(Event event) {
-
-            if (event.timestamp() == null) {
-                ts.update();
-                event.timestamp(ts.clone());
-            } else {
-                ts.update(event.timestamp().clone());
-            }
-
-            Layout layout = layoutsByClass.get(event.getClass().getName());
-            String encoded = BaseEncoding.base16().encode(layout.getHash());
-            InsertFunction insert = insertFunctions.get(encoded);
-            insert.apply(event, connection);
-
-            listener.onEvent(event);
-        }
-    }
 }
