@@ -35,6 +35,12 @@ public interface Journal extends Service {
     void setRepository(Repository repository);
 
     /**
+     * Get repository
+     * @return
+     */
+    Repository getRepository();
+
+    /**
      * Journal <code>command</code> in repository <code>repository</code>,
      * with a default (no-op) listener ({@link #DEFAULT_LISTENER})
      * <p>
