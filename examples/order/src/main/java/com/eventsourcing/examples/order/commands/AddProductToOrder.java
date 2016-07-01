@@ -12,7 +12,6 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.ProductAddedToOrder;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -33,8 +32,7 @@ public class AddProductToOrder extends StandardCommand<ProductAddedToOrder, Orde
     private final Integer quantity;
 
     @Builder
-    public AddProductToOrder(HybridTimestamp timestamp, UUID orderId, UUID productId, Integer quantity) {
-        super(timestamp);
+    public AddProductToOrder(UUID orderId, UUID productId, Integer quantity) {
         this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;

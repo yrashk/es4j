@@ -35,6 +35,13 @@ Layout defines following rules for property inclusion:
 * Property must be of a supported type (see below)
 * Property must have a matching parameter in the constructor (same parameter name or same name through `@PropertyName` parameter annotation)
 
+Additionally, inherited properties from parent classes will be admitted based on this criteria:
+
+* Every inherited property must have a getter and a setter
+* Property must be of a supported type (see below)
+* Property must have a matching parameter in any of the parent's constructors (same parameter name or same name through `@PropertyName` parameter annotation)
+
+
 Note: Since ES4J requires the use of accessors, using code generation tools like Lombok is advisable.
 
 ## Hash

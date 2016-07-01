@@ -45,8 +45,7 @@ public class PriceChanged extends StandardEvent {
     };
 
     @Builder
-    public PriceChanged(HybridTimestamp timestamp, UUID id, BigDecimal price) {
-        super(timestamp);
+    public PriceChanged(UUID id, BigDecimal price) {
         this.id = id;
         this.price = price;
     }

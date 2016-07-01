@@ -11,7 +11,6 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.ItemRemovedFromOrder;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,8 +25,7 @@ public class RemoveItemFromOrder extends StandardCommand<Void, Void> {
     private final UUID itemId;
 
     @Builder
-    public RemoveItemFromOrder(HybridTimestamp timestamp, UUID itemId) {
-        super(timestamp);
+    public RemoveItemFromOrder(UUID itemId) {
         this.itemId = itemId;
     }
 

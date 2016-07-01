@@ -12,15 +12,12 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.Order;
 import com.eventsourcing.examples.order.events.OrderCreated;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 
 public class CreateOrder extends StandardCommand<OrderCreated, Order> {
 
     @Builder
-    public CreateOrder(HybridTimestamp timestamp) {
-        super(timestamp);
-    }
+    public CreateOrder() {}
 
     @Override
     public EventStream<OrderCreated> events(Repository repository) throws Exception {

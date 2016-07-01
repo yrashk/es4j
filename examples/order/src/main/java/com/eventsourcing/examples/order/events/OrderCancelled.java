@@ -9,7 +9,6 @@ package com.eventsourcing.examples.order.events;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
-import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
@@ -35,8 +34,7 @@ public class OrderCancelled extends StandardEvent {
     };
 
     @Builder
-    public OrderCancelled(HybridTimestamp timestamp, UUID id) {
-        super(timestamp);
+    public OrderCancelled(UUID id) {
         this.id = id;
     }
 }

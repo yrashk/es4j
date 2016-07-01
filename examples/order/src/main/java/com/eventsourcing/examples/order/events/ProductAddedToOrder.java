@@ -14,7 +14,6 @@ import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
@@ -65,8 +64,7 @@ public class ProductAddedToOrder extends StandardEvent {
     };
 
     @Builder
-    public ProductAddedToOrder(HybridTimestamp timestamp, UUID orderId, UUID productId, int quantity) {
-        super(timestamp);
+    public ProductAddedToOrder(UUID orderId, UUID productId, int quantity) {
         this.orderId = orderId;
         this.productId = productId;
         this.quantity = quantity;

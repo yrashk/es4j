@@ -7,7 +7,6 @@
  */
 package com.eventsourcing.examples.order.commands;
 
-import com.eventsourcing.Event;
 import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
@@ -15,7 +14,6 @@ import com.eventsourcing.examples.order.Product;
 import com.eventsourcing.examples.order.events.NameChanged;
 import com.eventsourcing.examples.order.events.PriceChanged;
 import com.eventsourcing.examples.order.events.ProductCreated;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -33,8 +31,7 @@ public class CreateProduct extends StandardCommand<ProductCreated, Product> {
     private final BigDecimal price;
 
     @Builder
-    public CreateProduct(HybridTimestamp timestamp, String name, BigDecimal price) {
-        super(timestamp);
+    public CreateProduct(String name, BigDecimal price) {
         this.name = name;
         this.price = price;
     }

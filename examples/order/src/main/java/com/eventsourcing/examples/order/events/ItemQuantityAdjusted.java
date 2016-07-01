@@ -9,10 +9,11 @@ package com.eventsourcing.examples.order.events;
 
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
-import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
@@ -36,8 +37,7 @@ public class ItemQuantityAdjusted extends StandardEvent {
     };
 
     @Builder
-    public ItemQuantityAdjusted(HybridTimestamp timestamp, UUID itemId, Integer quantity) {
-        super(timestamp);
+    public ItemQuantityAdjusted(UUID itemId, Integer quantity) {
         this.itemId = itemId;
         this.quantity = quantity;
     }

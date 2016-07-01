@@ -11,7 +11,6 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.ItemQuantityAdjusted;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -28,8 +27,7 @@ public class AdjustItemQuantity extends StandardCommand<Void, Void> {
     private final Integer quantity;
 
     @Builder
-    public AdjustItemQuantity(HybridTimestamp timestamp, UUID itemId, Integer quantity) {
-        super(timestamp);
+    public AdjustItemQuantity(UUID itemId, Integer quantity) {
         this.itemId = itemId;
         this.quantity = quantity;
     }

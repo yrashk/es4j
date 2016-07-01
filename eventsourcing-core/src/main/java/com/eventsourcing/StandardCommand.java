@@ -17,6 +17,7 @@ import com.eventsourcing.repository.LockProvider;
  */
 public abstract class StandardCommand<S, R> extends StandardEntity<Command<S, R>> implements Command<S, R> {
 
+    public StandardCommand() { super(); }
     public StandardCommand(HybridTimestamp timestamp) {
         super(timestamp);
     }

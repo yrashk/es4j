@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 
 import java.lang.reflect.Parameter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -300,7 +301,7 @@ public class LayoutTest {
     }
 
     @Value
-    public static class DefaultConstructor {
+    public static class Initializer {
         private final String a;
         private boolean b;
     }
@@ -308,10 +309,76 @@ public class LayoutTest {
     @Test
     @SneakyThrows
     public void defaultConstructor() {
-        Layout<DefaultConstructor> layout = Layout.forClass(DefaultConstructor.class);
-        Object[] args = layout.getDefaultConstructorArguments();
-        DefaultConstructor instance = layout.getConstructor().newInstance(args);
+        Layout<Initializer> layout = Layout.forClass(Initializer.class);
+        Initializer instance = layout.instantiate();
         assertEquals(instance.getA(), "");
         assertFalse(instance.isB());
     }
+
+    @Test
+    @SneakyThrows
+    public void partialConstructor() {
+        Layout<Initializer> layout = Layout.forClass(Initializer.class);
+        HashMap<Property<Initializer>, Object> properties = new HashMap<>();
+        properties.put(layout.getProperty("a"), "hello");
+        Initializer instance = layout.instantiate(properties);
+        assertEquals(instance.getA(), "hello");
+        assertFalse(instance.isB());
+    }
+
+    public static class Base0Class {
+        @Getter @Setter
+        private String a;
+        @Getter @Setter
+        private boolean b;
+
+        public Base0Class() {
+        }
+
+        public Base0Class(String a, boolean b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
+    public static class BaseClass extends Base0Class {
+        @Getter @Setter
+        private String a;
+        @Getter @Setter
+        private boolean b;
+
+        public BaseClass() {
+        }
+
+        public BaseClass(String a, boolean b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
+    @Value
+    public static class Inheritance extends BaseClass {
+        private String c;
+    }
+
+    @Test
+    @SneakyThrows
+    public void inheritance() {
+        Layout<Inheritance> layout = Layout.forClass(Inheritance.class);
+        assertEquals(layout.getProperties().size(), 3);
+        Property<Inheritance> a = layout.getProperty("a");
+        Property<Inheritance> b = layout.getProperty("b");
+        assertNotNull(a);
+        assertNotNull(b);
+        HashMap<Property<Inheritance>, Object> properties = new HashMap<>();
+        properties.put(layout.getProperty("a"), "hello");
+        properties.put(layout.getProperty("b"), true);
+        properties.put(layout.getProperty("c"), "C");
+        Inheritance instance = layout.instantiate(properties);
+        assertEquals(instance.getA(), "hello");
+        assertTrue(instance.isB());
+        assertEquals(instance.getC(), "C");
+    }
+
+
 }
