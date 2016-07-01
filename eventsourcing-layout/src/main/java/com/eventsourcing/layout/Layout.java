@@ -8,7 +8,8 @@
 package com.eventsourcing.layout;
 
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.fasterxml.classmate.*;
+import com.fasterxml.classmate.ResolvedType;
+import com.fasterxml.classmate.TypeResolver;
 import com.google.common.io.BaseEncoding;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -25,7 +26,6 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -42,6 +42,14 @@ import java.util.stream.Stream;
  * <li>Has a matching parameter in the constructor (same parameter name or same name through {@link PropertyName}
  *     parameter annotation)</li>
  * <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
+ * </ul>
+ *
+ * Additionally, inherited properties will be qualified by the following criteria:
+ * <ul>
+ *     <li>Has both a getter and a setter (fluent or JavaBean style)</li>
+ *     <li>Has a matching parameter in the any parent's class constructor (same parameter name or same name through
+ *     {@link PropertyName} parameter annotation)</li>
+ *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
  * </ul>
  * <p>
  *
@@ -82,6 +90,8 @@ public class Layout<T> {
     private TypeResolver typeResolver;
     private MethodHandles.Lookup methodHandles;
 
+    private Map<String, MethodHandle> setters = new HashMap<>();
+
 
     @LayoutConstructor
     public Layout(String name, List<Property<T>> properties) {
@@ -117,8 +127,8 @@ public class Layout<T> {
         properties = new ArrayList<>();
         constructorProperties = new ArrayList<>();
 
-        constructor = findLayoutConstructor();
-        deriveProperties();
+        constructor = findLayoutConstructor(layoutClass);
+        deriveProperties(layoutClass, constructor, false);
 
         // Prepare the hash
         MessageDigest digest = MessageDigest.getInstance(DIGEST_ALGORITHM);
@@ -139,28 +149,28 @@ public class Layout<T> {
         this.hash = digest.digest();
     }
 
-    private Constructor<T> findLayoutConstructor() {
+    private <X> Constructor<X> findLayoutConstructor(Class<X> klass) {
         @SuppressWarnings("unchecked")
-        Constructor<T>[] constructors = (Constructor<T>[]) layoutClass.getConstructors();
+        Constructor<?>[] constructors = klass.getConstructors();
 
         // Must have at least one public constructor
         if (constructors.length == 0) {
-            throw new IllegalArgumentException(layoutClass + " doesn't have any public constructors");
+            throw new IllegalArgumentException(klass + " doesn't have any public constructors");
         }
 
         // Prefer wider constructors
-        List<Constructor<T>> constructorList = Arrays.asList(constructors);
+        List<Constructor<?>> constructorList = Arrays.asList(constructors);
         constructorList.sort((o1, o2) -> Integer.compare(o2.getParameterCount(), o1.getParameterCount()));
 
         // Pick the first constructor by default (if there will be only one)
-        Constructor<T> constructor = constructorList.get(0);
+        Constructor<?> constructor = constructorList.get(0);
 
         boolean ambiguityDetected = false;
 
-        for (Constructor<T> c : constructorList) {
+        for (Constructor<?> c : constructorList) {
             // If annotated as a layout constructor, pick it, end of story
             if (c.isAnnotationPresent(LayoutConstructor.class)) {
-                return c;
+                return (Constructor<X>) c;
             }
 
             // If a non-annotated constructor of the same width is found,
@@ -172,15 +182,17 @@ public class Layout<T> {
         }
 
         if (ambiguityDetected) {
-            throw new IllegalArgumentException(layoutClass + "has more than one constructor with " +
+            throw new IllegalArgumentException(klass + "has more than one constructor with " +
                                                constructor.getParameterCount() +
                                                " parameters and no @LayoutConstructor-annotated constructor");
         }
 
-        return constructor;
+        return (Constructor<X>) constructor;
     }
 
-    private void deriveProperties() throws TypeHandler.TypeHandlerException, IllegalAccessException {
+    private void deriveProperties(Class<?> klass, Constructor<T> constructor, boolean parentClass)
+            throws TypeHandler.TypeHandlerException,
+                   IllegalAccessException {
         Parameter[] parameters = constructor.getParameters();
         // Require parameter names
         for (Parameter parameter : parameters) {
@@ -192,24 +204,51 @@ public class Layout<T> {
             }
             String name = parameter.isAnnotationPresent(PropertyName.class) ?
                     parameter.getAnnotation(PropertyName.class).value() : parameter.getName();
+
+            // if there's such property already, skip processing the parameter
+            if (getNullableProperty(name) != null) {
+                continue;
+            }
+
             Optional<Method> fluent = retrieveGetter(name, parameter.getType());
             String capitalizedName = capitalizeFirstLetter(name);
             Optional<Method> getX = retrieveGetter("get" + capitalizedName, parameter.getType());
             Optional<Method> isX = (parameter.getType() == Boolean.TYPE || parameter.getType() == Boolean.class)
                     ? retrieveGetter("is" + capitalizedName, parameter.getType()) : Optional.empty();
+            Optional<Method> fluentSetter = retrieveSetter(name, parameter.getType());
+            Optional<Method> setX = retrieveSetter("set" + capitalizedName, parameter.getType());
             // prefer in this order: getX, isX, fluent
             Optional<Optional<Method>> getter = Stream.of(getX, isX, fluent).filter(Optional::isPresent).findFirst();
             if (!getter.isPresent()) {
                 throw new IllegalArgumentException("No getter found for " + layoutClass.getName() + "." + name);
             }
+            // Not a valid property if it doesn't have a setter and a setter is required
+            if (parentClass && !setX.isPresent() && !fluentSetter.isPresent()) {
+                continue;
+            }
+
+            if (parentClass) {
+                Method setterMethod = Stream.of(setX, fluentSetter).filter(Optional::isPresent).findFirst().get().get();
+                MethodHandle setterHandler = methodHandles.unreflect(setterMethod);
+                setters.put(name, setterHandler);
+            }
+
             Method method = getter.get().get();
+
             ResolvedType resolvedType = typeResolver.resolve(method.getReturnType());
             MethodHandle getterHandler = methodHandles.unreflect(method);
             Property<T> property = new Property<>(name, resolvedType,
                                                    TypeHandler.lookup(resolvedType, method.getAnnotatedReturnType()),
                                                    new GetterFunction<T>(getterHandler));
             properties.add(property);
-            constructorProperties.add(property);
+            if (!parentClass) {
+                constructorProperties.add(property);
+            }
+        }
+        Class superclass = klass.getSuperclass();
+        if (superclass != Object.class) {
+            Constructor parentConstructor = findLayoutConstructor(superclass);
+            deriveProperties(superclass, parentConstructor, true);
         }
         // Sort properties lexicographically (by default, they seem to be sorted anyway,
         // however, no such guarantee was found in the documentation upon brief inspection)
@@ -221,6 +260,19 @@ public class Layout<T> {
             Method method = layoutClass.getMethod(name);
             if (Modifier.isPublic(method.getModifiers()) &&
                     method.getReturnType() == type)  {
+                return Optional.of(method);
+            } else {
+                return Optional.empty();
+            }
+        } catch (NoSuchMethodException e) {
+            return Optional.empty();
+        }
+    }
+
+    private Optional<Method> retrieveSetter(String name, Class<?> type) {
+        try {
+            Method method = layoutClass.getMethod(name, type);
+            if (Modifier.isPublic(method.getModifiers()))  {
                 return Optional.of(method);
             } else {
                 return Optional.empty();
@@ -242,12 +294,18 @@ public class Layout<T> {
      * @throws NoSuchElementException if no such property is defined
      */
     public Property<T> getProperty(String name) throws NoSuchElementException {
+        Property<T> property = getNullableProperty(name);
+        if (property != null) return property;
+        throw new NoSuchElementException();
+    }
+
+    private Property<T> getNullableProperty(String name) {
         for (Property<T> property : properties) {
             if (property.getName().contentEquals(name)) {
                 return property;
             }
         }
-        throw new NoSuchElementException();
+        return null;
     }
 
     /**
@@ -257,7 +315,7 @@ public class Layout<T> {
      * @throws InstantiationException
      * @throws InvocationTargetException
      */
-    public T instantiate() throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    public T instantiate() throws Throwable {
         return instantiate(new HashMap<>());
     }
 
@@ -270,11 +328,11 @@ public class Layout<T> {
      * @throws InstantiationException
      */
     public T instantiate(Map<Property<T>, Object> properties)
-            throws IllegalAccessException, InvocationTargetException, InstantiationException {
+            throws Throwable {
         Object[] args = new Object[constructor.getParameterCount()];
         BinarySerialization serialization = BinarySerialization.getInstance();
         for (int i = 0; i < args.length; i++) {
-            Property<T> property = this.properties.get(i);
+            Property<T> property = this.constructorProperties.get(i);
             Optional<Object> suppliedProperty = findProperty(properties, property.getName());
             if (suppliedProperty.isPresent()) {
                 args[i] = suppliedProperty.get();
@@ -286,8 +344,16 @@ public class Layout<T> {
                 args[i] = o;
             }
         }
-        int[] order = getConstructorProperties().stream().mapToInt(this.properties::indexOf).toArray();
-        return constructor.newInstance(IntStream.of(order).mapToObj(i -> args[i]).toArray());
+        T t = constructor.newInstance(args);
+        if (!setters.isEmpty()) {
+            for (Map.Entry<String, MethodHandle> entry : setters.entrySet()) {
+                Optional<Object> suppliedProperty = findProperty(properties, entry.getKey());
+                if (suppliedProperty.isPresent()) {
+                    entry.getValue().invoke(t, suppliedProperty.get());
+                }
+            }
+        }
+        return t;
     }
 
     private Optional<Object> findProperty(Map<Property<T>, Object> properties, String name) {

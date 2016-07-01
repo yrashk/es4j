@@ -473,8 +473,7 @@ public abstract class RepositoryTest<T extends Repository> {
         };
 
         @Builder
-        public TestOptionalEvent(HybridTimestamp timestamp, Optional<String> optional) {
-            super(timestamp);
+        public TestOptionalEvent(Optional<String> optional) {
             this.optional = optional;
         }
     }

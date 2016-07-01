@@ -11,7 +11,6 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.NameChanged;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -27,8 +26,7 @@ public class Rename extends StandardCommand<Void, String> {
     private final String name;
 
     @Builder
-    public Rename(HybridTimestamp timestamp, UUID id, String name) {
-        super(timestamp);
+    public Rename(UUID id, String name) {
         this.id = id;
         this.name = name;
     }

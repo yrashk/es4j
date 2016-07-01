@@ -63,6 +63,7 @@ public abstract class StandardEntity<E extends Entity> implements Entity<E> {
         return (E)this;
     }
 
+    public StandardEntity() {}
     public StandardEntity(HybridTimestamp timestamp) {
         this.timestamp = timestamp;
     }

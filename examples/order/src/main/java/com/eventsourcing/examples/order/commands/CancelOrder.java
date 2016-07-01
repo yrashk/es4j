@@ -11,7 +11,6 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.OrderCancelled;
-import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -25,8 +24,7 @@ public class CancelOrder extends StandardCommand<Void, Void> {
     private final UUID id;
 
     @Builder
-    public CancelOrder(HybridTimestamp timestamp, UUID id) {
-        super(timestamp);
+    public CancelOrder(UUID id) {
         this.id = id;
     }
 

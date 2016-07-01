@@ -326,5 +326,59 @@ public class LayoutTest {
         assertFalse(instance.isB());
     }
 
+    public static class Base0Class {
+        @Getter @Setter
+        private String a;
+        @Getter @Setter
+        private boolean b;
+
+        public Base0Class() {
+        }
+
+        public Base0Class(String a, boolean b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
+    public static class BaseClass extends Base0Class {
+        @Getter @Setter
+        private String a;
+        @Getter @Setter
+        private boolean b;
+
+        public BaseClass() {
+        }
+
+        public BaseClass(String a, boolean b) {
+            this.a = a;
+            this.b = b;
+        }
+    }
+
+    @Value
+    public static class Inheritance extends BaseClass {
+        private String c;
+    }
+
+    @Test
+    @SneakyThrows
+    public void inheritance() {
+        Layout<Inheritance> layout = Layout.forClass(Inheritance.class);
+        assertEquals(layout.getProperties().size(), 3);
+        Property<Inheritance> a = layout.getProperty("a");
+        Property<Inheritance> b = layout.getProperty("b");
+        assertNotNull(a);
+        assertNotNull(b);
+        HashMap<Property<Inheritance>, Object> properties = new HashMap<>();
+        properties.put(layout.getProperty("a"), "hello");
+        properties.put(layout.getProperty("b"), true);
+        properties.put(layout.getProperty("c"), "C");
+        Inheritance instance = layout.instantiate(properties);
+        assertEquals(instance.getA(), "hello");
+        assertTrue(instance.isB());
+        assertEquals(instance.getC(), "C");
+    }
+
 
 }

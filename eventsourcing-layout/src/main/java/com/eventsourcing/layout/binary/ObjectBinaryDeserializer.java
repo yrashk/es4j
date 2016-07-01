@@ -10,13 +10,16 @@ package com.eventsourcing.layout.binary;
 import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.types.ObjectTypeHandler;
 import lombok.SneakyThrows;
+import lombok.Value;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Layout deserializer
@@ -30,30 +33,20 @@ public class ObjectBinaryDeserializer<T> implements Deserializer.RequiresTypeHan
     @Override
     @SneakyThrows
     public T deserialize(ObjectTypeHandler typeHandler, ByteBuffer buffer) {
+        BinarySerialization serialization = BinarySerialization.getInstance();
+
         @SuppressWarnings("unchecked")
         Layout<T> layout = (Layout<T>)typeHandler.getLayout();
-        List<Property<T>> properties = layout.getProperties();
-        int[] order = layout.getConstructorProperties().stream()
-                           .mapToInt(properties::indexOf).toArray();
 
-        List<T> values = layout.getProperties().stream().map(new PropertyFunction<>(buffer))
-                                .collect(Collectors.toList());
+        Map<Property<T>, Object> properties = new HashMap<>();
 
-       return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
-    }
-
-    private static class PropertyFunction<T> implements Function<Property<T>, T> {
-        private final ByteBuffer buffer;
-
-        public PropertyFunction(ByteBuffer buffer) {
-            this.buffer = buffer;
-        }
-
-        @Override
-        public T apply(Property<T> property) {
-            BinarySerialization serialization = BinarySerialization.getInstance();
-            return serialization.<T, TypeHandler>getDeserializer(property.getTypeHandler())
+        for (Property<T> property: layout.getProperties()) {
+            T v = serialization.<T, TypeHandler>getDeserializer(property.getTypeHandler())
                     .deserialize(property.getTypeHandler(), buffer);
+            properties.put(property, v);
         }
+
+        return layout.instantiate(properties);
     }
+
 }

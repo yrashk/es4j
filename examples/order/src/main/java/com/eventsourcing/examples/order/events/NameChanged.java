@@ -44,8 +44,7 @@ public class NameChanged extends StandardEvent {
     };
 
     @Builder
-    public NameChanged(HybridTimestamp timestamp, UUID id, String name) {
-        super(timestamp);
+    public NameChanged(UUID id, String name) {
         this.id = id;
         this.name = name;
     }

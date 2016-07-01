@@ -11,11 +11,8 @@ import com.eventsourcing.EventStream;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.examples.order.events.PriceChanged;
-import com.eventsourcing.hlc.HybridTimestamp;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.math.BigDecimal;
@@ -30,8 +27,7 @@ public class ChangePrice extends StandardCommand<Void, BigDecimal> {
     private final BigDecimal price;
 
     @Builder
-    public ChangePrice(HybridTimestamp timestamp, UUID id, BigDecimal price) {
-        super(timestamp);
+    public ChangePrice(UUID id, BigDecimal price) {
         this.id = id;
         this.price = price;
     }

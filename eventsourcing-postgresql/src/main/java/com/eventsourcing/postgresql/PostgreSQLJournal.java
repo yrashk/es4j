@@ -351,7 +351,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
     private class ReaderFunction implements Function<ResultSet, Object> {
 
-        private final Layout<?> layout;
+        private final Layout layout;
 
         public ReaderFunction(Layout<?> layout) {
             this.layout = layout;
@@ -361,15 +361,13 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
         @Override public Object apply(ResultSet resultSet) {
             AtomicInteger i = new AtomicInteger(1);
             List<? extends Property<?>> properties = layout.getProperties();
-            List<Object> values = new ArrayList<>();
+            Map<Property<?>, Object> props = new HashMap<>();
             for (Property property : properties) {
                 TypeHandler typeHandler = property.getTypeHandler();
-                values.add(getValue(resultSet, i, typeHandler));
-            };
-            int[] order = layout.getConstructorProperties().stream()
-                                .mapToInt(properties::indexOf).toArray();
+                props.put(property, getValue(resultSet, i, typeHandler));
+            }
 
-            return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
+            return layout.instantiate(props);
         }
 
         @SneakyThrows
@@ -445,15 +443,14 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
             if (typeHandler instanceof ObjectTypeHandler) {
                 Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
                 List<? extends Property<?>> properties = layout.getProperties();
-                List<Object> values = new ArrayList<>();
-                for (Property p : properties) {
-                    Object value = getValue(resultSet, i, p.getTypeHandler());
-                    values.add(value);
-                }
-                int[] order = layout.getConstructorProperties().stream()
-                                         .mapToInt(properties::indexOf).toArray();
 
-                return layout.getConstructor().newInstance(IntStream.of(order).mapToObj(values::get).toArray());
+                Map<Property<?>, Object> props = new HashMap<>();
+                for (Property property : properties) {
+                    props.put(property, getValue(resultSet, i, property.getTypeHandler()));
+                }
+                @SuppressWarnings("unchecked")
+                Object o = ((Layout) layout).instantiate(props);
+                return o;
             }
             if (typeHandler instanceof OptionalTypeHandler) {
                 return Optional.ofNullable(getValue(resultSet, i, ((OptionalTypeHandler) typeHandler)
@@ -474,7 +471,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
     }
 
     private static class ObjectArrayCollector implements Function<Map<String,Object>, Object> {
-        private final Layout<?> objectLayout;
+        private final Layout objectLayout;
         private final List<? extends Property<?>> properties;
 
         public ObjectArrayCollector(Layout<?> objectLayout, List<? extends Property<?>> properties) {
@@ -484,13 +481,13 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
         @SneakyThrows
         @Override public Object apply(Map<String, Object> map) {
-            int[] order = objectLayout.getConstructorProperties().stream()
-                                      .mapToInt(properties::indexOf).toArray();
-
-            Constructor<?> constructor = objectLayout.getConstructor();
-            return constructor.newInstance(IntStream.of(order)
-                                                    .mapToObj(i -> map.get(properties.get(i).getName()))
-                                                    .toArray());
+            Map<Property, Object> props = new HashMap<>();
+            for (Property property : properties) {
+                props.put(property, map.get(property.getName()));
+            }
+            @SuppressWarnings("unchecked")
+            Object o = objectLayout.instantiate(props);
+            return o;
         }
     }
 
