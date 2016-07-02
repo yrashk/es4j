@@ -15,6 +15,7 @@ import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 
+import java.util.Base64;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -54,7 +55,8 @@ public class IntroduceEntityLayouts extends StandardCommand<Lock, Void> {
         @Override public Stream<Event> apply(Class<? extends Entity> entity) {
         Layout<? extends Entity> layout = Layout.forClass(entity);
             byte[] fingerprint = layout.getHash();
-            Query<EntityHandle<EntityLayoutIntroduced>> query = equal(EntityLayoutIntroduced.FINGERPRINT,fingerprint);
+            Query<EntityHandle<EntityLayoutIntroduced>> query = equal(EntityLayoutIntroduced.FINGERPRINT,
+                                                                      Base64.getEncoder().encodeToString(fingerprint));
             try (ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = repository
                     .query(EntityLayoutIntroduced.class,
                            query)) {

@@ -68,7 +68,12 @@ public abstract class RepositoryTest<T extends Repository> {
         lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         repository.startAsync().awaitRunning();
-        assertTrue(journal.size(EntityLayoutIntroduced.class) > 0);
+
+        long size = journal.size(EntityLayoutIntroduced.class);
+        assertTrue(size > 0);
+        // make sure layout introductions don't duplicate
+        repository.publish(new IntroduceEntityLayouts(Iterables.concat(repository.getCommands(), repository.getEvents()))).join();
+        assertEquals(journal.size(EntityLayoutIntroduced.class), size);
     }
 
     protected abstract Journal createJournal();

@@ -100,8 +100,8 @@ public class LayoutMigration<A extends Event, B extends Event> {
     private Optional<EntityLayoutIntroduced> layoutIntroduction(Repository repository, Layout<?> layout) {
         try (ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = repository
                 .query(EntityLayoutIntroduced.class,
-                       equal(EntityLayoutIntroduced.FINGERPRINT,
-                             layout.getHash()))) {
+                       equal(EntityLayoutIntroduced.FINGERPRINT, Base64.getEncoder().encodeToString(layout.getHash())
+                       ))) {
             if (resultSet.isEmpty()) {
                 return Optional.empty();
             } else {
