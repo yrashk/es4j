@@ -61,6 +61,26 @@ public class LayoutTest {
         assertEquals(parameters[1].getType(), String.class);
     }
 
+    public static class WidestConstructor {
+        @Getter private final Integer a;
+        @Getter private final String b;
+        @Getter private final Integer c;
+        public WidestConstructor(Integer a, String b) {
+            this(a, b, null);
+        }
+        public WidestConstructor(Integer a, String b, Integer c) {
+            this.a = a;
+            this.b = b;
+            this.c = c;
+        }
+    }
+
+    @Test @SneakyThrows
+    public void widestConstructor() {
+        Layout<WidestConstructor> layout = Layout.forClass(WidestConstructor.class);
+        assertEquals(layout.getConstructor().getParameters().length, 3);
+    }
+
 
     public static class MissingPropertyGetter {
         public MissingPropertyGetter(String a) {
