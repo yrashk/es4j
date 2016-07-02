@@ -57,7 +57,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
     @Activate
     protected void activate(ComponentContext ctx) {
         if (!isRunning()) {
-            startAsync();
+            startAsync().awaitRunning();
         }
     }
 
