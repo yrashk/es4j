@@ -7,8 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.repository.LockProvider;
-
 /**
  * Command is a request for changes in the domain. Unlike an event,
  * it is not a statement of fact as it might be rejected.

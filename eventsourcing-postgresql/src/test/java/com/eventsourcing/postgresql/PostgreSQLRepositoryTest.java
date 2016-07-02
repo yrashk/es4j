@@ -8,18 +8,19 @@
 package com.eventsourcing.postgresql;
 
 import com.eventsourcing.Repository;
-import com.eventsourcing.RepositoryTest;
-import com.eventsourcing.repository.Journal;
+import com.eventsourcing.Journal;
+import com.eventsourcing.repository.RepositoryTest;
+import com.eventsourcing.repository.StandardRepository;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.postgresql.ds.PGSimpleDataSource;
 import org.testng.annotations.Test;
 
 @Test
-public class PostgresSQLRepositoryTest extends RepositoryTest<Repository> {
+public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
 
-    public PostgresSQLRepositoryTest() throws Exception {
-        super(Repository.create());
+    public PostgreSQLRepositoryTest() throws Exception {
+        super(new StandardRepository());
     }
 
     @Override protected Journal createJournal() {
@@ -27,8 +28,9 @@ public class PostgresSQLRepositoryTest extends RepositoryTest<Repository> {
         dataSource.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
 
         HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(30);
+        config.setMaximumPoolSize(50);
         config.setDataSource(dataSource);
+        config.setLeakDetectionThreshold(2000);
 
         return new PostgreSQLJournal(new HikariDataSource(config));
     }

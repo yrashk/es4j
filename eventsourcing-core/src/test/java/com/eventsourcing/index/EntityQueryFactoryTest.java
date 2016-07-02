@@ -13,9 +13,10 @@ import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.inmem.MemoryJournal;
-import com.eventsourcing.repository.LocalLockProvider;
-import com.eventsourcing.repository.PackageCommandSetProvider;
-import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.LocalLockProvider;
+import com.eventsourcing.PackageCommandSetProvider;
+import com.eventsourcing.PackageEventSetProvider;
+import com.eventsourcing.repository.StandardRepository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Builder;
 import lombok.SneakyThrows;
@@ -32,7 +33,7 @@ public class EntityQueryFactoryTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        repository = Repository.create();
+        repository = new StandardRepository();
         repository.addCommandSetProvider(
                 new PackageCommandSetProvider(new Package[]{EntityQueryFactoryTest.class.getPackage()}));
         repository.addEventSetProvider(

@@ -42,6 +42,10 @@ public class EntityLayoutIntroduced extends StandardEvent {
         this.fingerprint = fingerprint;
         this.layout = layout;
     }
+    public EntityLayoutIntroduced(byte[] fingerprint,
+                                  Optional<Layout<?>> layout) {
+        this(null, fingerprint, layout);
+    }
 
     public static Attribute<EntityLayoutIntroduced, byte[]> FINGERPRINT = Indexing.getAttribute
             (EntityLayoutIntroduced.class, "fingerprint");

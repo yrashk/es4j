@@ -8,6 +8,7 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntitySubscriber;
 
 /**
  * {@link EntitySubscriber} that subscribes to all entities that are inherited from

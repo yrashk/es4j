@@ -1,0 +1,4 @@
+dependencies {
+    compile project(':eventsourcing-core')
+    compile project(':eventsourcing-migrations')
+}

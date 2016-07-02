@@ -8,13 +8,11 @@
 package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
-import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.types.*;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
@@ -35,6 +33,8 @@ import java.sql.*;
 import java.time.Instant;
 import java.util.*;
 import java.util.Date;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -51,24 +51,25 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
     @Getter @Setter
     private Repository repository;
+    private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
 
     @Activate
     protected void activate() {
         dataSource = dataSourceProvider.getDataSource();
     }
 
-    public PostgreSQLJournal() {}
-
     public PostgreSQLJournal(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     @Override public void onCommandsAdded(Set<Class<? extends Command>> commands) {
-        commands.forEach(new LayoutExtractor());
+        commands.forEach(entityLayoutExtractor);
+        entityLayoutExtractor.flush();
     }
 
     @Override public void onEventsAdded(Set<Class<? extends Event>> events) {
-        events.forEach(new LayoutExtractor());
+        events.forEach(entityLayoutExtractor);
+        entityLayoutExtractor.flush();
     }
 
     @Value
@@ -104,41 +105,62 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
     }
 
     @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
-        Layout layout = layoutsByClass.get(command.getClass().getName());
+        Layout layout = getLayout(command.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         insertFunctions.get(encoded).apply(command, ((Transaction)tx).getConnection());
     }
 
     @Override public void record(AbstractJournal.Transaction tx, Event event) {
-        Layout layout = layoutsByClass.get(event.getClass().getName());
+        Layout layout = getLayout(event.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         InsertFunction insert = insertFunctions.get(encoded);
         insert.apply(event, ((Transaction)tx).getConnection());
     }
 
-    private String getParameter(Property p, boolean topLevel) {
-        if (p.getTypeHandler() instanceof ObjectTypeHandler) {
-            List<? extends Property<?>> ps = ((ObjectTypeHandler) p
-                    .getTypeHandler())
-                    .getLayout().getProperties();
-            return
-                    Joiner.on(", ").join(
-                            ps.stream()
-                              .map(px -> (topLevel ? "(" : "") + "\"" + p.getName() + "\"" +
-                                         (topLevel ? ")" : "") + "." + getParameter(px, false) + "")
-                              .collect(Collectors.toList()));
+    private void extractParameter(List<String> list, Property p, TypeHandler typeHandler, String context) {
+        if (typeHandler instanceof ObjectTypeHandler) {
+            ObjectTypeHandler handler = (ObjectTypeHandler) typeHandler;
+            String ctx = context == null ? "(\"" + p.getName() + "\")" : context + "." + "\"" + p.getName() + "\"";
+            list.addAll(getParameters(handler.getLayout(), ctx));
         } else
-        if (p.getTypeHandler() instanceof ListTypeHandler &&
-                ((ListTypeHandler) p.getTypeHandler()).getWrappedHandler() instanceof ObjectTypeHandler) {
-            ObjectTypeHandler handler = (ObjectTypeHandler) ((ListTypeHandler) p.getTypeHandler()).getWrappedHandler();
+        if (typeHandler instanceof OptionalTypeHandler) {
+            extractParameter(list, p, ((OptionalTypeHandler) typeHandler).getWrappedHandler(), context);
+        } else 
+        if (typeHandler instanceof ListTypeHandler &&
+                ((ListTypeHandler) typeHandler).getWrappedHandler() instanceof ObjectTypeHandler) {
+            ObjectTypeHandler handler = (ObjectTypeHandler) ((ListTypeHandler) typeHandler).getWrappedHandler();
+            @SuppressWarnings("unchecked")
             List<? extends Property<?>> ps = handler.getLayout().getProperties();
-            return Joiner.on(", ").join(
-                ps.stream()
-                  .map(px -> "(SELECT array_agg((i).\"" + px.getName() + "\") FROM unnest(" + p.getName() + ") AS i)")
-                  .collect(Collectors.toList()));
+            for (Property px : ps) {
+                if (context == null) {
+                    list.add(
+                            "(SELECT array_agg((i).\"" + px.getName() + "\") FROM unnest(\"" + p.getName() + "\") " +
+                                    "AS " +
+                                    "i)");
+                } else {
+                    list.add("(SELECT array_agg((i).\"" + px.getName() + "\") FROM unnest("+context+".\"" + p.getName
+                            () +
+                            "\") " +
+                            "AS i)");
+                }
+            }
         } else {
-           return "\"" + p.getName() + "\"";
+            String s = "\"" + p.getName() + "\"";
+            if (context == null) {
+                list.add(s);
+            } else {
+                list.add(context + "." + s);
+            }
         }
+    }
+
+    private List<String> getParameters(Layout<?> layout, String context) {
+        ArrayList<String> list = new ArrayList<>();
+        List<? extends Property<?>> properties = layout.getProperties();
+        for (Property<?> property : properties) {
+            extractParameter(list, property, property.getTypeHandler(), context);
+        }
+        return list;
     }
 
     @SneakyThrows
@@ -150,13 +172,11 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         s.setString(1, uuid.toString());
         try (ResultSet resultSet = s.executeQuery()) {
             if (resultSet.next()) {
-                String hash = BaseEncoding.base16().encode(resultSet.getBytes(1));
+                byte[] bytes = resultSet.getBytes(1);
+                String hash = BaseEncoding.base16().encode(bytes);
                 ReaderFunction reader = readerFunctions.get(hash);
-                Layout<?> layout = layoutsByHash.get(hash);
-                List<? extends Property<?>> properties = layout.getProperties();
-                String columns = Joiner.on(", ").join(properties.stream()
-                                                            .map(p -> getParameter(p, true)).collect(Collectors.toList
-                                ()));
+                Layout<?> layout = getLayout(bytes);
+                String columns = Joiner.on(", ").join(getParameters(layout, null));
                 String query = "SELECT " + columns + " FROM layout_" + hash + " WHERE uuid = ?::UUID";
 
                 PreparedStatement s1 = connection.prepareStatement(query);
@@ -190,7 +210,11 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
     private <T extends Entity> CloseableIterator<EntityHandle<T>> entityIterator(Class<T> klass) {
         Connection connection = dataSource.getConnection();
 
-        Layout layout = layoutsByClass.get(klass.getName());
+        Layout layout = getLayout(klass);
+        if (layout == null) {
+            layout = Layout.forClass(klass);
+            layoutsByClass.put(klass.getName(), layout);
+        }
         String hash = BaseEncoding.base16().encode(layout.getHash());
 
         PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_" + hash);
@@ -240,7 +264,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         public void close() {
             if (!resultSet.isClosed()) resultSet.close();
             if (!statement.isClosed()) statement.close();
-            if (!statement.isClosed()) connection.close();
+            if (!connection.isClosed()) connection.close();
         }
 
     }
@@ -273,7 +297,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
     @SneakyThrows
     @Override public <T extends Entity> long size(Class<T> klass) {
-        Layout layout = layoutsByClass.get(klass.getName());
+        Layout layout = getLayout(klass);
         String hash = BaseEncoding.base16().encode(layout.getHash());
         Connection connection = dataSource.getConnection();
         PreparedStatement s = connection
@@ -303,9 +327,6 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             notifyFailed(new IllegalStateException("dataSource == null"));
         }
 
-        repository.getCommands().forEach(new LayoutExtractor());
-        repository.getEvents().forEach(new LayoutExtractor());
-
         ensureLatestSchemaVersion();
 
         notifyStarted();
@@ -324,8 +345,8 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         notifyStopped();
     }
 
-    private Map<String, InsertFunction> insertFunctions = new HashMap<>();
-    private Map<String, ReaderFunction> readerFunctions = new HashMap<>();
+    private Map<String, InsertFunction> insertFunctions = new ConcurrentHashMap<>();
+    private Map<String, ReaderFunction> readerFunctions = new ConcurrentHashMap<>();
 
     private class ReaderFunction implements Function<ResultSet, Object> {
 
@@ -500,8 +521,15 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
                 List<?> list = object == null ? Arrays.asList() : (List<?>) object;
                 String listParameters = Joiner.on(",").join(
                         list.stream().map(i -> getParameter(connection, handler, i))
-                                          .collect(Collectors.toList()));
+                            .collect(Collectors.toList()));
                 return "ARRAY[" + listParameters + "]::" + getMappedType(connection, handler) + "[]";
+            } else if (typeHandler instanceof OptionalTypeHandler) {
+                if (object == null || !((Optional) object).isPresent()) {
+                    return "?";
+                } else {
+                    return getParameter(connection, ((OptionalTypeHandler) typeHandler).getWrappedHandler(), ((Optional)
+                            object).get());
+                }
             } else {
                 return "?";
             }
@@ -600,11 +628,13 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             if (typeHandler instanceof OptionalTypeHandler) {
                 TypeHandler handler = ((OptionalTypeHandler) typeHandler).getWrappedHandler();
                 if (value != null && ((Optional)value).isPresent()) {
-                    setValue(connection, s, i, ((Optional) value).get(),
+                     i = setValue(connection, s, i, ((Optional) value).get(),
                              handler);
                 } else {
                     s.setNull(i, getMappedSqlType(handler));
+                    i++;
                 }
+                return i;
             } else
             if (typeHandler instanceof ShortTypeHandler) {
                 s.setShort(i, value == null ? 0 : (Short) value);
@@ -621,12 +651,31 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         }
     }
 
-    private Map<String, Layout> layoutsByClass = new HashMap<>();
-    private Map<String, Layout> layoutsByHash = new HashMap<>();
+    private Map<String, Layout> layoutsByClass = new ConcurrentHashMap<>();
+    private Map<String, Layout> layoutsByHash = new ConcurrentHashMap<>();
 
-    private class LayoutExtractor implements Consumer<Class<?>> {
+    private Layout getLayout(Class<? extends Entity> klass) {
+        if (!layoutsByClass.containsKey(klass.getName())) {
+            new EntityLayoutExtractor(this).accept(klass);
+        }
+        return layoutsByClass.get(klass.getName());
+    }
+
+    private Layout getLayout(byte[] hash) {
+        String encoded = BaseEncoding.base16().encode(hash);
+        return layoutsByHash.get(encoded);
+    }
+
+
+    private class EntityLayoutExtractor extends AbstractJournal.EntityLayoutExtractor {
+        private Queue<Class<? extends Entity>> queue = new LinkedTransferQueue<>();
+
+        public EntityLayoutExtractor(AbstractJournal journal) {
+            super(journal);
+        }
+
         @SneakyThrows
-        @Override public void accept(Class<?> aClass) {
+        @Override public void accept(Class<? extends Entity> aClass) {
             Layout<?> layout = Layout.forClass(aClass);
             layoutsByClass.put(aClass.getName(), layout);
             byte[] fingerprint = layout.getHash();
@@ -653,6 +702,13 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
             ReaderFunction readerFunction = new ReaderFunction(layout);
             readerFunctions.put(encoded, readerFunction);
+
+            queue.add(aClass);
+        }
+
+        void flush() {
+            queue.iterator().forEachRemaining(super::accept);
+            queue.clear();
         }
 
     }

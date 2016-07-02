@@ -8,7 +8,7 @@
 package com.eventsourcing.jmh;
 
 import com.eventsourcing.h2.MVStoreJournal;
-import com.eventsourcing.repository.Journal;
+import com.eventsourcing.Journal;
 import org.h2.mvstore.MVStore;
 
 import java.io.File;

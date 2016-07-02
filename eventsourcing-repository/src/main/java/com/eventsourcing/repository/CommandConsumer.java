@@ -8,6 +8,7 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.Command;
+import com.eventsourcing.EntitySubscriber;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.google.common.util.concurrent.Service;
 

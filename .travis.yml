@@ -18,7 +18,7 @@ script:
   - ./gradlew publishToMavenLocal
   - cd examples/order && ./gradlew check
 after_success:
-  - cd ../.. && ./gradlew -Psnapshot=true :eventsourcing-core:bintrayUpload :eventsourcing-layout:bintrayUpload :eventsourcing-hlc:bintrayUpload :eventsourcing-h2:bintrayUpload :eventsourcing-cep:bintrayUpload :eventsourcing-migrations:bintrayUpload :eventsourcing-postgresql:bintrayUpload :eventsourcing-inmem:bintrayUpload
+  - cd ../.. && ./gradlew -Psnapshot=true :eventsourcing-core:bintrayUpload :eventsourcing-layout:bintrayUpload :eventsourcing-hlc:bintrayUpload :eventsourcing-h2:bintrayUpload :eventsourcing-cep:bintrayUpload :eventsourcing-migrations:bintrayUpload :eventsourcing-postgresql:bintrayUpload :eventsourcing-inmem:bintrayUpload :eventsourcing-repository:bintrayUpload
 env:
   global:
     - secure: "XUgklp7alyLawUShvgVc8ZJ/u6O1kovPO/vQO6VGvq0SxaNO3Ke3AxiNb7GDzNPtrYgDgmnSO7AhXicDkCrVyPvJsSE7G1vbAx6+qMy10tZIYfmgFmrPuzc7sX9Dsa1aDzCcfNP92l/LACjDsWaHAHbs0csHKFele8fqTnDZD4v+6y/MOPKRpK1Gfx1ey0lv7TZI6+1VCRuajL7kSfCHwfZc1XI42VCmuGso8n62ZUyV7rs7kykzjBp3Wg8uksinVaVg4qfOPT0SgHVlfwBiFDR13LtUJrAHaDWyWgafpVyX/BUxlPOnbA66+9SiRz+rO+IkECe2j09lM3gw4K6pFzEWFQG+Xe78nG01iVl/6DZ2BQPlqyYcTCoiqGzj5mZhBcy5fK5ONhLn95zgISrvun+ISaGAioT52i1Xn7pXifq3IxBjVWVVHQux2U/UIe0ICwDMxFtKoV4b5qk7f9V9nvvzojzUL0idvqGBJArWMvfuPoC2z7GVK1InkRhiv5GoP9UjZKWhhy4ZqYFBWpMTTJuGpkdYNjSg40vY9MGTtJg11OQG7HqRAAVSb9c/LJiDo8sPn1EXLLmnN7+KCojLSyRjNeG9hMDsk87M61cEiU9MyIRq//22p66JoitjBK6KL+iVz5SblzUwmPXZzM0oibAfxao3K+UQbZn/d43RQSY="

@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.JournalTest;
+import com.eventsourcing.repository.JournalTest;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.Test;

@@ -8,15 +8,15 @@
 package com.eventsourcing.jmh;
 
 import com.eventsourcing.Repository;
-import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.LocalLockProvider;
-import com.eventsourcing.repository.PackageCommandSetProvider;
-import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.Journal;
+import com.eventsourcing.LocalLockProvider;
+import com.eventsourcing.PackageCommandSetProvider;
+import com.eventsourcing.PackageEventSetProvider;
+import com.eventsourcing.repository.StandardRepository;
 import lombok.SneakyThrows;
 import org.openjdk.jmh.annotations.*;
 
@@ -33,7 +33,7 @@ public abstract class JournalBenchmark {
 
     @Setup
     public void setup() throws Exception {
-        repository = Repository.create();
+        repository = new StandardRepository();
 
         journal = createJournal();
 

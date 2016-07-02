@@ -10,7 +10,11 @@ package com.eventsourcing.postgresql;
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.LayoutConstructor;
-import com.eventsourcing.repository.Journal;
+import com.eventsourcing.Journal;
+import com.eventsourcing.Repository;
+import com.eventsourcing.repository.JournalTest;
+import com.eventsourcing.PackageCommandSetProvider;
+import com.eventsourcing.PackageEventSetProvider;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.Builder;
@@ -18,6 +22,7 @@ import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import javax.sql.DataSource;
@@ -35,8 +40,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         dataSource.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
 
         HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(30);
+        config.setMaximumPoolSize(50);
         config.setDataSource(dataSource);
+        config.setLeakDetectionThreshold(2000);
 
         return new HikariDataSource(config);
     }
@@ -45,6 +51,13 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         super(new PostgreSQLJournal(dataSource()));
     }
 
+    @BeforeClass @Override public void setUpEnv() throws Exception {
+        super.setUpEnv();
+        repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{PostgreSQLJournalTest.class.getPackage()
+        }));
+        repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{PostgreSQLJournalTest.class.getPackage()
+        }));
+    }
 
     @Accessors(fluent = true)
     public static class SomeValue {
@@ -199,7 +212,6 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
     @Test @SneakyThrows
     public void serializationNull() {
-
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         final SerializationEvent[] serializationEvent = new SerializationEvent[1];

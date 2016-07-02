@@ -7,7 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.repository.LocalLockProvider;
 import org.testng.annotations.Test;
 
 @Test

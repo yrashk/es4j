@@ -5,7 +5,7 @@ WIP
 
 * [Core] `Entity`, `Command` and `Event` are now interfaces, the classes were moved to to `StandardEntity`, `StandardCommand` and `StandardEvent` ([#67](https://github.com/eventsourcing/es4j/pull/67))
 * [Core] Most of repository implementation related code was moved to `com.eventsourcing.repository` ([#64](https://github.com/eventsourcing/es4j/pull/64))
-* [Core] `Repository.create()` now will use localhost NTP server ([#66](https://github.com/eventsourcing/es4j/pull/66))
+* [Core] `new StandardRepository()` now will use localhost NTP server ([#66](https://github.com/eventsourcing/es4j/pull/66))
 * [Core] Renamed `MemoryLockProvider` to `LocalLockProvider` ([#69](https://github.com/eventsourcing/es4j/pull/69), [#70](https://github.com/eventsourcing/es4j/pull/70)
 * [Core] `Journal#commandEventsIterator` has been removed ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] `MemoryJournal` has been moved to `eventsourcing-inmem` ([#69](https://github.com/eventsourcing/es4j/pull/69))

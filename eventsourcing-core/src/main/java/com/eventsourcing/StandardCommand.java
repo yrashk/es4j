@@ -8,7 +8,6 @@
 package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.repository.LockProvider;
 
 /**
  * Thin implementation of {@link Command}

@@ -1,8 +1,9 @@
 dependencies {
     compile project(':eventsourcing-core')
+    compile project(':eventsourcing-repository')
     compile project(':eventsourcing-layout')
 
-    testCompile project(':eventsourcing-core').sourceSets.test.output
+    testCompile project(':eventsourcing-repository').sourceSets.test.output
 
     // Useful utilities
     compile 'com.google.guava:guava:19.0'

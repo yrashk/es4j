@@ -13,7 +13,6 @@ import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.repository.Journal;
 import com.eventsourcing.repository.JournalEntityHandle;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
@@ -25,6 +24,7 @@ import org.osgi.service.component.annotations.Component;
 
 import java.nio.ByteBuffer;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Memory-based {@link Journal} implementation. Not meant to be used in production.
@@ -37,8 +37,10 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
     @Getter @Setter
     private Repository repository;
 
-    private Map<UUID, Command> commands = new HashMap<>();
-    private Map<UUID, Event> events = new HashMap<>();
+    private Map<UUID, Command> commands = new ConcurrentHashMap<>();
+    private Map<UUID, Event> events = new ConcurrentHashMap<>();
+
+    private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
 
     @Override
     protected void doStart() {
@@ -46,6 +48,14 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
             notifyFailed(new IllegalStateException("repository == null"));
         }
         notifyStarted();
+    }
+
+    @Override public void onCommandsAdded(Set<Class<? extends Command>> commands) {
+        commands.forEach(entityLayoutExtractor);
+    }
+
+    @Override public void onEventsAdded(Set<Class<? extends Event>> events) {
+        events.forEach(entityLayoutExtractor);
     }
 
     @Override

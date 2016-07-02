@@ -11,9 +11,10 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
-import com.eventsourcing.repository.LocalLockProvider;
-import com.eventsourcing.repository.PackageCommandSetProvider;
-import com.eventsourcing.repository.PackageEventSetProvider;
+import com.eventsourcing.LocalLockProvider;
+import com.eventsourcing.PackageCommandSetProvider;
+import com.eventsourcing.PackageEventSetProvider;
+import com.eventsourcing.repository.StandardRepository;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
@@ -32,7 +33,7 @@ public abstract class RepositoryTest {
     @BeforeMethod
     public void setUp() throws Exception {
         timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
-        repository = Repository.create();
+        repository = new StandardRepository();
         repository.setPhysicalTimeProvider(timeProvider);
         repository.setJournal(new MemoryJournal());
         repository.setIndexEngine(new MemoryIndexEngine());

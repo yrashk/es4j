@@ -1,6 +1,7 @@
 include 'eventsourcing-layout'
 include 'eventsourcing-hlc'
 include 'eventsourcing-core'
+include 'eventsourcing-repository'
 
 include 'eventsourcing-kotlin'
 

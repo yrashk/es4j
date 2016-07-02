@@ -8,22 +8,22 @@
 package com.eventsourcing.h2;
 
 import com.eventsourcing.*;
-import com.eventsourcing.events.CommandTerminatedExceptionally;
-import com.eventsourcing.events.EventCausalityEstablished;
-import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.Layout;
-import com.eventsourcing.repository.*;
-import com.google.common.base.Joiner;
+import com.eventsourcing.repository.AbstractJournal;
+import com.eventsourcing.repository.JournalEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVMap;
@@ -36,23 +36,22 @@ import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Deactivate;
 
-import javax.management.openmbean.*;
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.function.BiConsumer;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Component(
         service = Journal.class,
         property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
 @Slf4j
-public class MVStoreJournal extends AbstractService implements Journal, AbstractJournal, JournalMBean {
+public class MVStoreJournal extends AbstractService implements Journal, AbstractJournal {
     @Getter @Setter
     private Repository repository;
+
+    private final EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
 
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
     private MVStore store;
@@ -103,89 +102,21 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
         initializeStore();
 
-        repository.getCommands().forEach(new EntityLayoutExtractor());
-        repository.getEvents().forEach(new EntityLayoutExtractor());
-
         notifyStarted();
     }
 
     @Override
     public void onCommandsAdded(Set<Class<? extends Command>> commands) {
-        commands.forEach(new EntityLayoutExtractor());
-        reportUnrecognizedEntities();
+        commands.forEach(entityLayoutExtractor);
+        entityLayoutExtractor.flush();
     }
 
     @Override
     public void onEventsAdded(Set<Class<? extends Event>> events) {
-        events.forEach(new EntityLayoutExtractor());
-        reportUnrecognizedEntities();
+        events.forEach(entityLayoutExtractor);
+        entityLayoutExtractor.flush();
     }
 
-    void reportUnrecognizedEntities() {
-        getUnrecognizedEntities().forEach(layoutInformation -> {
-            String properties = Joiner.on("\n  ").join(layoutInformation.properties().stream().
-                    map(propertyInformation ->
-                                propertyInformation.name() + ": " + propertyInformation.type()).
-                                                                                collect(Collectors.toList()));
-            log.warn("Unrecognized entity {} (hash: {})\nProperties:\n  {}\n",
-                     layoutInformation.className(), BaseEncoding.base16().encode(layoutInformation.hash()), properties);
-        });
-    }
-
-    public List<LayoutInformation> getUnrecognizedEntities() {
-        List<LayoutInformation> result = new ArrayList<>();
-        layouts.forEach(new BiConsumer<byte[], byte[]>() {
-            @Override
-            public void accept(byte[] hash, byte[] info) {
-                if (!layoutsByHash.containsKey(BaseEncoding.base16().encode(hash))) {
-                    result.add(layoutInformationDeserializer.deserialize(ByteBuffer.wrap(info)));
-                }
-            }
-        });
-        return result;
-    }
-
-
-    @Override
-    public String getName() {
-        return store.getFileStore().getFileName();
-    }
-
-    @Override @SneakyThrows
-    public TabularData getEntities() {
-        CompositeType propertyType = new CompositeType("Entity Property", "Entity Property",
-                                                       new String[]{"Name", "Type"}, new String[]{"Name", "Type"},
-                                                       new OpenType[]{SimpleType.STRING, SimpleType.STRING});
-        TabularType propertyTabular = new TabularType("Property", "Property", propertyType, new String[]{"Name"});
-        CompositeType compositeType = new CompositeType("Entity", "Entity",
-                                                        new String[]{"Name", "Hash", "Recognized", "Properties"},
-                                                        new String[]{"Name", "Hash", "Recognized", "Properties"},
-                                                        new OpenType[]{SimpleType.STRING, SimpleType.STRING, SimpleType.BOOLEAN, propertyTabular});
-        TabularDataSupport tabular = new TabularDataSupport(
-                new TabularType("Entity", "Journalled entity", compositeType, new String[]{"Name"}));
-        layouts.forEach(new BiConsumer<byte[], byte[]>() {
-            @Override @SneakyThrows
-            public void accept(byte[] hash, byte[] info) {
-                LayoutInformation layoutInformation = layoutInformationDeserializer.deserialize(ByteBuffer.wrap(info));
-                boolean recognized = layoutsByHash.containsKey(BaseEncoding.base16().encode(hash));
-                Map<String, Object> entity = new HashMap<>();
-                entity.put("Name", layoutInformation.className());
-                entity.put("Hash", BaseEncoding.base16().encode(layoutInformation.hash()));
-                entity.put("Recognized", recognized);
-                TabularDataSupport propertyTab = new TabularDataSupport(propertyTabular);
-                layoutInformation.properties().forEach(new Consumer<PropertyInformation>() {
-                    @Override @SneakyThrows
-                    public void accept(PropertyInformation propertyInformation) {
-                        propertyTab.put(new CompositeDataSupport(propertyType, new String[]{"Name", "Type"},
-                                                                 new Object[]{propertyInformation.name(), propertyInformation.type()}));
-                    }
-                });
-                entity.put("Properties", propertyTab);
-                tabular.put(new CompositeDataSupport(compositeType, entity));
-            }
-        });
-        return tabular;
-    }
 
     void initializeStore() {
         MVMap<String, Object> info = store.openMap("info");
@@ -215,6 +146,20 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
     private Map<String, Layout> layoutsByHash = new HashMap<>();
     private Map<String, Layout> layoutsByClass = new HashMap<>();
+    
+    private Layout getLayout(Class<? extends Entity> klass) {
+        Layout layout = layoutsByClass.computeIfAbsent(klass.getName(), new LayoutFunction<>(klass));
+        if (getLayout(layout.getHash()) == null) {
+            String encoded = BaseEncoding.base16().encode(layout.getHash());
+            layoutsByHash.put(encoded, layout);
+        }
+        return layout;
+    }
+
+    private Layout getLayout(byte[] hash) {
+        String encoded = BaseEncoding.base16().encode(hash);
+        return layoutsByHash.get(encoded);
+    }
 
     static class Transaction implements AbstractJournal.Transaction {
         @Getter
@@ -252,7 +197,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         TransactionMap<byte[], Boolean> txHashCommands = tx0.openMap("hashCommands");
         TransactionMap<UUID, byte[]> txCommandHashes = tx0.openMap("commandHashes");
 
-        Layout commandLayout = layoutsByClass.get(command.getClass().getName());
+        Layout commandLayout = getLayout(command.getClass());
 
         ByteBuffer hashBuffer = ByteBuffer.allocate(16 + 20); // based on SHA-1
         hashBuffer.put(commandLayout.getHash());
@@ -267,9 +212,10 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
     }
 
+    @SneakyThrows
     @Override public void record(AbstractJournal.Transaction tx, Event event) {
         Transaction tx0 = ((Transaction) tx);
-        Layout layout = layoutsByClass.get(event.getClass().getName());
+        Layout layout = getLayout(event.getClass());
 
         ObjectSerializer serializer = serialization.getSerializer(event.getClass());
         int size = serializer.size(event);
@@ -300,8 +246,8 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         if (commandPayloads.containsKey(uuid)) {
             ByteBuffer payload = commandPayloads.get(uuid);
             payload.rewind();
-            String encodedHash = BaseEncoding.base16().encode(commandHashes.get(uuid));
-            Layout<Command<?, ?>> layout = layoutsByHash.get(encodedHash);
+            byte[] bytes = commandHashes.get(uuid);
+            Layout<Command<?, ?>> layout = getLayout(bytes);
             Command command = (Command) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
             command.uuid(uuid);
             return Optional.of((T) command);
@@ -309,8 +255,8 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         if (eventPayloads.containsKey(uuid)) {
             ByteBuffer payload = eventPayloads.get(uuid);
             payload.rewind();
-            String encodedHash = BaseEncoding.base16().encode(eventHashes.get(uuid));
-            Layout<Event> layout = layoutsByHash.get(encodedHash);
+            byte[] bytes = eventHashes.get(uuid);
+            Layout<Event> layout = getLayout(bytes);
             Event event = (Event) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
             event.uuid(uuid);
             return Optional.of((T) event);
@@ -321,18 +267,23 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
     @Override
     public <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
-        Layout layout = layoutsByClass.get(klass.getName());
-        byte[] hash = layout.getHash();
-        Iterator<Map.Entry<byte[], Boolean>> iterator = hashCommands.entryIterator(hashCommands.higherKey(hash));
-        return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
-                                          new EntityFunction<>(hash));
+        return entityIterator(klass, hashCommands);
     }
 
     @Override
     public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
-        Layout layout = layoutsByClass.get(klass.getName());
+        return entityIterator(klass, hashEvents);
+    }
+
+    @SneakyThrows
+    private <T extends Entity> CloseableIterator<EntityHandle<T>> entityIterator(Class<T> klass,  TransactionMap map) {
+        Layout layout = getLayout(klass);
+        if (layout == null) {
+            layout = Layout.forClass(klass);
+            layoutsByClass.put(klass.getName(), layout);
+        }
         byte[] hash = layout.getHash();
-        Iterator<Map.Entry<byte[], Boolean>> iterator = hashEvents.entryIterator(hashEvents.higherKey(hash));
+        Iterator<Map.Entry<byte[], Boolean>> iterator = map.entryIterator(map.higherKey(hash));
         return new EntityHandleIterator<>(iterator, bytes -> Bytes.indexOf(bytes, hash) == 0,
                                           new EntityFunction<>(hash));
     }
@@ -405,8 +356,23 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     private final ObjectSerializer<LayoutInformation> layoutInformationSerializer;
     private final ObjectDeserializer<LayoutInformation> layoutInformationDeserializer;
 
+    private static class LayoutFunction<X> implements Function<X, Layout> {
+        private final Class<? extends Entity> klass;
 
-    private class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
+        public LayoutFunction(Class<? extends Entity> klass) {this.klass = klass;}
+
+        @SneakyThrows
+        @Override public Layout apply(X n) {return Layout.forClass(klass);}
+    }
+
+
+    private class EntityLayoutExtractor extends AbstractJournal.EntityLayoutExtractor {
+
+        private Queue<Class<? extends Entity>> queue = new LinkedTransferQueue<>();
+
+        public EntityLayoutExtractor(AbstractJournal journal) {
+            super(journal);
+        }
 
         @Override
         @SneakyThrows
@@ -416,7 +382,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
             String encodedHash = BaseEncoding.base16().encode(hash);
             layoutsByHash.put(encodedHash, layout);
             layoutsByClass.put(aClass.getName(), layout);
-
             List<PropertyInformation> properties = layout.getProperties().stream()
                     .map(property -> new PropertyInformation(property.getName(), property.getType()
                                                                                         .getBriefDescription()))
@@ -424,6 +389,12 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
             LayoutInformation layoutInformation = new LayoutInformation(hash, aClass.getName(), properties);
             layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
+            queue.add(aClass);
+        }
+
+        void flush() {
+            queue.iterator().forEachRemaining(super::accept);
+            queue.clear();
         }
 
     }

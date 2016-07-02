@@ -40,7 +40,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
     public IndexEngineTest(T indexEngine) {
         this.indexEngine = indexEngine;
 
-        repository = new RepositoryImpl();
+        repository = new StandardRepository();
         journal = new MemoryJournal();
         journal.setRepository(repository);
         repository.setJournal(journal);

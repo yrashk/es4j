@@ -5,11 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.repository;
-
-import com.eventsourcing.Entity;
-import com.eventsourcing.EntityHandle;
-import com.eventsourcing.Repository;
+package com.eventsourcing;
 
 import java.util.stream.Stream;
 
@@ -31,7 +27,6 @@ import java.util.stream.Stream;
  * for every entity handle.
  *
  *
- * Most common entity subscriber is a {@link ClassEntitySubscriber}
  * @param <T>
  */
 public interface EntitySubscriber<T extends Entity> {
