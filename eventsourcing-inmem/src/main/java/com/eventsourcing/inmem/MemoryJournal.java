@@ -40,22 +40,12 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
     private Map<UUID, Command> commands = new ConcurrentHashMap<>();
     private Map<UUID, Event> events = new ConcurrentHashMap<>();
 
-    private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
-
     @Override
     protected void doStart() {
         if (repository == null) {
             notifyFailed(new IllegalStateException("repository == null"));
         }
         notifyStarted();
-    }
-
-    @Override public void onCommandsAdded(Set<Class<? extends Command>> commands) {
-        commands.forEach(entityLayoutExtractor);
-    }
-
-    @Override public void onEventsAdded(Set<Class<? extends Event>> events) {
-        events.forEach(entityLayoutExtractor);
     }
 
     @Override

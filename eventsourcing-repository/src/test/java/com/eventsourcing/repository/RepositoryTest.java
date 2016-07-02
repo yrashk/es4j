@@ -20,6 +20,8 @@ import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
+import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
+import com.google.common.collect.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -66,6 +68,7 @@ public abstract class RepositoryTest<T extends Repository> {
         lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         repository.startAsync().awaitRunning();
+        assertTrue(journal.size(EntityLayoutIntroduced.class) > 0);
     }
 
     protected abstract Journal createJournal();
@@ -78,8 +81,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @BeforeMethod
     public void setUp() throws Exception {
         journal.clear();
-        journal.onCommandsAdded(repository.getCommands());
-        journal.onEventsAdded(repository.getEvents());
+        repository.publish(new IntroduceEntityLayouts(Iterables.concat(repository.getCommands(), repository.getEvents()))).join();
     }
 
     @Accessors(fluent = true) @ToString

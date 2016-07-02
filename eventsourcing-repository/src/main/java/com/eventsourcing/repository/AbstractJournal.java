@@ -13,7 +13,7 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
-import com.eventsourcing.repository.commands.IntroduceEntityLayout;
+import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
@@ -121,29 +121,4 @@ public interface AbstractJournal extends Journal {
             listener.onEvent(event);
         }
     }
-
-    class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
-
-        private final AbstractJournal journal;
-
-        public EntityLayoutExtractor(AbstractJournal journal) {this.journal = journal;}
-
-        @Override
-        @SneakyThrows
-        public void accept(Class<? extends Entity> aClass) {
-            Layout<? extends Entity> layout = Layout.forClass(aClass);
-            byte[] fingerprint = layout.getHash();
-            Query<EntityHandle<EntityLayoutIntroduced>> query = equal(EntityLayoutIntroduced.FINGERPRINT,
-                                                                      fingerprint);
-            try(ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = journal.getRepository()
-                                                                                   .query(EntityLayoutIntroduced.class,
-                                                                                          query)) {
-                if (resultSet.isEmpty()) {
-                    journal.getRepository().publish(new IntroduceEntityLayout(fingerprint, Optional.of(layout))).get();
-                }
-            }
-        }
-
-    }
-
 }

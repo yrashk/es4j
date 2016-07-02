@@ -15,7 +15,8 @@ import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
-import com.eventsourcing.repository.commands.IntroduceEntityLayout;
+import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -94,7 +95,7 @@ public class StandardRepository extends AbstractService implements Repository, R
 
         addCommandSetProvider(() -> {
             List<Class<? extends Command>> classes = Arrays
-                    .asList(IntroduceEntityLayout.class);
+                    .asList(IntroduceEntityLayouts.class);
             return new HashSet<>(classes);
         });
 
@@ -115,6 +116,8 @@ public class StandardRepository extends AbstractService implements Repository, R
 
         journal.onCommandsAdded(commands);
         journal.onEventsAdded(events);
+
+        publish(new IntroduceEntityLayouts(Iterables.concat(commands, events))).join();
 
         notifyStarted();
     }
@@ -172,6 +175,7 @@ public class StandardRepository extends AbstractService implements Repository, R
             // apply immediately
             runnable.run();
             journal.onCommandsAdded(newCommands);
+            publish(new IntroduceEntityLayouts(Iterables.concat(newCommands))).join();
         } else {
             initialization.add(runnable);
         }
@@ -208,6 +212,7 @@ public class StandardRepository extends AbstractService implements Repository, R
             // apply immediately
             runnable.run();
             journal.onEventsAdded(newEvents);;
+            publish(new IntroduceEntityLayouts(Iterables.concat(newEvents))).join();
         } else {
             initialization.add(runnable);
         }

@@ -38,8 +38,8 @@ import org.osgi.service.component.annotations.Deactivate;
 
 import java.nio.ByteBuffer;
 import java.util.*;
-import java.util.concurrent.LinkedTransferQueue;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -51,7 +51,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     @Getter @Setter
     private Repository repository;
 
-    private final EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
+    private final EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor();
 
     @Getter(AccessLevel.PACKAGE) @Setter(AccessLevel.PACKAGE) // getter and setter for tests
     private MVStore store;
@@ -108,13 +108,11 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     @Override
     public void onCommandsAdded(Set<Class<? extends Command>> commands) {
         commands.forEach(entityLayoutExtractor);
-        entityLayoutExtractor.flush();
     }
 
     @Override
     public void onEventsAdded(Set<Class<? extends Event>> events) {
         events.forEach(entityLayoutExtractor);
-        entityLayoutExtractor.flush();
     }
 
 
@@ -366,13 +364,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     }
 
 
-    private class EntityLayoutExtractor extends AbstractJournal.EntityLayoutExtractor {
-
-        private Queue<Class<? extends Entity>> queue = new LinkedTransferQueue<>();
-
-        public EntityLayoutExtractor(AbstractJournal journal) {
-            super(journal);
-        }
+    private class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
 
         @Override
         @SneakyThrows
@@ -389,12 +381,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
             LayoutInformation layoutInformation = new LayoutInformation(hash, aClass.getName(), properties);
             layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
-            queue.add(aClass);
-        }
-
-        void flush() {
-            queue.iterator().forEachRemaining(super::accept);
-            queue.clear();
         }
 
     }

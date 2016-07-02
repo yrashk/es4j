@@ -34,7 +34,6 @@ import java.time.Instant;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -51,25 +50,24 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
     @Getter @Setter
     private Repository repository;
-    private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor(this);
+    private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor();
 
     @Activate
     protected void activate() {
         dataSource = dataSourceProvider.getDataSource();
     }
 
+    public PostgreSQLJournal() {}
     public PostgreSQLJournal(DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     @Override public void onCommandsAdded(Set<Class<? extends Command>> commands) {
         commands.forEach(entityLayoutExtractor);
-        entityLayoutExtractor.flush();
     }
 
     @Override public void onEventsAdded(Set<Class<? extends Event>> events) {
         events.forEach(entityLayoutExtractor);
-        entityLayoutExtractor.flush();
     }
 
     @Value
@@ -211,10 +209,6 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         Connection connection = dataSource.getConnection();
 
         Layout layout = getLayout(klass);
-        if (layout == null) {
-            layout = Layout.forClass(klass);
-            layoutsByClass.put(klass.getName(), layout);
-        }
         String hash = BaseEncoding.base16().encode(layout.getHash());
 
         PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_" + hash);
@@ -656,7 +650,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
     private Layout getLayout(Class<? extends Entity> klass) {
         if (!layoutsByClass.containsKey(klass.getName())) {
-            new EntityLayoutExtractor(this).accept(klass);
+            entityLayoutExtractor.accept(klass);
         }
         return layoutsByClass.get(klass.getName());
     }
@@ -667,13 +661,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
     }
 
 
-    private class EntityLayoutExtractor extends AbstractJournal.EntityLayoutExtractor {
-        private Queue<Class<? extends Entity>> queue = new LinkedTransferQueue<>();
-
-        public EntityLayoutExtractor(AbstractJournal journal) {
-            super(journal);
-        }
-
+    private class EntityLayoutExtractor implements Consumer<Class<? extends Entity>> {
         @SneakyThrows
         @Override public void accept(Class<? extends Entity> aClass) {
             Layout<?> layout = Layout.forClass(aClass);
@@ -702,13 +690,6 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
             ReaderFunction readerFunction = new ReaderFunction(layout);
             readerFunctions.put(encoded, readerFunction);
-
-            queue.add(aClass);
-        }
-
-        void flush() {
-            queue.iterator().forEachRemaining(super::accept);
-            queue.clear();
         }
 
     }
