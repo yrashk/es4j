@@ -33,6 +33,7 @@ import lombok.SneakyThrows;
 import org.postgresql.util.PSQLException;
 
 import javax.sql.DataSource;
+import java.security.MessageDigest;
 import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -42,6 +43,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.IntStream;
 
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
@@ -81,8 +83,11 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
     @SneakyThrows
     private void init() {
         try(Connection connection = dataSource.getConnection()) {
-            String encodedHash = BaseEncoding.base16().encode(layout.getHash());
-            tableName = "index_" + encodedHash + "_" + attribute.getAttributeName() + "_eq";
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            digest.update(layout.getHash());
+            digest.update(attribute.getAttributeName().getBytes());
+            String encodedHash = BaseEncoding.base16().encode(digest.digest());
+            tableName = "index_" + encodedHash + "_eq";
             if (unique) {
                 tableName += "_unique";
             }
@@ -107,8 +112,11 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             try (PreparedStatement s = connection.prepareStatement(indexObj)) {
                 s.executeUpdate();
             }
-            String comment = "COMMENT ON TABLE " + tableName + " IS '" + layout.getName() + "." +
-                    attribute.getAttributeName() + "'";
+            String indexComment = layout.getName() + "." + attribute.getAttributeName() + " EQ";
+            if (unique) {
+                indexComment += " UNIQUE";
+            }
+            String comment = "COMMENT ON TABLE " + tableName + " IS '" + indexComment + "'";
             try (PreparedStatement s = connection.prepareStatement(comment)) {
                 s.executeUpdate();
             }
