@@ -7,13 +7,15 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
 import com.google.common.hash.HashFunction;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 
 import java.util.Set;
 
-public abstract class AbstractHashingAttributeIndex<A, O> extends AbstractAttributeIndex<A, O> {
+public abstract class AbstractHashingAttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
 
     protected final HashFunction hashFunction;
     protected final int hashSize;
@@ -25,8 +27,8 @@ public abstract class AbstractHashingAttributeIndex<A, O> extends AbstractAttrib
      * @param supportedQueries The set of {@link Query} types which the subclass implementation supports
      * @param hashFunction
      */
-    protected AbstractHashingAttributeIndex(Attribute<O, A> attribute, Set<Class<? extends Query>> supportedQueries,
-                                            HashFunction hashFunction) {
+    protected AbstractHashingAttributeIndex(Attribute<O, A> attribute, Set<Class<? extends Query>>
+                                            supportedQueries, HashFunction hashFunction) {
         super(attribute, supportedQueries);
         this.hashFunction = hashFunction;
         hashSize = hashFunction.bits() / 8;

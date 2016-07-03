@@ -16,7 +16,7 @@ import static java.util.Arrays.asList;
 
 public class CarFactory {
 
-    public static Set<Car> createCollectionOfCars(int numCars) {
+    public static Set<Car>  createCollectionOfCars(int numCars) {
         Set<Car> cars = new LinkedHashSet<Car>(numCars);
         for (int carId = 0; carId < numCars; carId++) {
             cars.add(createCar(carId));

@@ -24,14 +24,6 @@ public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
     }
 
     @Override protected Journal createJournal() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
-
-        HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(50);
-        config.setDataSource(dataSource);
-        config.setLeakDetectionThreshold(2000);
-
-        return new PostgreSQLJournal(new HikariDataSource(config));
+        return new PostgreSQLJournal(PostgreSQLTest.dataSource);
     }
 }

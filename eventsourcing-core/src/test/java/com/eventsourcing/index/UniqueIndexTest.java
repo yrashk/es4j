@@ -7,6 +7,8 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
+import com.eventsourcing.StandardEntity;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
@@ -17,7 +19,6 @@ import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
-import lombok.Setter;
 import org.testng.annotations.Test;
 
 import java.util.Arrays;
@@ -31,9 +32,9 @@ import static org.testng.Assert.assertEquals;
 // indices the same way CQEngine does.
 public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
-    public abstract <A, O> UniqueIndex onAttribute(Attribute<O, A> attribute);
+    public abstract <A, O extends Entity> UniqueIndex onAttribute(Attribute<O, A> attribute);
 
-    public static class Car {
+    public static class Car extends StandardEntity {
         @Getter
         public int carId;
         @Getter
@@ -85,7 +86,10 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         // Add some indexes...
         UniqueIndex index = onAttribute(Car.CAR_ID);
         cars.addIndex(index);
-        cars.addIndex(HashIndex.onAttribute(Car.CAR_ID));
+        HashIndex<Integer, Car> index1 = HashIndex.onAttribute(Car.CAR_ID);
+        cars.addIndex(index1);
+        index.clear(noQueryOptions());
+        index1.clear(noQueryOptions());
 
         // Add some objects to the collection...
         cars.add(new Car(1, "ford focus", "great condition, low mileage", Arrays.asList("spare tyre", "sunroof")));
@@ -98,6 +102,10 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
                      "should prefer unique index over hash index");
 
         assertEquals(rs.uniqueResult().carId, 2, "should retrieve car 2");
+
+        index.clear(noQueryOptions());
+        index1.clear(noQueryOptions());
+
     }
 
     @Test(expectedExceptions = com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException.class)
@@ -105,7 +113,9 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
 
         // Add some indexes...
-        cars.addIndex(onAttribute(Car.CAR_ID));
+        UniqueIndex index = onAttribute(Car.CAR_ID);
+        cars.addIndex(index);
+        index.clear(noQueryOptions());
 
         // Add some objects to the collection...
         cars.add(new Car(1, "ford focus", "great condition, low mileage", Arrays.asList("spare tyre", "sunroof")));
@@ -113,6 +123,7 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         cars.add(new Car(3, "honda civic", "has a flat tyre and high mileage", Arrays.asList("radio")));
 
         cars.add(new Car(2, "some other car", "foo", Arrays.asList("bar")));
+        index.clear(noQueryOptions());
     }
 
     @Test(expectedExceptions = com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException.class)
@@ -120,7 +131,9 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
 
         // Add some indexes...
-        cars.addIndex(onAttribute(Car.FEATURES));
+        UniqueIndex index = onAttribute(Car.FEATURES);
+        cars.addIndex(index);
+        index.clear(noQueryOptions());
 
         // Add some objects to the collection...
         cars.add(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof")));
@@ -128,6 +141,7 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
         // Try to add another car which has a cd player, when one car already has a cd player...
         cars.add(new Car(3, "honda civic", "baz", Arrays.asList("cd player", "bluetooth")));
+        index.clear(noQueryOptions());
     }
 
     @Test
@@ -135,7 +149,9 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
 
         // Add some indexes...
-        cars.addIndex(onAttribute(Car.FEATURES));
+        UniqueIndex index = onAttribute(Car.FEATURES);
+        cars.addIndex(index);
+        index.clear(noQueryOptions());
 
         // Add some objects to the collection...
         cars.add(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof")));
@@ -143,21 +159,25 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
         assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
         assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
+        index.clear(noQueryOptions());
     }
 
     @Test
     public void indexingExistingData() {
         IndexedCollection<Car> cars = new ConcurrentIndexedCollection<>();
+        UniqueIndex index = onAttribute(Car.FEATURES);
+        index.clear(noQueryOptions());
 
         // Add some objects to the collection...
         cars.add(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof")));
         cars.add(new Car(2, "ford taurus", "bar", Arrays.asList("radio", "cd player")));
 
         // Add some indexes...
-        cars.addIndex(onAttribute(Car.FEATURES));
+        cars.addIndex(index);
 
         assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
         assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
+        index.clear(noQueryOptions());
     }
 
 }

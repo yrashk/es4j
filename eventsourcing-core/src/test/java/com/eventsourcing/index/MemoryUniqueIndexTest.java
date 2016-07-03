@@ -7,13 +7,14 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
 
 public class MemoryUniqueIndexTest extends UniqueIndexTest<UniqueIndex> {
 
     @Override
-    public <A, O> UniqueIndex onAttribute(Attribute<O, A> attribute) {
+    public <A, O extends Entity> UniqueIndex onAttribute(Attribute<O, A> attribute) {
         return UniqueIndex.onAttribute(attribute);
     }
 }

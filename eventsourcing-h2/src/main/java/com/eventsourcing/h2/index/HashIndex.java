@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.h2.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.index.AbstractHashingAttributeIndex;
 import com.google.common.collect.Iterators;
 import com.google.common.hash.HashFunction;
@@ -29,7 +30,8 @@ import org.h2.mvstore.MVStore;
 import java.nio.ByteBuffer;
 import java.util.*;
 
-public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> implements KeyStatisticsAttributeIndex<A, O> {
+public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeIndex<A, O> implements
+        KeyStatisticsAttributeIndex<A, O> {
 
     protected static final int INDEX_RETRIEVAL_COST = 30;
 
@@ -105,11 +107,11 @@ public class HashIndex<A, O> extends AbstractHashingAttributeIndex<A, O> impleme
         objHashMap = store.openMap("hash_index_objhash_" + classname + "_" + attribute.getAttributeName());
     }
 
-    public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
+    public static <A, O extends Entity> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
         return onAttribute(store, attribute, Hashing.sha1());
     }
 
-    public static <A, O> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
+    public static <A, O extends Entity> HashIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
                                                      HashFunction hashFunction) {
         return new HashIndex<>(store, attribute, hashFunction);
     }

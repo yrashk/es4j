@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.h2.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.index.AbstractHashingAttributeIndex;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.HashFunction;
@@ -29,7 +30,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
+public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIndex<A, O> {
 
 
     protected static final int INDEX_RETRIEVAL_COST = 25;
@@ -64,11 +65,11 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
         map = store.openMap("unique_index_" + classname + "_" + attribute.getAttributeName());
     }
 
-    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
+    public static <A, O extends Entity> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
         return onAttribute(store, attribute, Hashing.sha1());
     }
 
-    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
+    public static <A, O extends Entity> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
                                                        HashFunction hashFunction) {
         return new UniqueIndex<>(store, attribute, hashFunction);
     }

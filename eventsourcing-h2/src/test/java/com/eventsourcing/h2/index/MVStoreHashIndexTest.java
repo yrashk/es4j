@@ -7,13 +7,15 @@
  */
 package com.eventsourcing.h2.index;
 
+import com.eventsourcing.Entity;
+import com.eventsourcing.index.EqualityIndexTest;
 import com.googlecode.cqengine.attribute.Attribute;
 import org.h2.mvstore.MVStore;
 
-public class HashIndexTest extends com.eventsourcing.index.HashIndexTest<HashIndex> {
+public class MVStoreHashIndexTest extends EqualityIndexTest<HashIndex> {
 
     @Override
-    public <A, O> HashIndex onAttribute(Attribute<O, A> attribute) {
+    public <A, O extends Entity> HashIndex onAttribute(Attribute<O, A> attribute) {
         return HashIndex.onAttribute(MVStore.open(null), attribute);
     }
 }

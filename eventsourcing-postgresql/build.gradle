@@ -1,5 +1,6 @@
 dependencies {
     compile project(':eventsourcing-repository')
+    testCompile project(':eventsourcing-core').sourceSets.test.output
     testCompile project(':eventsourcing-repository').sourceSets.test.output
 
     compile 'org.postgresql:postgresql:9.4.1208'

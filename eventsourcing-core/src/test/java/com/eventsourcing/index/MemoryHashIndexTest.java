@@ -7,12 +7,13 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.hash.HashIndex;
 
-public class MemoryHashIndexTest extends HashIndexTest<HashIndex> {
+public class MemoryHashIndexTest extends EqualityIndexTest<HashIndex> {
     @Override
-    public <A, O> HashIndex onAttribute(Attribute<O, A> attribute) {
+    public <A, O extends Entity> HashIndex onAttribute(Attribute<O, A> attribute) {
         return HashIndex.onAttribute(attribute);
     }
 }

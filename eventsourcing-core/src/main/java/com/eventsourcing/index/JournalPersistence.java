@@ -15,6 +15,7 @@ import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.Persistence;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Getter;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -40,7 +41,8 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
     }
 
 
-    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>> {
+    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>>, KeyObjectStore<UUID, T>
+    {
 
         protected final Journal journal;
         protected final Class<T> klass;
@@ -48,6 +50,12 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
         public JournalObjectStore(Journal journal, Class<T> klass) {
             this.journal = journal;
             this.klass = klass;
+        }
+
+        @Override public T get(UUID key) {
+            @SuppressWarnings("unchecked")
+            T t = (T) journal.get(key).get();
+            return t;
         }
 
         @Override

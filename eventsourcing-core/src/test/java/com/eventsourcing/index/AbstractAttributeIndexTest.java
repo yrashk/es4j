@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.EntityHandle;
+import com.eventsourcing.Entity;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.models.Car;
 import com.fasterxml.classmate.ResolvedType;
@@ -27,7 +27,7 @@ import static org.testng.Assert.assertEquals;
 
 public class AbstractAttributeIndexTest {
 
-    private static class AttributeIndex<A, O> extends AbstractAttributeIndex<A, O> {
+    private static class AttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
 
         /**
          * Protected constructor, called by subclasses.
@@ -86,14 +86,16 @@ public class AbstractAttributeIndexTest {
     @Test
     @SneakyThrows
     public void generics() {
-        SimpleAttribute<Car, List<String>> FEATURES_LIST = new SimpleAttribute<Car, List<String>>("features") {
+        com.googlecode.cqengine.attribute
+                .SimpleAttribute<Car, List<String>> FEATURES_LIST = new com.googlecode.cqengine.attribute
+                .SimpleAttribute<Car, List<String>>("features") {
             @Override
             public List<String> getValue(Car car, QueryOptions queryOptions) {
                 return car.getFeatures();
             }
         };
 
-        AttributeIndex<List<String>, EntityHandle<Car>> index = new AttributeIndex<>(FEATURES_LIST,
+        AttributeIndex<List<String>, Car> index = new AttributeIndex<>(FEATURES_LIST,
                                                                                      new HashSet<Class<? extends Query>>() {{
                                                                                      }});
 

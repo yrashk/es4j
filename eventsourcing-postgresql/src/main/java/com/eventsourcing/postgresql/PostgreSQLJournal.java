@@ -28,9 +28,7 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
-import java.math.BigDecimal;
 import java.sql.*;
-import java.time.Instant;
 import java.util.*;
 import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,6 +37,9 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.eventsourcing.postgresql.PostgreSQLSerialization.getValue;
+import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
 @Component(property = "type=PostgreSQLJournal", service = Journal.class)
 public class PostgreSQLJournal extends AbstractService implements Journal, AbstractJournal {
@@ -215,36 +216,14 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         return new EntityIterator<>(this, s, connection);
     }
 
-    static private class EntityIterator<R extends Entity> implements CloseableIterator<EntityHandle<R>> {
-
+    static private class EntityIterator<R extends Entity> extends PostgreSQLStatementIterator<EntityHandle<R>> {
 
         private final Journal journal;
-        private ResultSet resultSet;
-        private final PreparedStatement statement;
-        private final Connection connection;
 
         public EntityIterator(Journal journal, PreparedStatement statement,
                               Connection connection) {
+            super(statement, connection, true);
             this.journal = journal;
-            this.statement = statement;
-            this.connection = connection;
-        }
-
-        @SneakyThrows
-        @Override
-        public boolean hasNext() {
-
-            // lazy query execution
-            if (resultSet == null) {
-                resultSet = statement.executeQuery();
-            }
-
-            if (resultSet.next()) {
-                return true;
-            } else {
-                close();
-                return false;
-            }
         }
 
         @SneakyThrows
@@ -252,15 +231,6 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         public EntityHandle<R> next() {
             return new JournalEntityHandle<>(journal, UUID.fromString(resultSet.getString(1)));
         }
-
-        @SneakyThrows
-        @Override
-        public void close() {
-            if (!resultSet.isClosed()) resultSet.close();
-            if (!statement.isClosed()) statement.close();
-            if (!connection.isClosed()) connection.close();
-        }
-
     }
 
 
@@ -363,125 +333,6 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             return layout.instantiate(props);
         }
 
-        @SneakyThrows
-        private Object getValue(ResultSet resultSet, AtomicInteger i, TypeHandler typeHandler) {
-            if (typeHandler instanceof BigDecimalTypeHandler) {
-                return resultSet.getBigDecimal(i.getAndIncrement());
-            }
-            if (typeHandler instanceof BooleanTypeHandler) {
-                return resultSet.getBoolean(i.getAndIncrement());
-            }
-            if (typeHandler instanceof ByteArrayTypeHandler) {
-                byte[] bytes = resultSet.getBytes(i.getAndIncrement());
-                if (((ByteArrayTypeHandler) typeHandler).isPrimitive()) {
-                    return bytes;
-                } else {
-                    return ((ByteArrayTypeHandler) typeHandler).toObject(bytes);
-                }
-            }
-            if (typeHandler instanceof ByteTypeHandler) {
-                return resultSet.getByte(i.getAndIncrement());
-            }
-            if (typeHandler instanceof DateTypeHandler) {
-                return Date.from(resultSet.getTimestamp(i.getAndIncrement()).toInstant());
-            }
-            if (typeHandler instanceof DoubleTypeHandler) {
-                return resultSet.getDouble(i.getAndIncrement());
-            }
-            if (typeHandler instanceof EnumTypeHandler) {
-                Class<? extends Enum> enumClass = ((EnumTypeHandler) typeHandler).getEnumClass();
-                String[] enumNames = Arrays.stream(enumClass.getEnumConstants()).map(Enum::name).toArray(String[]::new);
-                return Enum.valueOf(enumClass, enumNames[resultSet.getInt(i.getAndIncrement())]);
-            }
-            if (typeHandler instanceof FloatTypeHandler) {
-                return resultSet.getFloat(i.getAndIncrement());
-            }
-            if (typeHandler instanceof IntegerTypeHandler) {
-                return resultSet.getInt(i.getAndIncrement());
-            }
-            if (typeHandler instanceof ListTypeHandler) {
-                if (((ListTypeHandler) typeHandler).getWrappedHandler() instanceof ObjectTypeHandler) {
-                    ObjectTypeHandler handler = (ObjectTypeHandler) ((ListTypeHandler) typeHandler).getWrappedHandler();
-                    Layout<?> objectLayout = handler.getLayout();
-                    List<? extends Property<?>> properties = objectLayout.getProperties();
-                    List<Map<String, Object>> list = new ArrayList();
-                    for (Property p : properties) {
-                        Array array = resultSet.getArray(i.getAndIncrement());
-                        ResultSet arrayResultSet = array.getResultSet();
-                        int j=0;
-                        while (arrayResultSet.next()) {
-                            j++;
-                            if (list.size() < j) {
-                                list.add(new HashMap<>());
-                            }
-                            Map<String, Object> o = list.get(j - 1);
-                            o.put(p.getName(), getValue(arrayResultSet, new AtomicInteger(2), p.getTypeHandler()));
-                        }
-                    }
-                    return list.stream().map(new ObjectArrayCollector(objectLayout, properties)).collect(Collectors.toList());
-                } else {
-                    Array array = resultSet.getArray(i.getAndIncrement());
-                    ResultSet arrayResultSet = array.getResultSet();
-                    List list = new ArrayList();
-                    TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
-                    while (arrayResultSet.next()) {
-                        list.add(getValue(arrayResultSet, new AtomicInteger(2), handler));
-                    }
-                    return list;
-                }
-            }
-            if (typeHandler instanceof LongTypeHandler) {
-                return resultSet.getLong(i.getAndIncrement());
-            }
-            if (typeHandler instanceof ObjectTypeHandler) {
-                Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
-                List<? extends Property<?>> properties = layout.getProperties();
-
-                Map<Property<?>, Object> props = new HashMap<>();
-                for (Property property : properties) {
-                    props.put(property, getValue(resultSet, i, property.getTypeHandler()));
-                }
-                @SuppressWarnings("unchecked")
-                Object o = ((Layout) layout).instantiate(props);
-                return o;
-            }
-            if (typeHandler instanceof OptionalTypeHandler) {
-                return Optional.ofNullable(getValue(resultSet, i, ((OptionalTypeHandler) typeHandler)
-                        .getWrappedHandler()));
-            }
-            if (typeHandler instanceof ShortTypeHandler) {
-                return resultSet.getShort(i.getAndIncrement());
-            }
-            if (typeHandler instanceof StringTypeHandler) {
-                return resultSet.getString(i.getAndIncrement());
-            }
-            if (typeHandler instanceof UUIDTypeHandler) {
-                return UUID.fromString(resultSet.getString(i.getAndIncrement()));
-            }
-            throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
-        }
-
-    }
-
-    private static class ObjectArrayCollector implements Function<Map<String,Object>, Object> {
-        private final Layout objectLayout;
-        private final List<? extends Property<?>> properties;
-
-        public ObjectArrayCollector(Layout<?> objectLayout, List<? extends Property<?>> properties) {
-            this.objectLayout = objectLayout;
-            this.properties = properties;
-        }
-
-        @SneakyThrows
-        @Override public Object apply(Map<String, Object> map) {
-            Map<Property, Object> props = new HashMap<>();
-            for (Property property : properties) {
-                props.put(property, map.get(property.getName()));
-            }
-            @SuppressWarnings("unchecked")
-            Object o = objectLayout.instantiate(props);
-            return o;
-        }
     }
 
     private class InsertFunction implements BiFunction<Object, Connection, UUID> {
@@ -516,7 +367,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
                 String listParameters = Joiner.on(",").join(
                         list.stream().map(i -> getParameter(connection, handler, i))
                             .collect(Collectors.toList()));
-                return "ARRAY[" + listParameters + "]::" + getMappedType(connection, handler) + "[]";
+                return "ARRAY[" + listParameters + "]::" + PostgreSQLSerialization.getMappedType(connection, handler) + "[]";
             } else if (typeHandler instanceof OptionalTypeHandler) {
                 if (object == null || !((Optional) object).isPresent()) {
                     return "?";
@@ -563,86 +414,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             return uuid;
         }
 
-        @SneakyThrows
-        private int setValue(Connection connection, PreparedStatement s, int i, Object value, TypeHandler typeHandler) {
-            if (typeHandler instanceof BigDecimalTypeHandler) {
-                s.setBigDecimal(i, value == null ? BigDecimal.ZERO : (BigDecimal) value);
-            } else
-            if (typeHandler instanceof BooleanTypeHandler) {
-                s.setBoolean(i, value == null ? false: (Boolean) value);
-            } else
-            if (typeHandler instanceof ByteArrayTypeHandler) {
-                if (((ByteArrayTypeHandler) typeHandler).isPrimitive()) {
-                    s.setBytes(i, value == null ? new byte[]{} : (byte[]) value);
-                } else {
-                    s.setBytes(i, value == null ?  new byte[]{} :
-                            (byte[]) ((ByteArrayTypeHandler) typeHandler).toPrimitive(value));
-                }
-            } else
-            if (typeHandler instanceof ByteTypeHandler) {
-                s.setByte(i, value == null ? 0 : (Byte) value);
-            } else
-            if (typeHandler instanceof DateTypeHandler) {
-                s.setTimestamp(i, value == null ? Timestamp.from(Instant.EPOCH) :
-                        Timestamp.from(((Date)value).toInstant()));
-            } else
-            if (typeHandler instanceof DoubleTypeHandler) {
-                s.setDouble(i, value == null ? 0 : (Double) value);
-            } else
-            if (typeHandler instanceof EnumTypeHandler) {
-                s.setInt(i, value == null ? 0 : ((Enum)value).ordinal());
-            } else
-            if (typeHandler instanceof FloatTypeHandler) {
-                s.setFloat(i, value == null ? 0 : (Float) value);
-            } else
-            if (typeHandler instanceof IntegerTypeHandler) {
-                s.setInt(i, value == null ? 0 : (Integer) value);
-            } else
-            if (typeHandler instanceof ListTypeHandler) {
-                int j=i;
-                TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
-                for (Object item : (value == null ? Arrays.asList() : (List)value)) {
-                    j = setValue(connection, s, j, item, handler);
-                }
-                return j;
-            } else
-            if (typeHandler instanceof LongTypeHandler) {
-                s.setLong(i, value == null ? 0 : (Long) value);
-            } else
-            if (typeHandler instanceof ObjectTypeHandler) {
-                Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
-                Object value_ = value == null ? layout.instantiate() : value;
-                List<? extends Property<?>> properties = layout.getProperties();
-                int j=i;
-                for (Property p : properties) {
-                    j = setValue(connection, s, j, p.get(value_), p.getTypeHandler());
-                }
-                return j;
-            } else
-            if (typeHandler instanceof OptionalTypeHandler) {
-                TypeHandler handler = ((OptionalTypeHandler) typeHandler).getWrappedHandler();
-                if (value != null && ((Optional)value).isPresent()) {
-                     i = setValue(connection, s, i, ((Optional) value).get(),
-                             handler);
-                } else {
-                    s.setNull(i, getMappedSqlType(handler));
-                    i++;
-                }
-                return i;
-            } else
-            if (typeHandler instanceof ShortTypeHandler) {
-                s.setShort(i, value == null ? 0 : (Short) value);
-            } else
-            if (typeHandler instanceof StringTypeHandler) {
-                s.setString(i, value == null ? "" : (String) value);
-            } else
-            if (typeHandler instanceof UUIDTypeHandler) {
-                s.setString(i, value == null ? new UUID(0,0).toString() : value.toString());
-            } else {
-                throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
-            }
-            return i+1;
-        }
+
     }
 
     private Map<String, Layout> layoutsByClass = new ConcurrentHashMap<>();
@@ -697,144 +469,9 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
     protected static String defineColumns(Connection connection, Layout<?> layout) {
         return Joiner.on(",\n").join(layout.getProperties().stream()
                                            .map(p -> "\"" + p.getName() + "\" " +
-                                                          getMappedType(connection, p.getTypeHandler()))
+                                                          PostgreSQLSerialization.getMappedType(connection, p.getTypeHandler()))
                                            .collect(Collectors.toList()));
     }
 
-
-    @SneakyThrows
-    static String getMappedType(Connection connection, TypeHandler typeHandler) {
-        if (typeHandler instanceof BigDecimalTypeHandler) {
-            return "NUMERIC";
-        }
-        if (typeHandler instanceof BooleanTypeHandler) {
-            return "BOOLEAN";
-        }
-        if (typeHandler instanceof ByteArrayTypeHandler) {
-            return "BYTEA";
-        }
-        if (typeHandler instanceof ByteTypeHandler) {
-            return "SMALLINT";
-        }
-        if (typeHandler instanceof DateTypeHandler) {
-            return "TIMESTAMP";
-        }
-        if (typeHandler instanceof DoubleTypeHandler) {
-            return "DOUBLE PRECISION";
-        }
-        if (typeHandler instanceof EnumTypeHandler) {
-            return "INTEGER";
-        }
-        if (typeHandler instanceof FloatTypeHandler) {
-            return "REAL";
-        }
-        if (typeHandler instanceof IntegerTypeHandler) {
-            return "INTEGER";
-        }
-        if (typeHandler instanceof ListTypeHandler) {
-            return getMappedType(connection, ((ListTypeHandler) typeHandler).getWrappedHandler()) +
-                    "[]";
-        }
-        if (typeHandler instanceof LongTypeHandler) {
-            return "BIGINT";
-        }
-        if (typeHandler instanceof ObjectTypeHandler) {
-            Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
-            byte[] fingerprint = layout.getHash();
-            String encoded = BaseEncoding.base16().encode(fingerprint);
-            String typname = "layout_" + encoded;
-
-            PreparedStatement check = connection
-                    .prepareStatement("SELECT * FROM pg_catalog.pg_type WHERE lower(typname) = lower(?)");
-
-            check.setString(1, typname);
-
-            boolean shouldCreateType;
-            try (ResultSet resultSet = check.executeQuery()) {
-                shouldCreateType = !resultSet.next();
-            }
-            check.close();
-
-            if (shouldCreateType) {
-                String columns = defineColumns(connection, layout);
-                String createType = "CREATE TYPE " + typname + " AS (" +
-                        columns +
-                        ")";
-                PreparedStatement s = connection.prepareStatement(createType);
-                s.execute();
-                s.close();
-                s = connection.prepareStatement("COMMENT ON TYPE " + typname + " IS '" + layout.getName() + "'");
-                s.execute();
-                s.close();
-            }
-
-            return typname;
-        }
-        if (typeHandler instanceof OptionalTypeHandler) {
-            return getMappedType(connection, ((OptionalTypeHandler) typeHandler).getWrappedHandler());
-        }
-        if (typeHandler instanceof ShortTypeHandler) {
-            return "SMALLINT";
-        }
-        if (typeHandler instanceof StringTypeHandler) {
-            return "TEXT";
-        }
-        if (typeHandler instanceof UUIDTypeHandler) {
-            return "UUID";
-        }
-        throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
-    }
-
-    static int getMappedSqlType(TypeHandler typeHandler) {
-        if (typeHandler instanceof BigDecimalTypeHandler) {
-            return Types.DECIMAL;
-        }
-        if (typeHandler instanceof BooleanTypeHandler) {
-            return Types.BOOLEAN;
-        }
-        if (typeHandler instanceof ByteArrayTypeHandler) {
-            return Types.BINARY;
-        }
-        if (typeHandler instanceof ByteTypeHandler) {
-            return Types.SMALLINT;
-        }
-        if (typeHandler instanceof DateTypeHandler) {
-            return Types.TIMESTAMP;
-        }
-        if (typeHandler instanceof DoubleTypeHandler) {
-            return Types.DOUBLE;
-        }
-        if (typeHandler instanceof EnumTypeHandler) {
-            return Types.INTEGER;
-        }
-        if (typeHandler instanceof FloatTypeHandler) {
-            return Types.FLOAT;
-        }
-        if (typeHandler instanceof IntegerTypeHandler) {
-            return Types.INTEGER;
-        }
-        if (typeHandler instanceof ListTypeHandler) {
-            return Types.ARRAY;
-        }
-        if (typeHandler instanceof LongTypeHandler) {
-            return Types.BIGINT;
-        }
-        if (typeHandler instanceof ObjectTypeHandler) {
-            return Types.VARCHAR;
-        }
-        if (typeHandler instanceof OptionalTypeHandler) {
-            return getMappedSqlType(((OptionalTypeHandler) typeHandler).getWrappedHandler());
-        }
-        if (typeHandler instanceof ShortTypeHandler) {
-            return Types.SMALLINT;
-        }
-        if (typeHandler instanceof StringTypeHandler) {
-            return Types.VARCHAR;
-        }
-        if (typeHandler instanceof UUIDTypeHandler) {
-            return Types.VARCHAR;
-        }
-        throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
-    }
 
 }
