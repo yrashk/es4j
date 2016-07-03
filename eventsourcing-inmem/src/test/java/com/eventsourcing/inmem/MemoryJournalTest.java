@@ -7,7 +7,7 @@
  */
 package com.eventsourcing.inmem;
 
-import com.eventsourcing.JournalTest;
+import com.eventsourcing.repository.JournalTest;
 import org.testng.annotations.Test;
 
 @Test

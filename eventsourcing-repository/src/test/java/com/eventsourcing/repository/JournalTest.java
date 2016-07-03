@@ -5,14 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
+import com.eventsourcing.*;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.repository.*;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +35,7 @@ import static org.testng.Assert.assertTrue;
 public abstract class JournalTest<T extends Journal> {
 
     protected T journal;
-    private RepositoryImpl repository;
+    protected StandardRepository repository;
     private IndexEngine indexEngine;
     protected NTPServerTimeProvider timeProvider;
 
@@ -46,7 +46,7 @@ public abstract class JournalTest<T extends Journal> {
 
     @BeforeClass
     public void setUpEnv() throws Exception {
-        repository = new RepositoryImpl();
+        repository = new StandardRepository();
         repository.addCommandSetProvider(new PackageCommandSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{JournalTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{EventCausalityEstablished.class

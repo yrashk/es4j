@@ -8,10 +8,8 @@
 package com.eventsourcing;
 
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.repository.*;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.QueryFactory;
@@ -28,27 +26,6 @@ import static com.googlecode.cqengine.query.QueryFactory.noQueryOptions;
  * facilitate Eventsourcing operations.
  */
 public interface Repository extends Service {
-
-    /**
-     * Creates a default Repository.
-     * <p>
-     * Default setup:
-     * <p>
-     * <ul>
-     * <li>Default {@link NTPServerTimeProvider} is set with {@link #setPhysicalTimeProvider(PhysicalTimeProvider)}</li>
-     * <li>Default {@link LocalLockProvider} is set with {@link #setLockProvider(LockProvider)}</li>
-     * </ul>
-     *
-     * @return
-     */
-    static Repository create() throws Exception {
-        RepositoryImpl repository = new RepositoryImpl();
-        PhysicalTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
-        repository.setPhysicalTimeProvider(timeProvider);
-        LockProvider lockProvider = new LocalLockProvider();
-        repository.setLockProvider(lockProvider);
-        return repository;
-    }
 
     /**
      * Gets journal as previously configured.

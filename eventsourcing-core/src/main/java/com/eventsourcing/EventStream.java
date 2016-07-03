@@ -7,7 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.repository.LockProvider;
 import lombok.Getter;
 
 import java.util.stream.Stream;

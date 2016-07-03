@@ -12,7 +12,8 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.migrations.events.EntityLayoutReplaced;
-import com.eventsourcing.repository.LockProvider;
+import com.eventsourcing.LockProvider;
+import com.eventsourcing.Repository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 
@@ -99,8 +100,8 @@ public class LayoutMigration<A extends Event, B extends Event> {
     private Optional<EntityLayoutIntroduced> layoutIntroduction(Repository repository, Layout<?> layout) {
         try (ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = repository
                 .query(EntityLayoutIntroduced.class,
-                       equal(EntityLayoutIntroduced.FINGERPRINT,
-                             layout.getHash()))) {
+                       equal(EntityLayoutIntroduced.FINGERPRINT, Base64.getEncoder().encodeToString(layout.getHash())
+                       ))) {
             if (resultSet.isEmpty()) {
                 return Optional.empty();
             } else {

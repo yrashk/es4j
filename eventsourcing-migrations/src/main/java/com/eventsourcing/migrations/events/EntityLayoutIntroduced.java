@@ -12,8 +12,10 @@ import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.Indexing;
+import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.LayoutName;
+import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +23,7 @@ import lombok.experimental.Accessors;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
+import java.util.Base64;
 import java.util.Optional;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
@@ -30,7 +33,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.UNIQUE;
 @LayoutName("rfc.eventsourcing.com/spec:8/EMT/#EntityLayoutIntroduced")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:8/EMT/", revision = "July 22, 2016")
 public class EntityLayoutIntroduced extends StandardEvent {
-    @Getter(onMethod = @_(@Index({EQ, UNIQUE})))
+    @Getter
     private final byte[] fingerprint;
     @Getter
     private final Optional<Layout<?>> layout;
@@ -42,7 +45,17 @@ public class EntityLayoutIntroduced extends StandardEvent {
         this.fingerprint = fingerprint;
         this.layout = layout;
     }
+    public EntityLayoutIntroduced(byte[] fingerprint,
+                                  Optional<Layout<?>> layout) {
+        this(null, fingerprint, layout);
+    }
 
-    public static Attribute<EntityLayoutIntroduced, byte[]> FINGERPRINT = Indexing.getAttribute
-            (EntityLayoutIntroduced.class, "fingerprint");
+    @Index({EQ, UNIQUE})
+    public static Attribute<EntityLayoutIntroduced, Comparable> FINGERPRINT =
+            new SimpleAttribute<EntityLayoutIntroduced, Comparable>("fingerprint") {
+        @Override
+        public Comparable getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
+            return Base64.getEncoder().encodeToString(entityLayoutIntroduced.fingerprint());
+        }
+    };
 }

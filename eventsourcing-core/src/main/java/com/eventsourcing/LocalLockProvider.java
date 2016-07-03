@@ -5,9 +5,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.repository;
+package com.eventsourcing;
 
 import com.eventsourcing.Lock;
+import com.eventsourcing.LockProvider;
 import com.google.common.util.concurrent.AbstractService;
 import org.osgi.service.component.annotations.Component;
 

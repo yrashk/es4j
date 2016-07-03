@@ -5,8 +5,12 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 --
+CREATE TYPE hlc_timestamp AS (
+  logicalCounter BIGINT,
+  logicalTime    BIGINT
+);
 
-CREATE OR REPLACE FUNCTION hybrid_timestamp(ts layout_c47d416193cba63554e5a69ca701973bc3e44172)
+CREATE OR REPLACE FUNCTION hybrid_timestamp(ts hlc_timestamp)
     RETURNS TIMESTAMP
     AS $$
     DECLARE

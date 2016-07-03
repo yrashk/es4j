@@ -4,7 +4,7 @@ Repository is an entry point to most of end-user ES4J functionality.
 It puts all components (journalling, indexing, querying) together.
 
 ```java
-Repository repository = Repository.create();
+Repository repository = new StandardRepository();
 
 Journal journal = new MemoryJournal();
 repository.setJournal(journal);

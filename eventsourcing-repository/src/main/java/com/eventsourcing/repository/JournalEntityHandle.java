@@ -9,6 +9,7 @@ package com.eventsourcing.repository;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.Journal;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 

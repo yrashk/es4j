@@ -7,19 +7,21 @@
  */
 package com.eventsourcing.repository;
 
-import com.eventsourcing.Command;
-import com.eventsourcing.Entity;
-import com.eventsourcing.Event;
-import com.eventsourcing.Repository;
+import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
+import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
+import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
@@ -32,7 +34,13 @@ import java.util.stream.Collectors;
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
            property = {"Journal.target=", "IndexEngine.target=", "LockProvider.target=", "jmx.objectname=com.eventsourcing:type=repository"})
 @Slf4j
-public class RepositoryImpl extends AbstractService implements Repository, RepositoryMBean {
+public class StandardRepository extends AbstractService implements Repository, RepositoryMBean {
+
+    @SneakyThrows
+    public StandardRepository() {
+        setPhysicalTimeProvider(new NTPServerTimeProvider(new String[]{"localhost"}));
+        setLockProvider(new LocalLockProvider());
+    }
 
     @Getter
     private Journal journal;
@@ -80,7 +88,14 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
 
         addEventSetProvider(() -> {
             List<Class<? extends Event>> classes = Arrays
-                    .asList(CommandTerminatedExceptionally.class, EventCausalityEstablished.class);
+                    .asList(CommandTerminatedExceptionally.class, EventCausalityEstablished.class,
+                            EntityLayoutIntroduced.class);
+            return new HashSet<>(classes);
+        });
+
+        addCommandSetProvider(() -> {
+            List<Class<? extends Command>> classes = Arrays
+                    .asList(IntroduceEntityLayouts.class);
             return new HashSet<>(classes);
         });
 
@@ -98,6 +113,11 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         commandConsumer = new DisruptorCommandConsumer(commands, physicalTimeProvider, this, journal, indexEngine,
                                                        lockProvider);
         commandConsumer.startAsync().awaitRunning();
+
+        journal.onCommandsAdded(commands);
+        journal.onEventsAdded(events);
+
+        publish(new IntroduceEntityLayouts(Iterables.concat(commands, events))).join();
 
         notifyStarted();
     }
@@ -155,6 +175,7 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
             // apply immediately
             runnable.run();
             journal.onCommandsAdded(newCommands);
+            publish(new IntroduceEntityLayouts(Iterables.concat(newCommands))).join();
         } else {
             initialization.add(runnable);
         }
@@ -190,7 +211,8 @@ public class RepositoryImpl extends AbstractService implements Repository, Repos
         if (isRunning()) {
             // apply immediately
             runnable.run();
-            journal.onEventsAdded(newEvents);
+            journal.onEventsAdded(newEvents);;
+            publish(new IntroduceEntityLayouts(Iterables.concat(newEvents))).join();
         } else {
             initialization.add(runnable);
         }

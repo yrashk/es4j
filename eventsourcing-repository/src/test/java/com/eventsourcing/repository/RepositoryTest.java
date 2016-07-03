@@ -5,10 +5,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
 import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
+import com.eventsourcing.*;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
@@ -18,21 +19,22 @@ import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.LayoutConstructor;
-import com.eventsourcing.repository.*;
+import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
+import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
+import com.google.common.collect.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.*;
 import lombok.experimental.Accessors;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
+import org.testng.Assert;
+import org.testng.annotations.*;
 
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.index.EntityQueryFactory.all;
@@ -66,6 +68,12 @@ public abstract class RepositoryTest<T extends Repository> {
         lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
         repository.startAsync().awaitRunning();
+
+        long size = journal.size(EntityLayoutIntroduced.class);
+        assertTrue(size > 0);
+        // make sure layout introductions don't duplicate
+        repository.publish(new IntroduceEntityLayouts(Iterables.concat(repository.getCommands(), repository.getEvents()))).join();
+        assertEquals(journal.size(EntityLayoutIntroduced.class), size);
     }
 
     protected abstract Journal createJournal();
@@ -78,6 +86,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @BeforeMethod
     public void setUp() throws Exception {
         journal.clear();
+        repository.publish(new IntroduceEntityLayouts(Iterables.concat(repository.getCommands(), repository.getEvents()))).join();
     }
 
     @Accessors(fluent = true) @ToString
@@ -137,6 +146,15 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     public void discovery() {
         assertTrue(repository.getCommands().contains(RepositoryTestCommand.class));
+    }
+
+    @Test
+    @SneakyThrows
+    public void layoutIntroduction() {
+        try (ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = repository
+                .query(EntityLayoutIntroduced.class, all(EntityLayoutIntroduced.class))) {
+            assertTrue(resultSet.isNotEmpty());
+        }
     }
 
     @Test
@@ -282,12 +300,12 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{BogusEvent.class.getPackage()}));
         assertTrue(repository.getCommands().contains(BogusCommand.class));
         assertTrue(repository.getEvents().contains(BogusEvent.class));
-        assertEquals("bogus", repository.publish(BogusCommand.builder().build()).get());
+        Assert.assertEquals("bogus", repository.publish(BogusCommand.builder().build()).get());
         // testing its indexing
         IndexedCollection<EntityHandle<BogusEvent>> coll = indexEngine.getIndexedCollection(BogusEvent.class);
         assertTrue(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).isNotEmpty());
         assertTrue(coll.retrieve(contains(BogusEvent.ATTR, "us")).isNotEmpty());
-        assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().string(), "bogus");
+        Assert.assertEquals(coll.retrieve(equal(BogusEvent.ATTR, "bogus")).uniqueResult().get().string(), "bogus");
     }
 
     public static class LockCommand extends StandardCommand<Void, Void> {
@@ -352,12 +370,13 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(o instanceof IllegalStateException);
         Optional<Entity> commandLookup = journal.get(command.uuid());
         assertTrue(commandLookup.isPresent());
-        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
+        try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
-                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
-        assertEquals(resultSet.size(), 1);
-        EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
-        assertEquals(result.get().className(), IllegalStateException.class.getName());
+                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()))) {
+            assertEquals(resultSet.size(), 1);
+            EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
+            assertEquals(result.get().className(), IllegalStateException.class.getName());
+        }
     }
 
 
@@ -400,12 +419,13 @@ public abstract class RepositoryTest<T extends Repository> {
         CompletableFuture<Void> future = repository.publish(command);
         while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
         assertTrue(future.isCompletedExceptionally());
-        ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
+        try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
-                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()));
-        assertEquals(resultSet.size(), 1);
-        EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
-        assertEquals(result.get().className(), IllegalStateException.class.getName());
+                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()))) {
+            assertEquals(resultSet.size(), 1);
+            EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
+            assertEquals(result.get().className(), IllegalStateException.class.getName());
+        }
         assertTrue(journal.get(command.uuid()).isPresent());
         assertFalse(journal.get(eventUUID).isPresent());
         assertTrue(repository.query(TestEvent.class, equal(TestEvent.ATTR, "test")).isEmpty());

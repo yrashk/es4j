@@ -10,6 +10,7 @@ package com.eventsourcing.cep.protocols;
 import com.eventsourcing.*;
 import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.Repository;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;

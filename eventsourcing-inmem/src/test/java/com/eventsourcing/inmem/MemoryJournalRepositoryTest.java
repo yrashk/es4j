@@ -7,15 +7,15 @@
  */
 package com.eventsourcing.inmem;
 
-import com.eventsourcing.RepositoryTest;
-import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.RepositoryImpl;
+import com.eventsourcing.Journal;
+import com.eventsourcing.repository.RepositoryTest;
+import com.eventsourcing.repository.StandardRepository;
 import org.testng.annotations.Test;
 
 @Test
-public class MemoryJournalRepositoryTest extends RepositoryTest<RepositoryImpl> {
+public class MemoryJournalRepositoryTest extends RepositoryTest<StandardRepository> {
     public MemoryJournalRepositoryTest() {
-        super(new RepositoryImpl());
+        super(new StandardRepository());
     }
 
     protected Journal createJournal() {

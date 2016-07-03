@@ -8,7 +8,7 @@
 package com.eventsourcing.jmh;
 
 import com.eventsourcing.postgresql.PostgreSQLJournal;
-import com.eventsourcing.repository.Journal;
+import com.eventsourcing.Journal;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.postgresql.ds.PGSimpleDataSource;

@@ -7,23 +7,14 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.PersistentJournalTest;
-import com.eventsourcing.StandardEvent;
-import com.eventsourcing.hlc.HybridTimestamp;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.SneakyThrows;
+import com.eventsourcing.repository.PersistentJournalTest;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Test;
 
 import java.io.File;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertTrue;
 
 public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJournal> {
 
@@ -74,32 +65,4 @@ public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJ
         }
     }
 
-    public static class TestEvent extends StandardEvent {
-        @Getter
-        private final String value;
-
-        @Builder
-        public TestEvent(HybridTimestamp timestamp, String value) {
-            super(timestamp);
-            this.value = value;
-        }
-    }
-
-    @Test
-    @SneakyThrows
-    public void unrecognizedEntities() {
-        journal.onEventsAdded(Collections.singletonList(TestEvent.class).stream().collect(Collectors.toSet()));
-        journal.getStore().commit();
-        journal.getStore().close();
-        journal = new MVStoreJournal(MVStore.open("nio:" + FILENAME));
-        journal.initializeStore();
-        List<MVStoreJournal.LayoutInformation> unrecognizedEntities = journal.getUnrecognizedEntities();
-        assertFalse(unrecognizedEntities.isEmpty());
-        assertEquals(unrecognizedEntities.size(), 1);
-        MVStoreJournal.LayoutInformation entity = unrecognizedEntities.get(0);
-        assertEquals(entity.className(), TestEvent.class.getName());
-        assertEquals(entity.properties().size(), 2);
-        assertEquals(entity.properties().get(1).name(), "value");
-        assertEquals(entity.properties().get(1).type(), "java.lang.String");
-    }
 }

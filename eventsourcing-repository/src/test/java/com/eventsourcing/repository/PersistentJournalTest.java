@@ -5,11 +5,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.repository;
 
+import com.eventsourcing.Entity;
+import com.eventsourcing.Event;
+import com.eventsourcing.Journal;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.repository.Journal;
 import lombok.SneakyThrows;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
@@ -63,7 +66,7 @@ public abstract class PersistentJournalTest<T extends Journal> extends JournalTe
         Optional<Entity> entity = journal.get(command.uuid());
         if (works) {
             assertTrue(entity.isPresent());
-            assertEquals(command.uuid(), entity.get().uuid());
+            Assert.assertEquals(command.uuid(), entity.get().uuid());
         } else {
             assertFalse(entity.isPresent());
         }

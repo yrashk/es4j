@@ -7,16 +7,16 @@
  */
 package com.eventsourcing.h2;
 
-import com.eventsourcing.RepositoryTest;
-import com.eventsourcing.repository.Journal;
-import com.eventsourcing.repository.RepositoryImpl;
+import com.eventsourcing.Journal;
+import com.eventsourcing.repository.RepositoryTest;
+import com.eventsourcing.repository.StandardRepository;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.Test;
 
 @Test
-public class MVStoreJournalRepositoryTest extends RepositoryTest<RepositoryImpl> {
+public class MVStoreJournalRepositoryTest extends RepositoryTest<StandardRepository> {
     public MVStoreJournalRepositoryTest() {
-        super(new RepositoryImpl());
+        super(new StandardRepository());
     }
 
     @Override
