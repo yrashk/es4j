@@ -51,10 +51,10 @@ public class EntityLayoutIntroduced extends StandardEvent {
     }
 
     @Index({EQ, UNIQUE})
-    public static Attribute<EntityLayoutIntroduced, Comparable> FINGERPRINT =
-            new SimpleAttribute<EntityLayoutIntroduced, Comparable>("fingerprint") {
+    public static Attribute<EntityLayoutIntroduced, String> FINGERPRINT =
+            new SimpleAttribute<EntityLayoutIntroduced, String>("fingerprint") {
         @Override
-        public Comparable getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
+        public String getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
             return Base64.getEncoder().encodeToString(entityLayoutIntroduced.fingerprint());
         }
     };
