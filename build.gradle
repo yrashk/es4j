@@ -67,12 +67,15 @@ subprojects {
     }
 
     task delombok(type: JavaExec) {
+        inputs.files(file('src/main/java'))
+        outputs.dir(file('src/main/delombok'))
         classpath = configurations.compile
         main = "lombok.launch.Main"
         args("delombok", "--quiet", "src/main/java", "--target", "src/delombok/java")
     }
 
     javadoc {
+        inputs.files(file("src/delombok/java"))
         source = file("src/delombok/java")
         classpath = configurations.compile
     }
