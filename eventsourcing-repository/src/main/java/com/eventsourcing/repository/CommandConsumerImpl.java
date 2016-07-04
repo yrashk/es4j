@@ -33,7 +33,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 @Slf4j
-class DisruptorCommandConsumer extends AbstractService implements CommandConsumer {
+class CommandConsumerImpl extends AbstractService implements CommandConsumer {
 
 
     private final Iterable<Class<? extends Command>> commandClasses;
@@ -117,8 +117,6 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         public void onEvent(Event event) {
             IndexedCollection<EntityHandle<Event>> coll = txCollections
                     .computeIfAbsent(event.getClass(), klass -> new ConcurrentIndexedCollection<>());
-//            IndexedCollection<EntityHandle<Event>> coll = indexEngine
-//                    .getIndexedCollection((Class<Event>) event.getClass().eq);
             coll.add(new ResolvedEntityHandle<>(event));
             lastTimestamp = event.timestamp().clone();
             disruptorEvent.getEntitySubscribers().stream()
@@ -210,10 +208,10 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
     private final static Serialization serialization = BinarySerialization.getInstance();
 
     @SneakyThrows
-    public DisruptorCommandConsumer(Iterable<Class<? extends Command>> commandClasses,
-                                    PhysicalTimeProvider timeProvider,
-                                    Repository repository, Journal journal, IndexEngine indexEngine,
-                                    LockProvider lockProvider) {
+    public CommandConsumerImpl(Iterable<Class<? extends Command>> commandClasses,
+                               PhysicalTimeProvider timeProvider,
+                               Repository repository, Journal journal, IndexEngine indexEngine,
+                               LockProvider lockProvider) {
         this.commandClasses = commandClasses;
         this.repository = repository;
         this.journal = journal;
@@ -271,8 +269,6 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
 
     @Override @SuppressWarnings("unchecked")
     protected void doStart() {
-        log.info("Starting command consumer");
-
         ThreadFactory threadFactory = new ThreadFactoryBuilder().setNameFormat("eventsourcing-%d").setDaemon(true)
                                                                 .build();
 
