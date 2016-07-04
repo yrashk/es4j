@@ -7,12 +7,15 @@
  */
 package com.eventsourcing.h2.index;
 
+import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.AbstractHashingAttributeIndex;
+import com.eventsourcing.index.Attribute;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.google.common.collect.UnmodifiableIterator;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
@@ -29,7 +32,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 
-public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
+public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIndex<A, O> {
 
 
     protected static final int INDEX_RETRIEVAL_COST = 25;
@@ -64,11 +67,11 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
         map = store.openMap("unique_index_" + classname + "_" + attribute.getAttributeName());
     }
 
-    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
+    public static <A, O extends Entity> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute) {
         return onAttribute(store, attribute, Hashing.sha1());
     }
 
-    public static <A, O> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
+    public static <A, O extends Entity> UniqueIndex<A, O> onAttribute(MVStore store, Attribute<O, A> attribute,
                                                        HashFunction hashFunction) {
         return new UniqueIndex<>(store, attribute, hashFunction);
     }
@@ -84,17 +87,17 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public ResultSet<O> retrieve(Query<O> query, QueryOptions queryOptions) {
+    public ResultSet<EntityHandle<O>> retrieve(Query<EntityHandle<O>> query, QueryOptions queryOptions) {
         Class<?> queryClass = query.getClass();
         if (queryClass.equals(Equal.class)) {
-            final Equal<O, A> equal = (Equal<O, A>) query;
+            final Equal<EntityHandle<O>, A> equal = (Equal<EntityHandle<O>, A>) query;
             byte[] val = map.get(encodeKey(equal.getValue()));
-            final O obj = val == null ? null : decodeVal(val).getObject();
+            final EntityHandle<O> obj = val == null ? null : new ResolvedEntityHandle<O>(decodeVal(val).getObject());
 
-            return new ResultSet<O>() {
+            return new ResultSet<EntityHandle<O>>() {
                 @Override
-                public Iterator<O> iterator() {
-                    return new UnmodifiableIterator<O>() {
+                public Iterator<EntityHandle<O>> iterator() {
+                    return new UnmodifiableIterator<EntityHandle<O>>() {
                         boolean hasNext = (obj != null);
 
                         @Override
@@ -103,7 +106,7 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
                         }
 
                         @Override
-                        public O next() {
+                        public EntityHandle<O> next() {
                             this.hasNext = false;
                             return obj;
                         }
@@ -111,17 +114,17 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
                 }
 
                 @Override
-                public boolean contains(O object) {
+                public boolean contains(EntityHandle<O> object) {
                     return (object != null && obj != null && object.equals(obj));
                 }
 
                 @Override
-                public boolean matches(O object) {
+                public boolean matches(EntityHandle<O> object) {
                     return query.matches(object, queryOptions);
                 }
 
                 @Override
-                public Query<O> getQuery() {
+                public Query<EntityHandle<O>> getQuery() {
                     return query;
                 }
 
@@ -155,7 +158,7 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public Index<O> getEffectiveIndex() {
+    public Index<EntityHandle<O>> getEffectiveIndex() {
         return this;
     }
 
@@ -205,26 +208,26 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
-        for (O object : objects) {
+    public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        for (EntityHandle<O> object : objects) {
             addObject(queryOptions, object);
         }
         return true;
     }
 
-    public boolean addAll(ObjectStore<O> objects, QueryOptions queryOptions) {
-        CloseableIterator<O> iterator = objects.iterator(queryOptions);
+    public boolean addAll(ObjectStore<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        CloseableIterator<EntityHandle<O>> iterator = objects.iterator(queryOptions);
         while (iterator.hasNext()) {
-            O object = iterator.next();
+            EntityHandle<O> object = iterator.next();
             addObject(queryOptions, object);
         }
         return true;
     }
 
-    private void addObject(QueryOptions queryOptions, O object) {
+    private void addObject(QueryOptions queryOptions, EntityHandle<O> object) {
         for (A value : attribute.getValues(object, queryOptions)) {
             if (value != null) { // Don't index null attribute values
-                Entry entry = encodeEntry(object, value);
+                Entry entry = encodeEntry(object.get(), value);
                 if (map.containsKey(entry.getKey()) && !decodeVal(map.get(entry.getKey())).getObject().equals(object)) {
                     throw new com.googlecode.cqengine.index.unique.UniqueIndex.UniqueConstraintViolatedException(
                             "The application has attempted to add a duplicate object to the UniqueIndex on attribute '"
@@ -241,10 +244,10 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public boolean removeAll(Collection<O> objects, QueryOptions queryOptions) {
-        for (O object : objects) {
+    public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        for (EntityHandle<O> object : objects) {
             for (A value : attribute.getValues(object, queryOptions)) {
-                Entry entry = encodeEntry(object, value);
+                Entry entry = encodeEntry(object.get(), value);
                 map.remove(entry.getKey());
             }
         }
@@ -257,7 +260,7 @@ public class UniqueIndex<A, O> extends AbstractHashingAttributeIndex<A, O> {
     }
 
     @Override
-    public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+    public void init(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
         addAll(objectStore, queryOptions);
     }
 

@@ -10,6 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Journal;
+import com.eventsourcing.JournalEntityHandle;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.Persistence;
@@ -40,7 +41,9 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
     }
 
 
-    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>> {
+    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>>,
+            KeyObjectStore<UUID, EntityHandle<T>>
+    {
 
         protected final Journal journal;
         protected final Class<T> klass;
@@ -48,6 +51,10 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
         public JournalObjectStore(Journal journal, Class<T> klass) {
             this.journal = journal;
             this.klass = klass;
+        }
+
+        @Override public EntityHandle<T> get(UUID key) {
+            return new JournalEntityHandle<>(journal, key);
         }
 
         @Override

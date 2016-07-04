@@ -145,7 +145,7 @@ public abstract class JournalTest<T extends Journal> {
                          }
 
                          @Override
-                         public void onCommit() {
+                         public void onCommit(Command command) {
                              onCommit.set(true);
                          }
                      }));

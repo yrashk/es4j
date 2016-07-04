@@ -12,10 +12,13 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.Journal;
 import com.google.common.base.Joiner;
 import com.googlecode.cqengine.index.Index;
+import lombok.Getter;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.*;
 
+import javax.management.openmbean.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,11 +34,18 @@ import java.util.stream.Collectors;
  * that are not available through references. They will be ignored.
  */
 @Slf4j
-@Component(property = {"indexEngines=", "type=CascadingIndexEngine"}, configurationPolicy = ConfigurationPolicy.REQUIRE)
-public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
+@Component(property = {"indexEngines=", "type=CascadingIndexEngine",
+                      "jmx.objectname=com.eventsourcing.index.IndexEngine:type=CascadingIndexEngine"
+                      }, configurationPolicy = ConfigurationPolicy.REQUIRE)
+public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine, CascadingIndexEngineMBean {
+
+    @Override public String getType() {
+        return "CascadingIndexEngine";
+    }
 
     private List<IndexEngine> indexEngines = new ArrayList<>();
-    private String[] indexEngineNames;
+    @Getter
+    private String[] configuredIndexEngines;
 
     public CascadingIndexEngine() {
     }
@@ -44,18 +54,22 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
         this.indexEngines = Arrays.asList(indexEngines);
     }
 
-    @Reference(cardinality = ReferenceCardinality.MULTIPLE, policy = ReferencePolicy.DYNAMIC,
+    @Reference(cardinality = ReferenceCardinality.MULTIPLE,
+               policy = ReferencePolicy.DYNAMIC,
                target = "(!(service.pid=com.eventsourcing.index.CascadingIndexEngine))")
     public void addIndexEngine(IndexEngine indexEngine) {
+        indexEngine.setJournal(journal);
+        indexEngine.setRepository(repository);
+
         indexEngines.add(indexEngine);
         sortIndexEngines();
     }
 
     protected void sortIndexEngines() {
-        if (indexEngineNames != null) {
+        if (configuredIndexEngines != null) {
             indexEngines =
-                    Arrays.asList(indexEngineNames).stream().
-                            map(name -> indexEngines.stream().filter(e -> e.getClass().getName().contentEquals(name))
+                    Arrays.asList(configuredIndexEngines).stream().
+                            map(name -> indexEngines.stream().filter(e -> e.getType().contentEquals(name))
                                                     .findFirst()).
                                   filter(Optional::isPresent).
                                   map(Optional::get).
@@ -69,13 +83,12 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Activate
     protected void activate(ComponentContext ctx) {
-        indexEngineNames = ((String) ctx.getProperties().get("indexEngines")).split(",");
+        configuredIndexEngines = ((String) ctx.getProperties().get("indexEngines")).split(",");
         sortIndexEngines();
     }
 
-    @Override
-    protected List<IndexCapabilities> getIndexMatrix() {
-        return Collections.emptyList();
+    public String[] getIndexEngines() {
+        return indexEngines.stream().map(IndexEngine::getType).toArray(String[]::new);
     }
 
     @Override
@@ -88,12 +101,16 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
         this.repository = repository;
     }
 
+    private Map<String, IndexEngine> decisions = new HashMap<>();
+
     @Override
     public <O extends Entity, A> Index<O> getIndexOnAttribute(Attribute<O, A> attribute, IndexFeature... features)
             throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {
-                return engine.getIndexOnAttribute(attribute, features);
+                Index<O> index = engine.getIndexOnAttribute(attribute, features);
+                decisions.put(Joiner.on(", ").join(features) + " on " + attribute.toString(), engine);
+                return index;
             } catch (IndexNotSupported e) {
             }
         }
@@ -105,7 +122,11 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
             throws IndexNotSupported {
         for (IndexEngine engine : indexEngines) {
             try {
-                return engine.getIndexOnAttributes(attributes, features);
+                Index<O> index = engine.getIndexOnAttributes(attributes, features);
+                for (Attribute attribute : attributes) {
+                    decisions.put(Joiner.on(", ").join(features) + " on " + attribute.toString(), engine);
+                }
+                return index;
             } catch (IndexNotSupported e) {
             }
         }
@@ -119,8 +140,29 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Override
     protected void doStart() {
-        indexEngines.forEach(engine -> engine.setJournal(journal));
-        indexEngines.forEach(engine -> engine.setRepository(repository));
         super.doStart();
+    }
+
+    // MBean
+    @Override
+    protected List<IndexCapabilities> getIndexMatrix() {
+        return Collections.emptyList();
+    }
+
+    @SneakyThrows
+    @Override public TabularData getCascadingDecisions() {
+        CompositeType type = new CompositeType("Decision", "Cascading decision",
+                                               new String[]{"Index", "Engine"},
+                                               new String[]{"Index", "Index Engine"},
+                                               new OpenType[]{SimpleType.STRING, SimpleType.STRING});
+        TabularDataSupport tab = new TabularDataSupport(
+                new TabularType("Decisions", "Cascading decisions", type, new String[]{"Index"}));
+        for (Map.Entry<String, IndexEngine> entry : decisions.entrySet()) {
+            tab.put(new CompositeDataSupport(type,
+                                             new String[]{"Index", "Engine"},
+                                             new Object[]{entry.getKey(), entry.getValue().getType()}));
+        }
+
+        return tab;
     }
 }

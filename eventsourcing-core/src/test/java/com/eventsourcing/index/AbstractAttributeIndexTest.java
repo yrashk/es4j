@@ -7,12 +7,12 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.models.Car;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
@@ -27,7 +27,7 @@ import static org.testng.Assert.assertEquals;
 
 public class AbstractAttributeIndexTest {
 
-    private static class AttributeIndex<A, O> extends AbstractAttributeIndex<A, O> {
+    private static class AttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
 
         /**
          * Protected constructor, called by subclasses.
@@ -50,22 +50,23 @@ public class AbstractAttributeIndexTest {
         }
 
         @Override
-        public com.googlecode.cqengine.resultset.ResultSet<O> retrieve(Query<O> query, QueryOptions queryOptions) {
+        public com.googlecode.cqengine.resultset.ResultSet<EntityHandle<O>> retrieve(Query<EntityHandle<O>> query,
+                                                                                     QueryOptions queryOptions) {
             return null;
         }
 
         @Override
-        public Index<O> getEffectiveIndex() {
+        public Index<EntityHandle<O>> getEffectiveIndex() {
             return this;
         }
 
         @Override
-        public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
+        public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
             return false;
         }
 
         @Override
-        public boolean removeAll(Collection<O> objects, QueryOptions queryOptions) {
+        public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
             return false;
         }
 
@@ -75,7 +76,7 @@ public class AbstractAttributeIndexTest {
         }
 
         @Override
-        public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+        public void init(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
 
         }
 
@@ -93,9 +94,7 @@ public class AbstractAttributeIndexTest {
             }
         };
 
-        AttributeIndex<List<String>, EntityHandle<Car>> index = new AttributeIndex<>(FEATURES_LIST,
-                                                                                     new HashSet<Class<? extends Query>>() {{
-                                                                                     }});
+        AttributeIndex index = new AttributeIndex<>(FEATURES_LIST, new HashSet<Class<? extends Query>>() {{}});
 
         list = Arrays.asList("Hello");
         TypeResolver typeResolver = new TypeResolver();
@@ -104,7 +103,7 @@ public class AbstractAttributeIndexTest {
         ByteBuffer buffer = ByteBuffer.allocate(index.attributeSerializer.size(listTypeHandler, list));
         index.attributeSerializer.serialize(listTypeHandler, list, buffer);
         buffer.rewind();
-        List<String> deserialized = index.attributeDeserializer.deserialize(listTypeHandler, buffer);
+        List<String> deserialized = (List<String>) index.attributeDeserializer.deserialize(listTypeHandler, buffer);
         assertEquals(deserialized.get(0), list.get(0));
     }
 }

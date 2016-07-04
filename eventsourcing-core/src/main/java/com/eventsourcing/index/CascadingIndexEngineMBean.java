@@ -7,12 +7,11 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.Entity;
-import com.googlecode.cqengine.index.hash.HashIndex;
+import javax.management.openmbean.TabularData;
 
-public class MemoryHashIndexTest extends EqualityIndexTest<HashIndex> {
-    @Override
-    public <A, O extends Entity> HashIndex onAttribute(Attribute<O, A> attribute) {
-        return HashIndex.onAttribute(attribute);
-    }
+public interface CascadingIndexEngineMBean {
+
+    String[] getIndexEngines();
+    String[] getConfiguredIndexEngines();
+    TabularData getCascadingDecisions();
 }

@@ -34,7 +34,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.index.EntityQueryFactory.all;
@@ -46,7 +45,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     private final T repository;
     private Journal journal;
-    private MemoryIndexEngine indexEngine;
+    private IndexEngine indexEngine;
     private LocalLockProvider lockProvider;
     private NTPServerTimeProvider timeProvider;
 
@@ -63,7 +62,7 @@ public abstract class RepositoryTest<T extends Repository> {
         repository.setJournal(journal);
         timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
         repository.setPhysicalTimeProvider(timeProvider);
-        indexEngine = new MemoryIndexEngine();
+        indexEngine = createIndexEngine();
         repository.setIndexEngine(indexEngine);
         lockProvider = new LocalLockProvider();
         repository.setLockProvider(lockProvider);
@@ -76,6 +75,8 @@ public abstract class RepositoryTest<T extends Repository> {
         assertEquals(journal.size(EntityLayoutIntroduced.class), size);
     }
 
+    protected IndexEngine createIndexEngine() {return new MemoryIndexEngine();}
+
     protected abstract Journal createJournal();
 
     @AfterClass
@@ -86,6 +87,7 @@ public abstract class RepositoryTest<T extends Repository> {
     @BeforeMethod
     public void setUp() throws Exception {
         journal.clear();
+        indexEngine.getIndexedCollection(EntityLayoutIntroduced.class).clear();
         repository.publish(new IntroduceEntityLayouts(Iterables.concat(repository.getCommands(), repository.getEvents()))).join();
     }
 
@@ -186,13 +188,16 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void timestamping() {
-        repository.publish(RepositoryTestCommand.builder().build()).get();
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
+        coll.clear();
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
+                .getIndexedCollection(RepositoryTestCommand.class);
+        coll1.clear();
+
+        repository.publish(RepositoryTestCommand.builder().build()).get();
         TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
         assertNotNull(test.timestamp());
 
-        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
-                .getIndexedCollection(RepositoryTestCommand.class);
         RepositoryTestCommand test1 = coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).uniqueResult().get();
         assertNotNull(test1.timestamp());
 
@@ -210,6 +215,7 @@ public abstract class RepositoryTest<T extends Repository> {
         RepositoryTestCommand command2 = RepositoryTestCommand.builder().build();
         IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
                 .getIndexedCollection(RepositoryTestCommand.class);
+        coll1.clear();
 
         repository.publish(command2).get();
         repository.publish(command1).get();
@@ -256,14 +262,15 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void eventTimestamping() {
+        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine
+                .getIndexedCollection(TestEvent.class);
+        coll.clear();
+
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         TimestampingEventCommand command = TimestampingEventCommand.builder().eventTimestamp(timestamp).build();
 
         repository.publish(command).get();
-
-        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine
-                .getIndexedCollection(TestEvent.class);
 
         TestEvent test = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get();
 
@@ -279,14 +286,17 @@ public abstract class RepositoryTest<T extends Repository> {
     @Test
     @SneakyThrows
     public void indexing() {
-        repository.publish(RepositoryTestCommand.builder().build()).get();
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
+        coll.clear();
+        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
+                .getIndexedCollection(RepositoryTestCommand.class);
+        coll1.clear();
+
+        repository.publish(RepositoryTestCommand.builder().build()).get();
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
 
-        IndexedCollection<EntityHandle<RepositoryTestCommand>> coll1 = indexEngine
-                .getIndexedCollection(RepositoryTestCommand.class);
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
         assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());
 
@@ -526,13 +536,20 @@ public abstract class RepositoryTest<T extends Repository> {
     }
 
     @Test @SneakyThrows
-    public void goesThroughLayoutSerialization() {
+    public void commandGoesThroughLayoutSerialization() {
         TestOptionalCommand command = TestOptionalCommand.builder().build();
         repository.publish(command).get();
 
         TestOptionalCommand test = repository
                 .query(TestOptionalCommand.class, equal(TestOptionalCommand.ATTR, command.uuid())).uniqueResult().get();
         assertFalse(test.optional().isPresent());
+
+    }
+
+    @Test @SneakyThrows
+    public void eventGoesThroughLayoutSerialization() {
+        TestOptionalCommand command = TestOptionalCommand.builder().build();
+        repository.publish(command).get();
 
         TestOptionalEvent testOptionalEvent = repository.query(TestOptionalEvent.class, all(TestOptionalEvent.class))
                                                         .uniqueResult().get();

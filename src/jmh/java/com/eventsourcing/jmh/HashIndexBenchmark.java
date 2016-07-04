@@ -7,8 +7,10 @@
  */
 package com.eventsourcing.jmh;
 
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.jmh.models.Car;
 import com.eventsourcing.jmh.models.CarFactory;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.hash.HashIndex;
@@ -26,10 +28,10 @@ public class HashIndexBenchmark {
     public static final String H2_FILENAME = "nio:HashIndexBenchmark.db";
     private com.eventsourcing.h2.index.HashIndex<String, Car> memoryH2Index;
     private com.eventsourcing.h2.index.HashIndex<String, Car> fileH2Index;
-    private HashIndex<String, Car> memoryIndex;
-    private IndexedCollection<Car> memoryCollection;
-    private IndexedCollection<Car> memoryH2Collection;
-    private IndexedCollection<Car> fileH2Collection;
+    private HashIndex<String, EntityHandle<Car>> memoryIndex;
+    private IndexedCollection<EntityHandle<Car>> memoryCollection;
+    private IndexedCollection<EntityHandle<Car>> memoryH2Collection;
+    private IndexedCollection<EntityHandle<Car>> fileH2Collection;
 
     @Setup
     public void setup() {
@@ -63,8 +65,8 @@ public class HashIndexBenchmark {
         test(fileH2Collection);
     }
 
-    private void test(IndexedCollection<Car> coll) {
+    private void test(IndexedCollection<EntityHandle<Car>> coll) {
         Car car = CarFactory.createCar(1);
-        coll.add(car);
+        coll.add(new ResolvedEntityHandle<>(car));
     }
 }

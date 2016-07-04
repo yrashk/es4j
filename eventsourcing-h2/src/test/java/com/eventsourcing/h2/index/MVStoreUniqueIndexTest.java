@@ -7,12 +7,13 @@
  */
 package com.eventsourcing.h2.index;
 
-import com.googlecode.cqengine.attribute.Attribute;
+import com.eventsourcing.Entity;
+import com.eventsourcing.index.Attribute;
 import org.h2.mvstore.MVStore;
 
-public class UniqueIndexTest extends com.eventsourcing.index.UniqueIndexTest<UniqueIndex> {
+public class MVStoreUniqueIndexTest extends com.eventsourcing.index.UniqueIndexTest<UniqueIndex> {
     @Override
-    public <A, O> UniqueIndex onAttribute(Attribute<O, A> attribute) {
+    public <A, O extends Entity> UniqueIndex onAttribute(Attribute<O, A> attribute) {
         return UniqueIndex.onAttribute(MVStore.open(null), attribute);
     }
 }

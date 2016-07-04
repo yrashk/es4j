@@ -8,6 +8,9 @@
 package com.eventsourcing.h2;
 
 import com.eventsourcing.Journal;
+import com.eventsourcing.index.CascadingIndexEngine;
+import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.repository.RepositoryTest;
 import com.eventsourcing.repository.StandardRepository;
 import org.h2.mvstore.MVStore;
@@ -22,5 +25,9 @@ public class MVStoreJournalRepositoryTest extends RepositoryTest<StandardReposit
     @Override
     protected Journal createJournal() {
         return new MVStoreJournal(MVStore.open(null));
+    }
+
+    @Override protected IndexEngine createIndexEngine() {
+        return new CascadingIndexEngine(new MVStoreIndexEngine(MVStore.open(null)), new MemoryIndexEngine());
     }
 }

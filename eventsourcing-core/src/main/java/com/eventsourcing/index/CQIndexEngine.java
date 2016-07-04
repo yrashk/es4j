@@ -42,8 +42,7 @@ public abstract class CQIndexEngine extends AbstractIndexEngine {
                 throw new IllegalArgumentException();
             }
 
-            ConcurrentIndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(
-                    tJournalPersistence);
+            IndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(tJournalPersistence);
             indexedCollections.put(klass.getName(), indexedCollection);
             return indexedCollection;
         } else {

@@ -28,7 +28,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.UNIQUE;
 @LayoutName("rfc.eventsourcing.com/spec:9/RIG/#EventCausalityEstablished")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:9/RIG/", revision = "July 22, 2016")
 public class EventCausalityEstablished extends StandardEvent {
-    @Getter(onMethod = @_(@Index(UNIQUE)))
+    @Getter(onMethod = @_(@Index))
     private final UUID event;
     @Getter(onMethod = @_(@Index))
     private final UUID command;

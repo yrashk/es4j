@@ -5,34 +5,43 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.h2;
+package com.eventsourcing.postgresql;
 
+import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
-import com.eventsourcing.h2.index.HashIndex;
-import com.eventsourcing.h2.index.UniqueIndex;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.Journal;
-import org.h2.mvstore.MVStore;
-import org.osgi.service.component.ComponentContext;
+import com.eventsourcing.postgresql.index.EqualityIndex;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
-import org.osgi.service.component.annotations.Deactivate;
+import org.osgi.service.component.annotations.Reference;
 
+import javax.sql.DataSource;
 import java.util.Arrays;
 import java.util.List;
 
-@Component(property = {"filename=index.db", "type=MVStoreIndexEngine"})
-public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
+import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
+
+@Component(property = {"type=PostgreSQLIndexEngine"})
+public class PostgreSQLIndexEngine extends CQIndexEngine implements IndexEngine {
 
     @Override public String getType() {
-        return "MVStoreIndexEngine";
+        return "PostgreSQLIndexEngine";
     }
 
-    private MVStore store;
+    @Reference
+    protected DataSourceProvider dataSourceProvider;
 
-    public MVStoreIndexEngine() {}
+    private DataSource dataSource;
+
+    public PostgreSQLIndexEngine() {}
+    public PostgreSQLIndexEngine(DataSource dataSource) {this.dataSource = dataSource;}
+
+    @Activate
+    protected void activate() {
+        dataSource = dataSourceProvider.getDataSource();
+    }
 
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
@@ -50,23 +59,9 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
         this.journal = journal;
     }
 
-    public MVStoreIndexEngine(MVStore store) {
-        this.store = store;
-    }
-
-    @Activate
-    protected void activate(ComponentContext ctx) {
-        store = MVStore.open((String) ctx.getProperties().get("filename"));
-    }
-
-    @Deactivate
-    protected void deactivate(ComponentContext ctx) {
-        store.close();
-    }
 
     @Override
     protected void doStop() {
-        this.store.close();
         super.doStop();
     }
 
@@ -74,16 +69,16 @@ public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
     protected List<IndexCapabilities> getIndexMatrix() {
         return Arrays.asList(
                 new IndexCapabilities<Attribute>("Hash",
-                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ},
-                                                 attribute -> HashIndex.onAttribute(store, attribute)),
+                                                 new IndexFeature[]{EQ, IN, QZ},
+                                                 attribute -> EqualityIndex.onAttribute(dataSource, attribute, false)),
                 new IndexCapabilities<Attribute>("Unique",
-                                                 new IndexFeature[]{IndexFeature.UNIQUE, IndexFeature.EQ, IndexFeature.IN},
-                                                 attribute -> UniqueIndex.onAttribute(store, attribute))
+                                                 new IndexFeature[]{EQ, IN, QZ, UNIQUE},
+                                                 attribute -> EqualityIndex.onAttribute(dataSource, attribute, true))
         );
     }
 
     @Override
     public String toString() {
-        return "MVStoreIndexEngine[" + store.getFileStore().getFileName() + "]";
+        return "PostgreSQLIndexEngine[" + dataSource + "]";
     }
 }

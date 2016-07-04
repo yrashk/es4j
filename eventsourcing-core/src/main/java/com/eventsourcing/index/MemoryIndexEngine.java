@@ -26,6 +26,10 @@ import java.util.List;
 @Component(property = {"type=MemoryIndexEngine"})
 public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {
 
+    @Override public String getType() {
+        return "MemoryIndexEngine";
+    }
+
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
         if (isRunning()) {

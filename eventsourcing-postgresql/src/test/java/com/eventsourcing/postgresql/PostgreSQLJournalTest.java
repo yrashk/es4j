@@ -35,20 +35,9 @@ import static org.testng.Assert.*;
 @Test
 public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
-    private static DataSource dataSource() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
-
-        HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(50);
-        config.setDataSource(dataSource);
-        config.setLeakDetectionThreshold(2000);
-
-        return new HikariDataSource(config);
-    }
 
     public PostgreSQLJournalTest() {
-        super(new PostgreSQLJournal(dataSource()));
+        super(new PostgreSQLJournal(PostgreSQLTest.dataSource));
     }
 
     @BeforeClass @Override public void setUpEnv() throws Exception {
