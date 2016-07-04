@@ -127,7 +127,7 @@ public class Layout<T> {
         properties = new ArrayList<>();
         constructorProperties = new ArrayList<>();
 
-        ClassAnalyzer.Constructor analyzerConstructor = findLayoutConstructor(layoutClass);
+        ClassAnalyzer.Constructor<T> analyzerConstructor = findLayoutConstructor(layoutClass);
         constructor = analyzerConstructor.getConstructor();
         deriveProperties(layoutClass, analyzerConstructor, false);
 

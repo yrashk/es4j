@@ -26,7 +26,7 @@ class KotlinParameter(val parameter : KParameter) : ClassAnalyzer.Parameter {
     }
 
 }
-class KotlinConstructor(val constructor: KFunction<*>) : ClassAnalyzer.Constructor {
+class KotlinConstructor<X>(val constructor: KFunction<X>) : ClassAnalyzer.Constructor<X> {
 
     override fun isLayoutConstructor(): Boolean {
         return constructor.annotations.find { it.javaClass.equals(LayoutConstructor::class.java) } != null
@@ -36,14 +36,14 @@ class KotlinConstructor(val constructor: KFunction<*>) : ClassAnalyzer.Construct
         return constructor.parameters.map { KotlinParameter(it) }.toTypedArray()
     }
 
-    override fun <X : Any?> getConstructor(): Constructor<X> {
-        return constructor.javaConstructor!! as Constructor<X>
+    override fun getConstructor(): Constructor<X> {
+        return constructor.javaConstructor!!
     }
 
 }
-class KotlinClassAnalyzer : ClassAnalyzer {
+class KotlinClassAnalyzer: ClassAnalyzer {
 
-    override fun getConstructors(klass: Class<*>?): Array<out ClassAnalyzer.Constructor> {
+    override fun <X: Any> getConstructors(klass: Class<X>?): Array<out ClassAnalyzer.Constructor<X>> {
         return klass!!.kotlin.constructors.map { KotlinConstructor(it) }.toTypedArray()
     }
 

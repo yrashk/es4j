@@ -39,7 +39,7 @@ class JavaClassAnalyzer implements ClassAnalyzer {
         }
 
     }
-    static class JavaClassConstructor implements Constructor {
+    static class JavaClassConstructor<X> implements Constructor<X> {
 
         @Getter
         private java.lang.reflect.Constructor constructor;
@@ -58,10 +58,9 @@ class JavaClassAnalyzer implements ClassAnalyzer {
                          .map(JavaParameter::new).collect(Collectors.toList()).toArray(p);
         }
     }
-    @Override public Constructor[] getConstructors(Class<?> klass) {
-        Constructor[] c = new Constructor[]{};
+    @Override public <X> Constructor<X>[] getConstructors(Class<X> klass) {
         return Arrays.asList(klass.getConstructors()).stream()
-                     .map(JavaClassConstructor::new).collect(Collectors.toList()).toArray(c);
+                     .map(JavaClassConstructor::new).toArray(Constructor[]::new);
 
     }
 }
