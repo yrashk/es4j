@@ -8,21 +8,22 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.AttributeIndex;
 import com.googlecode.cqengine.index.support.CloseableIterable;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.index.support.KeyStatistics;
 import com.googlecode.cqengine.index.support.KeyStatisticsIndex;
-import com.googlecode.cqengine.persistence.onheap.OnHeapPersistence;
 import com.googlecode.cqengine.resultset.ResultSet;
 import org.testng.annotations.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
@@ -50,8 +51,9 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void getDistinctKeysAndCounts() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MODEL_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(Car.MODEL);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MODEL_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MODEL);
         MODEL_INDEX.clear(noQueryOptions());
 
         collection.addIndex(MODEL_INDEX);
@@ -71,9 +73,9 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void getCountOfDistinctKeys() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
-                Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
         MANUFACTURER_INDEX.clear(noQueryOptions());
 
         collection.addIndex(MANUFACTURER_INDEX);
@@ -87,9 +89,9 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void getStatisticsForDistinctKeys() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
-                Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
         MANUFACTURER_INDEX.clear(noQueryOptions());
 
         collection.addIndex(MANUFACTURER_INDEX);
@@ -110,19 +112,19 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void retrieveEqual() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
-                Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
         MANUFACTURER_INDEX.clear(noQueryOptions());
 
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(10));
 
-        ResultSet<Car> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
+        ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
         assertTrue(StreamSupport.stream(cars.spliterator(), false)
-                                .allMatch(car -> car.getManufacturer().contentEquals("Honda")));
+                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
 
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());
@@ -130,16 +132,16 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void retrieveHas() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
-                Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
         MANUFACTURER_INDEX.clear(noQueryOptions());
         collection.addIndex(MANUFACTURER_INDEX);
 
-        Set<Car> coll = CarFactory.createCollectionOfCars(10);
+        Set<EntityHandle<Car>> coll = CarFactory.createCollectionOfCars(10);
         collection.addAll(coll);
 
-        ResultSet<Car> cars = collection.retrieve(has(Car.MANUFACTURER));
+        ResultSet<EntityHandle<Car>> cars = collection.retrieve(has(Car.MANUFACTURER));
         assertTrue(cars.isNotEmpty());
         assertEquals(cars.size(), coll.size());
 
@@ -149,19 +151,19 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
     @Test
     public void indexExistingData() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = (KeyStatisticsIndex<String, Car>) onAttribute(
-                Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
         MANUFACTURER_INDEX.clear(noQueryOptions());
 
         collection.addAll(CarFactory.createCollectionOfCars(10));
 
         collection.addIndex(MANUFACTURER_INDEX);
 
-        ResultSet<Car> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
+        ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
         assertTrue(StreamSupport.stream(cars.spliterator(), false)
-                                .allMatch(car -> car.getManufacturer().contentEquals("Honda")));
+                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
 
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());

@@ -17,14 +17,16 @@ public class PostgreSQLTest {
     public static final DataSource dataSource;
 
     static {
-            PGSimpleDataSource ds = new PGSimpleDataSource();
-            ds.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
+        PGSimpleDataSource ds = new PGSimpleDataSource();
+        String port = System.getenv("PGPORT") == null ? "5432" : System.getenv("PGPORT");
+        ds.setUrl("jdbc:postgresql://localhost:" + port + "/eventsourcing?user=eventsourcing&password=eventsourcing");
+        ds.setCurrentSchema("public");
 
-            HikariConfig config = new HikariConfig();
-            config.setMaximumPoolSize(100);
-            config.setDataSource(ds);
-            config.setLeakDetectionThreshold(2000);
+        HikariConfig config = new HikariConfig();
+        config.setMaximumPoolSize(100);
+        config.setDataSource(ds);
+        config.setLeakDetectionThreshold(2000);
 
-            dataSource = new HikariDataSource(config);
+        dataSource = new HikariDataSource(config);
     }
 }

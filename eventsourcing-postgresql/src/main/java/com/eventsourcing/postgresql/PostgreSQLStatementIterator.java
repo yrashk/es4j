@@ -52,7 +52,7 @@ public abstract class PostgreSQLStatementIterator<T> implements CloseableIterato
     @SneakyThrows
     @Override
     public void close() {
-        if (!resultSet.isClosed()) resultSet.close();
+        if (resultSet != null && !resultSet.isClosed()) resultSet.close();
         if (!statement.isClosed()) statement.close();
         if (!connection.isClosed()) connection.close();
     }

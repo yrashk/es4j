@@ -14,12 +14,14 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+import com.googlecode.cqengine.index.Index;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -122,9 +124,18 @@ public class StandardRepository extends AbstractService implements Repository, R
         notifyStarted();
     }
 
+    private Set<String> indicesConfiguredFor = new HashSet<>();
+
+    @SneakyThrows
     private boolean configureIndices(Class<? extends Entity> klass) {
         try {
-            indexEngine.getIndices(klass);
+            if (!indicesConfiguredFor.contains(klass.getName())) {
+                Iterable<Index> indices = indexEngine.getIndices(klass);
+                for (Index i : indices) {
+                    indexEngine.getIndexedCollection(klass).addIndex(i);
+                }
+                indicesConfiguredFor.add(klass.getName());
+            }
         } catch (IndexEngine.IndexNotSupported | IllegalAccessException e) {
             notifyFailed(e);
             return true;

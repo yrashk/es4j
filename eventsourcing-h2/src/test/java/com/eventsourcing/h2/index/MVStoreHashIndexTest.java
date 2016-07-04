@@ -8,10 +8,12 @@
 package com.eventsourcing.h2.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.EqualityIndexTest;
-import com.googlecode.cqengine.attribute.Attribute;
 import org.h2.mvstore.MVStore;
+import org.testng.annotations.Test;
 
+@Test
 public class MVStoreHashIndexTest extends EqualityIndexTest<HashIndex> {
 
     @Override

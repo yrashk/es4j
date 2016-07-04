@@ -17,6 +17,7 @@ import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -110,11 +111,15 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
             disruptorEvent.setState(state);
         }
 
+        private Map<Class<? extends Event>, IndexedCollection<EntityHandle<Event>>> txCollections = new HashMap<>();
+
         @Override @SuppressWarnings("unchecked")
         public void onEvent(Event event) {
-            IndexedCollection<EntityHandle<Event>> coll = indexEngine
-                    .getIndexedCollection((Class<Event>) event.getClass());
-            coll.add(new JournalEntityHandle<>(journal, event.uuid()));
+            IndexedCollection<EntityHandle<Event>> coll = txCollections
+                    .computeIfAbsent(event.getClass(), klass -> new ConcurrentIndexedCollection<>());
+//            IndexedCollection<EntityHandle<Event>> coll = indexEngine
+//                    .getIndexedCollection((Class<Event>) event.getClass().eq);
+            coll.add(new ResolvedEntityHandle<>(event));
             lastTimestamp = event.timestamp().clone();
             disruptorEvent.getEntitySubscribers().stream()
                     .filter(s -> s.matches(event))
@@ -122,25 +127,30 @@ class DisruptorCommandConsumer extends AbstractService implements CommandConsume
         }
 
         @Override @SuppressWarnings("unchecked")
-        public void onCommit() {
+        public void onCommit(Command cmd) {
+            for (Map.Entry<Class<? extends Event>, IndexedCollection<EntityHandle<Event>>> pair :
+                    txCollections.entrySet()) {
+                IndexedCollection<EntityHandle<Event>> value = pair.getValue();
+                indexEngine.getIndexedCollection((Class<Event>)pair.getKey()).addAll(value);
+            }
             IndexedCollection<EntityHandle<Command<?, ?>>> coll = indexEngine
-                    .getIndexedCollection((Class<Command<?, ?>>) command.getClass());
-            EntityHandle<Command<?, ?>> commandHandle = new JournalEntityHandle<>(journal, command.uuid());
-            coll.add(commandHandle);
+                    .getIndexedCollection((Class<Command<?, ?>>) cmd.getClass());
+            EntityHandle<Command<?, ?>> commandHandle = new JournalEntityHandle<>(journal, cmd.uuid());
+            coll.add(new ResolvedEntityHandle<>(cmd));
             subscriptions.entrySet().stream()
                     .forEach(entry -> entry.getKey()
                                            .accept(entry.getValue()
                                                         .stream()
                                                         .map(uuid -> new JournalEntityHandle<>(journal, uuid))));
             disruptorEvent.getEntitySubscribers().stream()
-                    .filter(s -> s.matches(command))
+                    .filter(s -> s.matches(cmd))
                     .forEach(s -> s.accept(Stream.of(commandHandle)));
             timestamp.update(lastTimestamp);
         }
 
         @Override
         public void onAbort(Throwable throwable) {
-
+            txCollections.clear();
         }
     }
 

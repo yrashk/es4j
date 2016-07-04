@@ -11,6 +11,9 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+
 /**
  * An extension of {@link com.googlecode.cqengine.attribute.SimpleAttribute} that hides
  * the unnecessary complexity of using {@link EntityHandle}
@@ -18,22 +21,28 @@ import com.googlecode.cqengine.query.option.QueryOptions;
  * @param <O>
  * @param <A>
  */
-public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute
-        .SimpleAttribute<EntityHandle<O>, A> implements Attribute<O, A> {
+public abstract class SimpleAttribute<O extends Entity, A>
+        extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A>
+        implements Attribute<O, A> {
+
+    private Class<O> objectType;
 
     public SimpleAttribute() {
+        super();
     }
 
     public SimpleAttribute(String attributeName) {
         super(attributeName);
     }
 
-    public SimpleAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType) {
-        super(objectType, attributeType);
+    public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
+        super(handleType, attributeType);
+        this.objectType = objectType;
     }
 
-    public SimpleAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType, String attributeName) {
-        super(objectType, attributeType, attributeName);
+    public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String attributeName) {
+        super(handleType, attributeType, attributeName);
+        this.objectType = objectType;
     }
 
     @Override
@@ -42,4 +51,9 @@ public abstract class SimpleAttribute<O extends Entity, A> extends com.googlecod
     }
 
     public abstract A getValue(O object, QueryOptions queryOptions);
+
+    @Override public Class<O> getEffectiveObjectType() {
+        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
+    }
+
 }

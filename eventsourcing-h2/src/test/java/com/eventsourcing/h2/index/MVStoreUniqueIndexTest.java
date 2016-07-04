@@ -8,7 +8,7 @@
 package com.eventsourcing.h2.index;
 
 import com.eventsourcing.Entity;
-import com.googlecode.cqengine.attribute.Attribute;
+import com.eventsourcing.index.Attribute;
 import org.h2.mvstore.MVStore;
 
 public class MVStoreUniqueIndexTest extends com.eventsourcing.index.UniqueIndexTest<UniqueIndex> {

@@ -9,10 +9,10 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.postgresql.index.EqualityIndex;
-import com.googlecode.cqengine.attribute.Attribute;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -25,6 +25,10 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 @Component(property = {"type=PostgreSQLIndexEngine"})
 public class PostgreSQLIndexEngine extends CQIndexEngine implements IndexEngine {
+
+    @Override public String getType() {
+        return "PostgreSQLIndexEngine";
+    }
 
     @Reference
     protected DataSourceProvider dataSourceProvider;

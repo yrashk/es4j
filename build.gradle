@@ -154,6 +154,17 @@ subprojects {
     }
 
     test.useTestNG()
+
+    tasks.withType(Test) {
+      testLogging {
+          events "passed", "failed"
+          showExceptions true
+          exceptionFormat "full"
+          showCauses true
+          showStackTraces true
+
+      }
+    }
 }
 
 idea {

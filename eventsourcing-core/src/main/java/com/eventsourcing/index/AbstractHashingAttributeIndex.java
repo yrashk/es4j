@@ -8,9 +8,7 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
-import com.eventsourcing.EntityHandle;
 import com.google.common.hash.HashFunction;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 
 import java.util.Set;

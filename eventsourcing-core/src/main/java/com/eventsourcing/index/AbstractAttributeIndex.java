@@ -14,7 +14,6 @@ import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.layout.types.ObjectTypeHandler;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 import lombok.SneakyThrows;
 
@@ -22,8 +21,8 @@ import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
 import java.util.Set;
 
-public abstract class AbstractAttributeIndex<A, O extends Entity> extends com.googlecode.cqengine.index.support
-        .AbstractAttributeIndex<A, O> {
+public abstract class AbstractAttributeIndex<A, O extends Entity>
+        extends com.googlecode.cqengine.index.support.AbstractAttributeIndex<A, EntityHandle<O>> {
 
     protected Serializer<A, TypeHandler> attributeSerializer;
     protected Deserializer<A, TypeHandler> attributeDeserializer;
@@ -52,7 +51,7 @@ public abstract class AbstractAttributeIndex<A, O extends Entity> extends com.go
         attributeSerializer = serialization.getSerializer(attrTypeHandler);
         attributeDeserializer = serialization.getDeserializer(attrTypeHandler);
 
-        ResolvedType objectType = new TypeResolver().resolve(attribute.getObjectType());
+        ResolvedType objectType = new TypeResolver().resolve(attribute.getEffectiveObjectType());
         ObjectTypeHandler objectTypeHandler = (ObjectTypeHandler) TypeHandler.lookup(objectType, null);
         if (!(objectTypeHandler instanceof ObjectTypeHandler)) {
             throw new RuntimeException("Index " + attribute.getAttributeName() +

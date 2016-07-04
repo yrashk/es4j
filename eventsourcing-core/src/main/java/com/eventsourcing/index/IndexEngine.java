@@ -33,6 +33,8 @@ import java.util.function.Function;
 
 public interface IndexEngine extends Service {
 
+    String getType();
+
     /**
      * Sets journal to be used in this repository
      * <p>
@@ -158,7 +160,8 @@ public interface IndexEngine extends Service {
     @SuppressWarnings("unchecked")
     static <O extends Entity, A> SimpleAttribute<O, A> getAttribute(Method method) {
         String name = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
-        return new SimpleAttribute<O, A>(// this is used to pass type information, the value is not important
+        return new SimpleAttribute<O, A>((Class<O>) method.getDeclaringClass(),
+                                         // this is used to pass type information, the value is not important
                                          (Class<EntityHandle<O>>) method.getDeclaringClass(),
                                          (Class<A>)method.getReturnType(),
                                          name) {

@@ -145,7 +145,7 @@ public interface Journal extends Service {
          * Called when a new event is received from the stream and
          * persisted into the journal. Note that at this point the event
          * should not be available until the entire journalling operation has
-         * been completed and {@link #onCommit()} has been called.
+         * been completed and {@link #onCommit(Command)} has been called.
          *
          * @param event
          */
@@ -156,7 +156,7 @@ public interface Journal extends Service {
          * At this point, all records have been committed and are visible to all
          * other readers.
          */
-        default void onCommit() {}
+        default void onCommit(Command command) {}
 
         /**
          * Called when there was an exception during event generation

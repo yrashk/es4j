@@ -11,9 +11,10 @@ import com.eventsourcing.*;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
+import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.layout.types.*;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.repository.JournalEntityHandle;
+import com.eventsourcing.JournalEntityHandle;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.AbstractService;
@@ -28,9 +29,9 @@ import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
+import java.nio.ByteBuffer;
 import java.sql.*;
 import java.util.*;
-import java.util.Date;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
@@ -38,6 +39,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.getValue;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
@@ -103,17 +105,29 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         return new Transaction(dataSource);
     }
 
-    @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
         Layout layout = getLayout(command.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         insertFunctions.get(encoded).apply(command, ((Transaction)tx).getConnection());
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        ByteBuffer s = serialization.getSerializer(command.getClass()).serialize(command);
+        s.rewind();
+        Command command1 = (Command) serialization.getDeserializer(command.getClass()).deserialize(s);
+        command1.uuid(command.uuid());
+        return command1;
     }
 
-    @Override public void record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
         Layout layout = getLayout(event.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         InsertFunction insert = insertFunctions.get(encoded);
         insert.apply(event, ((Transaction)tx).getConnection());
+        BinarySerialization serialization = BinarySerialization.getInstance();
+        ByteBuffer s = serialization.getSerializer(event.getClass()).serialize(event);
+        s.rewind();
+        Event event1 = (Event) serialization.getDeserializer(event.getClass()).deserialize(s);
+        event1.uuid(event.uuid());
+        return event1;
     }
 
     private void extractParameter(List<String> list, Property p, TypeHandler typeHandler, String context) {
@@ -347,46 +361,11 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         }
 
         @SneakyThrows
-        private String getParameter(Connection connection, TypeHandler typeHandler, Object object) {
-            if (typeHandler instanceof UUIDTypeHandler) {
-                return "?::UUID";
-            } else if (typeHandler instanceof ObjectTypeHandler) {
-                Layout layout = ((ObjectTypeHandler) typeHandler).getLayout();
-                final Object o = object == null ?
-                        layout.instantiate() : object;
-                @SuppressWarnings("unchecked")
-                List<? extends Property> properties = layout.getProperties();
-                @SuppressWarnings("unchecked")
-                String rowParameters = Joiner.on(",").join(
-                        properties.stream().map(p1 -> getParameter(connection, p1.getTypeHandler(), p1.get(o))
-                ).collect(Collectors.toList()));
-                return "ROW(" + rowParameters + ")";
-            } else if (typeHandler instanceof ListTypeHandler) {
-                TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
-                List<?> list = object == null ? Arrays.asList() : (List<?>) object;
-                String listParameters = Joiner.on(",").join(
-                        list.stream().map(i -> getParameter(connection, handler, i))
-                            .collect(Collectors.toList()));
-                return "ARRAY[" + listParameters + "]::" + PostgreSQLSerialization.getMappedType(connection, handler) + "[]";
-            } else if (typeHandler instanceof OptionalTypeHandler) {
-                if (object == null || !((Optional) object).isPresent()) {
-                    return "?";
-                } else {
-                    return getParameter(connection, ((OptionalTypeHandler) typeHandler).getWrappedHandler(), ((Optional)
-                            object).get());
-                }
-            } else {
-                return "?";
-            }
-        }
-
-        @SneakyThrows
         @Override public UUID apply(Object object, Connection connection) {
             String parameters = Joiner.on(",")
                                .join(properties.stream()
                                                .map(p -> getParameter(connection, p.getTypeHandler(), p.get(object)))
-                                               .collect
-                                               (Collectors.toList()));
+                                               .collect(Collectors.toList()));
 
             PreparedStatement s = connection
                     .prepareStatement("INSERT INTO " + table + " VALUES (?::UUID," + parameters + ")");

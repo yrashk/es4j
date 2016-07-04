@@ -13,7 +13,7 @@ import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.repository.JournalEntityHandle;
+import com.eventsourcing.JournalEntityHandle;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
@@ -70,7 +70,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         }
     }
 
-    @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
         ObjectSerializer<Command> serializer = serialization.getSerializer(command.getClass());
         ObjectDeserializer<Command> deserializer = serialization.getDeserializer(command.getClass());
 
@@ -80,9 +80,11 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         command1.uuid(command.uuid());
 
         ((Transaction) tx).setCommand(command1);
+
+        return command1;
     }
 
-    @Override public void record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
         ObjectSerializer<Event> serializer = serialization.getSerializer(event.getClass());
         ObjectDeserializer<Event> deserializer = serialization.getDeserializer(event.getClass());
 
@@ -92,6 +94,8 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         event1.uuid(event.uuid());
 
         ((Transaction) tx).events.put(event1.uuid(), event1);
+
+        return event1;
     }
 
     @Override public AbstractJournal.Transaction beginTransaction() {

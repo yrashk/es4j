@@ -61,10 +61,10 @@ public interface AbstractJournal extends Journal {
                 }
             }).count();
 
-            record(tx, command);
+            Command command_ = record(tx, command);
 
             tx.commit();
-            listener.onCommit();
+            listener.onCommit(command_);
 
             return count;
         } catch (Exception e) {
@@ -82,8 +82,8 @@ public interface AbstractJournal extends Journal {
 
     }
 
-    void record(Transaction tx, Command<?, ?> command);
-    void record(Transaction tx, Event event);
+    Command record(Transaction tx, Command<?, ?> command);
+    Event record(Transaction tx, Event event);
 
     Transaction beginTransaction();
 
@@ -116,7 +116,7 @@ public interface AbstractJournal extends Journal {
                 ts.update(event.timestamp().clone());
             }
 
-            journal.record(tx, event);
+            event = journal.record(tx, event);
 
             listener.onEvent(event);
         }

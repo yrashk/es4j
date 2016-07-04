@@ -14,7 +14,7 @@ import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.repository.JournalEntityHandle;
+import com.eventsourcing.JournalEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
@@ -188,7 +188,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         return new Transaction(transactionStore.begin());
     }
 
-    @Override public void record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
         TransactionStore.Transaction tx0 = ((Transaction) tx).getTx();
         TransactionMap<UUID, ByteBuffer> txCommandPayloads = tx0.openMap("commandPayloads", new ObjectDataType(),
                                                                         new ByteBufferDataType());
@@ -208,10 +208,14 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         txCommandPayloads.tryPut(command.uuid(), buffer);
         txHashCommands.tryPut(hashBuffer.array(), true);
         txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
+        buffer.rewind();
+        Command command1 = (Command) serialization.getDeserializer(command.getClass()).deserialize(buffer);
+        command1.uuid(command.uuid());
+        return command1;
     }
 
     @SneakyThrows
-    @Override public void record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
         Transaction tx0 = ((Transaction) tx);
         Layout layout = getLayout(event.getClass());
 
@@ -234,6 +238,10 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
         tx0.txHashEvents.tryPut(hashBuffer.array(), true);
         tx0.txEventHashes.tryPut(event.uuid(), layout.getHash());
+        payloadBuffer.rewind();
+        Event event1 = (Event) serialization.getDeserializer(event.getClass()).deserialize(payloadBuffer);
+        event1.uuid(event.uuid());
+        return event1;
     }
 
 

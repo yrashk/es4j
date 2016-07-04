@@ -7,6 +7,8 @@
  */
 package com.eventsourcing.models;
 
+import com.eventsourcing.EntityHandle;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.googlecode.concurrenttrees.common.LazyIterator;
 
 import java.util.*;
@@ -16,10 +18,10 @@ import static java.util.Arrays.asList;
 
 public class CarFactory {
 
-    public static Set<Car>  createCollectionOfCars(int numCars) {
-        Set<Car> cars = new LinkedHashSet<Car>(numCars);
+    public static Set<EntityHandle<Car>>  createCollectionOfCars(int numCars) {
+        Set<EntityHandle<Car>> cars = new LinkedHashSet<EntityHandle<Car>>(numCars);
         for (int carId = 0; carId < numCars; carId++) {
-            cars.add(createCar(carId));
+            cars.add(new ResolvedEntityHandle<>(createCar(carId)));
         }
         return cars;
     }

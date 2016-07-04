@@ -8,12 +8,14 @@
 package com.eventsourcing.h2.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.AbstractHashingAttributeIndex;
+import com.eventsourcing.index.Attribute;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
@@ -31,7 +33,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 
 public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeIndex<A, O> implements
-        KeyStatisticsAttributeIndex<A, O> {
+        KeyStatisticsAttributeIndex<A, EntityHandle<O>> {
 
     protected static final int INDEX_RETRIEVAL_COST = 30;
 
@@ -101,7 +103,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
             add(Has.class);
         }}, hashFunction);
         this.store = store;
-        String classname = attribute.getObjectType().getName();
+        String classname = attribute.getEffectiveObjectType().getName();
         map = store.openMap("hash_index_" + classname + "_" + attribute.getAttributeName());
         attrHashMap = store.openMap("hash_index_attrhash_" + classname + "_" + attribute.getAttributeName());
         objHashMap = store.openMap("hash_index_objhash_" + classname + "_" + attribute.getAttributeName());
@@ -267,7 +269,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     @Override
-    public CloseableIterable<KeyValue<A, O>> getKeysAndValues(QueryOptions queryOptions) {
+    public CloseableIterable<KeyValue<A, EntityHandle<O>>> getKeysAndValues(QueryOptions queryOptions) {
         return null;
     }
 
@@ -282,37 +284,37 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     @Override
-    public ResultSet<O> retrieve(Query<O> query, QueryOptions queryOptions) {
+    public ResultSet<EntityHandle<O>> retrieve(Query<EntityHandle<O>> query, QueryOptions queryOptions) {
         Class<?> queryClass = query.getClass();
         if (queryClass.equals(Equal.class)) {
-            final Equal<O, A> equal = (Equal<O, A>) query;
+            final Equal<EntityHandle<O>, A> equal = (Equal<EntityHandle<O>, A>) query;
             byte[] attr = encodeAttribute(equal.getValue());
             byte[] from = map.ceilingKey(attr);
 
-            return new ResultSet<O>() {
+            return new ResultSet<EntityHandle<O>>() {
                 @Override
-                public Iterator<O> iterator() {
+                public Iterator<EntityHandle<O>> iterator() {
                     boolean empty = Bytes.indexOf(from, attr) != 0;
                     Cursor<byte[], Boolean> cursor = map.cursor(from);
                     if (empty) {
-                        return Collections.<O>emptyList().iterator();
+                        return Collections.<EntityHandle<O>>emptyList().iterator();
                     }
                     return new CursorIterator(cursor, attr);
                 }
 
                 @Override
-                public boolean contains(O object) {
-                    Entry entry = encodeEntry(object, equal.getValue());
+                public boolean contains(EntityHandle<O> object) {
+                    Entry entry = encodeEntry(object.get(), equal.getValue());
                     return objHashMap.containsKey(entry.getValueHash());
                 }
 
                 @Override
-                public boolean matches(O object) {
+                public boolean matches(EntityHandle<O> object) {
                     return equal.matches(object, queryOptions);
                 }
 
                 @Override
-                public Query<O> getQuery() {
+                public Query<EntityHandle<O>> getQuery() {
                     return equal;
                 }
 
@@ -342,31 +344,31 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
                 }
             };
         } else if (queryClass.equals(Has.class)) {
-            final Has<O, A> has = (Has<O, A>) query;
+            final Has<EntityHandle<O>, A> has = (Has<EntityHandle<O>, A>) query;
             byte[] from = map.firstKey();
 
-            return new ResultSet<O>() {
+            return new ResultSet<EntityHandle<O>>() {
 
                 @Override
-                public Iterator<O> iterator() {
+                public Iterator<EntityHandle<O>> iterator() {
                     Cursor<byte[], Boolean> cursor = map.cursor(from);
                     return new CursorIterator(cursor, new byte[]{});
                 }
 
                 @Override
-                public boolean contains(O object) {
-                    ByteBuffer buffer = ByteBuffer.allocate(objectSerializer.size(object));
-                    objectSerializer.serialize(object, buffer);
+                public boolean contains(EntityHandle<O> object) {
+                    ByteBuffer buffer = ByteBuffer.allocate(objectSerializer.size(object.get()));
+                    objectSerializer.serialize(object.get(), buffer);
                     return objHashMap.containsKey(hashFunction.hashBytes(buffer.array()).asBytes());
                 }
 
                 @Override
-                public boolean matches(O object) {
+                public boolean matches(EntityHandle<O> object) {
                     return has.matches(object, queryOptions);
                 }
 
                 @Override
-                public Query<O> getQuery() {
+                public Query<EntityHandle<O>> getQuery() {
                     return has;
                 }
 
@@ -401,31 +403,31 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     @Override
-    public Index<O> getEffectiveIndex() {
+    public Index<EntityHandle<O>> getEffectiveIndex() {
         return this;
     }
 
     @Override
-    public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
-        for (O object : objects) {
+    public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        for (EntityHandle<O> object : objects) {
             addObject(queryOptions, object);
         }
         return true;
     }
 
-    public boolean addAll(ObjectStore<O> objects, QueryOptions queryOptions) {
-        CloseableIterator<O> iterator = objects.iterator(queryOptions);
+    public boolean addAll(ObjectStore<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        CloseableIterator<EntityHandle<O>> iterator = objects.iterator(queryOptions);
         while (iterator.hasNext()) {
-            O object = iterator.next();
+            EntityHandle<O> object = iterator.next();
             addObject(queryOptions, object);
         }
         return true;
     }
 
-    private void addObject(QueryOptions queryOptions, O object) {
+    private void addObject(QueryOptions queryOptions, EntityHandle<O> object) {
         for (A value : attribute.getValues(object, queryOptions)) {
             if (value != null) { // Don't index null attribute values
-                Entry entry = encodeEntry(object, value);
+                Entry entry = encodeEntry(object.get(), value);
                 map.put(entry.getKey(), true);
                 attrHashMap.putIfAbsent(entry.getAttrHash(), entry.getAttr());
                 objHashMap.putIfAbsent(entry.getValueHash(), entry.getValue());
@@ -434,10 +436,10 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     @Override
-    public boolean removeAll(Collection<O> objects, QueryOptions queryOptions) {
-        for (O object : objects) {
+    public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        for (EntityHandle<O> object : objects) {
             for (A value : attribute.getValues(object, queryOptions)) {
-                Entry entry = encodeEntry(object, value);
+                Entry entry = encodeEntry(object.get(), value);
                 map.remove(entry.getKey());
             }
         }
@@ -450,12 +452,12 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     @Override
-    public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+    public void init(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
         addAll(objectStore, queryOptions);
     }
 
 
-    private class CursorIterator implements Iterator<O> {
+    private class CursorIterator implements Iterator<EntityHandle<O>> {
 
         private final Cursor<byte[], Boolean> cursor;
         private final byte[] attr;
@@ -477,12 +479,12 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
         }
 
         @Override
-        public O next() {
+        public EntityHandle<O> next() {
             ByteBuffer buffer = ByteBuffer.wrap(next);
             buffer.position(hashSize); // skip attribute hash
             byte[] hash = new byte[hashSize];
             buffer.get(hash);
-            return objectDeserializer.deserialize(ByteBuffer.wrap(objHashMap.get(hash)));
+            return new ResolvedEntityHandle<>(objectDeserializer.deserialize(ByteBuffer.wrap(objHashMap.get(hash))));
         }
     }
 }

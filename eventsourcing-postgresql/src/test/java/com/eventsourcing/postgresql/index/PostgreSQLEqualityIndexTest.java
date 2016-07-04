@@ -8,14 +8,22 @@
 package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.EqualityIndexTest;
-import com.eventsourcing.postgresql.PostgreSQLTest;
-import com.googlecode.cqengine.attribute.Attribute;
+import lombok.SneakyThrows;
+import org.testng.annotations.Test;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+
+import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
+
+@Test
 public class PostgreSQLEqualityIndexTest extends EqualityIndexTest<EqualityIndex> {
 
     @Override
+    @SneakyThrows
     public <A, O extends Entity> EqualityIndex onAttribute(Attribute<O, A> attribute) {
-        return EqualityIndex.onAttribute(PostgreSQLTest.dataSource, attribute, false);
+        return EqualityIndex.onAttribute(dataSource, attribute, false);
     }
 }

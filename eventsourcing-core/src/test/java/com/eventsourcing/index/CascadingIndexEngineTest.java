@@ -31,6 +31,10 @@ public class CascadingIndexEngineTest {
             return Arrays.asList();
         }
 
+        @Override public String getType() {
+            return "FailingIndexEngine";
+        }
+
         @Override
         public void setJournal(Journal journal) throws IllegalStateException {
             this.journal = journal;

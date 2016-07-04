@@ -8,8 +8,8 @@
 package com.eventsourcing.models;
 
 import com.eventsourcing.StandardEntity;
-import com.googlecode.cqengine.attribute.MultiValueAttribute;
-import com.googlecode.cqengine.attribute.SimpleAttribute;
+import com.eventsourcing.index.MultiValueAttribute;
+import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 import lombok.Setter;

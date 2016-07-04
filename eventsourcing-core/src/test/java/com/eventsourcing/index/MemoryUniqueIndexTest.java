@@ -8,7 +8,6 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
 
 public class MemoryUniqueIndexTest extends UniqueIndexTest<UniqueIndex> {

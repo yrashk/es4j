@@ -8,6 +8,8 @@
 package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.KeyObjectStore;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.TypeHandler;
@@ -15,10 +17,7 @@ import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
-import com.google.common.hash.HashFunction;
-import com.google.common.hash.Hashing;
 import com.google.common.io.BaseEncoding;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
@@ -30,6 +29,7 @@ import com.googlecode.cqengine.query.simple.Has;
 import com.googlecode.cqengine.resultset.ResultSet;
 import com.googlecode.cqengine.resultset.closeable.CloseableResultSet;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
 
 import javax.sql.DataSource;
@@ -43,12 +43,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 
+import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
-public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O>
-        implements KeyStatisticsAttributeIndex<A, O> {
+@Slf4j
+public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A, EntityHandle<O>>
+        implements KeyStatisticsAttributeIndex<A, EntityHandle<O>> {
 
     protected static final int INDEX_RETRIEVAL_COST = 30;
     protected static final int UNIQUE_INDEX_RETRIEVAL_COST = 25;
@@ -58,7 +59,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
     private Layout<O> layout;
     private final boolean unique;
     private final TypeHandler attributeTypeHandler;
-    private KeyObjectStore<UUID, O> keyObjectStore;
+    private KeyObjectStore<UUID, EntityHandle<O>> keyObjectStore;
 
     public static <A, O extends Entity> EqualityIndex<A, O> onAttribute(DataSource dataSource,
                                                                         Attribute<O, A> attribute, boolean unique) {
@@ -73,7 +74,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
         }});
         this.dataSource = dataSource;
         this.unique = unique;
-        layout = Layout.forClass(attribute.getObjectType());
+        layout = Layout.forClass(attribute.getEffectiveObjectType());
         TypeResolver typeResolver = new TypeResolver();
         ResolvedType resolvedType = typeResolver.resolve(attribute.getAttributeType());
         attributeTypeHandler = TypeHandler.lookup(resolvedType, null);
@@ -182,14 +183,14 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
     }
 
     @SneakyThrows
-    @Override public CloseableIterable<KeyValue<A, O>> getKeysAndValues(QueryOptions queryOptions) {
+    @Override public CloseableIterable<KeyValue<A, EntityHandle<O>>> getKeysAndValues(QueryOptions queryOptions) {
         Connection connection = dataSource.getConnection();
         PreparedStatement s = connection.prepareStatement("SELECT key, value FROM " + tableName + " ORDER BY key");
-        return new CloseableIterable<KeyValue<A, O>>() {
-            @Override public CloseableIterator<KeyValue<A, O>> iterator() {
-                return new PostgreSQLStatementIterator<KeyValue<A, O>>(s, connection, true) {
+        return new CloseableIterable<KeyValue<A, EntityHandle<O>>>() {
+            @Override public CloseableIterator<KeyValue<A, EntityHandle<O>>> iterator() {
+                return new PostgreSQLStatementIterator<KeyValue<A, EntityHandle<O>>>(s, connection, true) {
                     @SneakyThrows
-                    @Override public KeyValue<A, O> next() {
+                    @Override public KeyValue<A, EntityHandle<O>> next() {
                         AtomicInteger i = new AtomicInteger(1);
                         A key = (A) PostgreSQLSerialization.getValue(resultSet, i, attributeTypeHandler);
                         UUID uuid = UUID.fromString(resultSet.getString(i.get()));
@@ -209,16 +210,17 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
     }
 
     @SneakyThrows
-    @Override public ResultSet<O> retrieve(Query<O> query, QueryOptions queryOptions) {
+    @Override public ResultSet<EntityHandle<O>> retrieve(Query<EntityHandle<O>> query, QueryOptions queryOptions) {
         Class<?> queryClass = query.getClass();
         if (queryClass.equals(Equal.class)) {
-            final Equal<O, A> equal = (Equal<O, A>) query;
+            final Equal<EntityHandle<O>, A> equal = (Equal<EntityHandle<O>, A>) query;
             Connection connection = dataSource.getConnection();
 
             int size = 0;
             try(PreparedStatement counter = connection
-                    .prepareStatement("SELECT count(object) FROM " + tableName + " WHERE key = ? ")) {
-                setValue(connection, counter, 1, ((Equal<O, A>) query).getValue(), attributeTypeHandler);
+                    .prepareStatement("SELECT count(object) FROM " + tableName + " WHERE key = " + getParameter
+                            (connection, attributeTypeHandler, null))) {
+                setValue(connection, counter, 1, ((Equal<EntityHandle<O>, A>) query).getValue(), attributeTypeHandler);
                 try (java.sql.ResultSet resultSet = counter.executeQuery()) {
                     resultSet.next();
                     size = resultSet.getInt(1);
@@ -226,12 +228,14 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             }
 
             PreparedStatement s = connection
-                    .prepareStatement("SELECT object FROM " + tableName + " WHERE key = ? ");
-            setValue(connection, s, 1, ((Equal<O, A>) query).getValue(), attributeTypeHandler);
+                    .prepareStatement("SELECT object FROM " + tableName + " WHERE key = " +
+                                              getParameter(connection, attributeTypeHandler, null));
+            setValue(connection, s, 1, ((Equal<EntityHandle<O>, A>) query).getValue(), attributeTypeHandler);
 
-            PostgreSQLStatementIterator<O> iterator = new PostgreSQLStatementIterator<O>(s,connection, true) {
+            PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
+                    (s,connection, true) {
                 @SneakyThrows
-                @Override public O next() {
+                @Override public EntityHandle<O> next() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }
@@ -239,17 +243,17 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
 
 
             int finalSize = size;
-            ResultSet<O> rs = new ResultSet<O>() {
+            ResultSet<EntityHandle<O>> rs = new ResultSet<EntityHandle<O>>() {
                 @Override
-                public Iterator<O> iterator() {
+                public Iterator<EntityHandle<O>> iterator() {
                     return iterator;
                 }
 
                 @Override
                 @SneakyThrows
-                public boolean contains(O object) {
+                public boolean contains(EntityHandle<O> object) {
                     try (Connection c = dataSource.getConnection()) {
-                        String sql = "SELECT count(key) FROM " + tableName + " WHERE uuid = ?::UUID";
+                        String sql = "SELECT count(key) FROM " + tableName + " WHERE object = ?::UUID";
                         try (PreparedStatement s = c.prepareStatement(sql)) {
                             try (java.sql.ResultSet resultSet = s.executeQuery()) {
                                 resultSet.next();
@@ -260,12 +264,12 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
                 }
 
                 @Override
-                public boolean matches(O object) {
+                public boolean matches(EntityHandle<O> object) {
                     return equal.matches(object, queryOptions);
                 }
 
                 @Override
-                public Query<O> getQuery() {
+                public Query<EntityHandle<O>> getQuery() {
                     return equal;
                 }
 
@@ -296,7 +300,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             };
             return new CloseableResultSet<>(rs, query, queryOptions);
         } else if (queryClass.equals(Has.class)) {
-            final Has<O, A> has = (Has<O, A>) query;
+            final Has<EntityHandle<O>, A> has = (Has<EntityHandle<O>, A>) query;
 
             Connection connection = dataSource.getConnection();
 
@@ -312,24 +316,24 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             PreparedStatement s = connection
                     .prepareStatement("SELECT object FROM " + tableName);
 
-            PostgreSQLStatementIterator<O> iterator = new PostgreSQLStatementIterator<O>(s,connection, true) {
+            PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>(s,connection, true) {
                 @SneakyThrows
-                @Override public O next() {
+                @Override public EntityHandle<O> next() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }
             };
 
             int finalSize = size;
-            ResultSet<O> rs = new ResultSet<O>() {
+            ResultSet<EntityHandle<O>> rs = new ResultSet<EntityHandle<O>>() {
                 @Override
-                public Iterator<O> iterator() {
+                public Iterator<EntityHandle<O>> iterator() {
                     return iterator;
                 }
 
                 @Override
                 @SneakyThrows
-                public boolean contains(O object) {
+                public boolean contains(EntityHandle<O> object) {
                     try (Connection c = dataSource.getConnection()) {
                         String sql = "SELECT count(key) FROM " + tableName;
                         try (PreparedStatement s = c.prepareStatement(sql)) {
@@ -342,12 +346,12 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
                 }
 
                 @Override
-                public boolean matches(O object) {
+                public boolean matches(EntityHandle<O> object) {
                     return has.matches(object, queryOptions);
                 }
 
                 @Override
-                public Query<O> getQuery() {
+                public Query<EntityHandle<O>> getQuery() {
                     return has;
                 }
 
@@ -382,22 +386,23 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
         }
     }
 
-    @Override public Index<O> getEffectiveIndex() {
+    @Override public Index<EntityHandle<O>> getEffectiveIndex() {
         return this;
     }
 
-    @Override public boolean addAll(Collection<O> objects, QueryOptions queryOptions) {
+    @Override public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
         return addAll(objects.iterator(), queryOptions);
     }
 
     @SneakyThrows
-    public boolean addAll(Iterator<O> iterator, QueryOptions queryOptions) {
+    public boolean addAll(Iterator<EntityHandle<O>> iterator, QueryOptions queryOptions) {
         try(Connection connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
-            String insert = "INSERT INTO " + tableName + " VALUES (?, ?::UUID)";
+            String insert = "INSERT INTO " + tableName + " VALUES (" + getParameter(connection, attributeTypeHandler,
+                                                                                    null) + ", ?::UUID)";
             try (PreparedStatement s = connection.prepareStatement(insert)) {
                 while (iterator.hasNext()) {
-                    O object = iterator.next();
+                    EntityHandle<O> object = iterator.next();
                     Iterator<A> attrIterator = attribute.getValues(object, queryOptions).iterator();
                     while (attrIterator.hasNext()) {
                         int i = 1;
@@ -408,7 +413,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
                     }
                 }
                 if (iterator instanceof CloseableIterable) {
-                    ((CloseableIterator<O>)iterator).close();
+                    ((CloseableIterator<EntityHandle<O>>)iterator).close();
                 }
 
                 try {
@@ -417,6 +422,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
                     connection.rollback();
                     SQLException nextException = e.getNextException();
                     if (nextException instanceof PSQLException) {
+                        nextException.printStackTrace();
                         if (nextException.getMessage().contains("duplicate key value violates unique constraint")) {
                             throw new UniqueIndex.UniqueConstraintViolatedException(nextException.getMessage());
                         } else {
@@ -433,19 +439,19 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
         return true;
     }
 
-    private void addAll(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+    private void addAll(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
         addAll(objectStore.iterator(queryOptions), queryOptions);
     }
 
 
     @SneakyThrows
-    @Override public boolean removeAll(Collection<O> objects, QueryOptions queryOptions) {
+    @Override public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
         try(Connection connection = dataSource.getConnection()) {
             String insert = "DELETE FROM " + tableName + " WHERE object = ?::UUID";
             try (PreparedStatement s = connection.prepareStatement(insert)) {
-                Iterator<O> iterator = objects.iterator();
+                Iterator<EntityHandle<O>> iterator = objects.iterator();
                 while (iterator.hasNext()) {
-                    O object = iterator.next();
+                    EntityHandle<O> object = iterator.next();
                     s.setString(1, object.uuid().toString());
                     s.addBatch();
                 }
@@ -466,20 +472,20 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
 
     }
 
-    class SetKeyObjectStore implements KeyObjectStore<UUID, O> {
+    class SetKeyObjectStore implements KeyObjectStore<UUID, EntityHandle<O>> {
 
-        private final ObjectStore<O> objectStore;
+        private final ObjectStore<EntityHandle<O>> objectStore;
         private final QueryOptions queryOptions;
 
-        public SetKeyObjectStore(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+        public SetKeyObjectStore(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
             this.objectStore = objectStore;
             this.queryOptions = queryOptions;
         }
 
-        @Override public O get(UUID key) {
-            CloseableIterator<O> iterator = objectStore.iterator(queryOptions);
+        @Override public EntityHandle<O> get(UUID key) {
+            CloseableIterator<EntityHandle<O>> iterator = objectStore.iterator(queryOptions);
             while (iterator.hasNext()) {
-                O next = iterator.next();
+                EntityHandle<O> next = iterator.next();
                 if (next.uuid().equals(key)) {
                     return next;
                 }
@@ -487,13 +493,16 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             return null;
         }
     }
-    @Override public void init(ObjectStore<O> objectStore, QueryOptions queryOptions) {
+    @Override public void init(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
         if (objectStore instanceof KeyObjectStore) {
-            this.keyObjectStore = (KeyObjectStore<UUID, O>) objectStore;
+            this.keyObjectStore = (KeyObjectStore<UUID, EntityHandle<O>>) objectStore;
         } else {
             this.keyObjectStore = new SetKeyObjectStore(objectStore, queryOptions);
         }
         addAll(objectStore, queryOptions);
     }
 
+    @Override public String toString() {
+        return "EqualityIndex[PostgreSQL, table=" + tableName + "]";
+    }
 }

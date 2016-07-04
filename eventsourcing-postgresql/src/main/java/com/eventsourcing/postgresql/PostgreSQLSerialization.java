@@ -11,6 +11,7 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.types.*;
+import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 import lombok.SneakyThrows;
 
@@ -339,6 +340,41 @@ public class PostgreSQLSerialization {
         }
         throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
     }
+
+    @SneakyThrows
+    public static String getParameter(Connection connection, TypeHandler typeHandler, Object object) {
+        if (typeHandler instanceof UUIDTypeHandler) {
+            return "?::UUID";
+        } else if (typeHandler instanceof ObjectTypeHandler) {
+            Layout layout = ((ObjectTypeHandler) typeHandler).getLayout();
+            final Object o = object == null ?
+                    layout.instantiate() : object;
+            @SuppressWarnings("unchecked")
+            List<? extends Property> properties = layout.getProperties();
+            @SuppressWarnings("unchecked")
+            String rowParameters = Joiner.on(",").join(
+                    properties.stream().map(p1 -> getParameter(connection, p1.getTypeHandler(), p1.get(o))
+                    ).collect(Collectors.toList()));
+            return "ROW(" + rowParameters + ")";
+        } else if (typeHandler instanceof ListTypeHandler) {
+            TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
+            List<?> list = object == null ? Arrays.asList() : (List<?>) object;
+            String listParameters = Joiner.on(",").join(
+                    list.stream().map(i -> getParameter(connection, handler, i))
+                        .collect(Collectors.toList()));
+            return "ARRAY[" + listParameters + "]::" + PostgreSQLSerialization.getMappedType(connection, handler) + "[]";
+        } else if (typeHandler instanceof OptionalTypeHandler) {
+            if (object == null || !((Optional) object).isPresent()) {
+                return "?";
+            } else {
+                return getParameter(connection, ((OptionalTypeHandler) typeHandler).getWrappedHandler(), ((Optional)
+                        object).get());
+            }
+        } else {
+            return "?";
+        }
+    }
+
 
     private static class ObjectArrayCollector implements Function<Map<String,Object>, Object> {
         private final Layout objectLayout;

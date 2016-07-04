@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
@@ -52,8 +53,8 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void getDistinctKeysAndCounts() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        SortedKeyStatisticsIndex<String, Car> MODEL_INDEX = onAttribute(Car.MODEL);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<String, EntityHandle<Car>> MODEL_INDEX = onAttribute(Car.MODEL);
         collection.addIndex(MODEL_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -74,8 +75,8 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void getCountOfDistinctKeys() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -85,8 +86,8 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void getStatisticsForDistinctKeys() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        KeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -104,8 +105,8 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void getStatisticsForDistinctKeysDescending() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
-        SortedKeyStatisticsIndex<String, Car> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -123,7 +124,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_SpanningTwoBucketsMidRange() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
@@ -140,7 +141,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_FirstBucket() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
@@ -156,7 +157,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_LastBucket() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
@@ -173,7 +174,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_LessThan() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
@@ -185,7 +186,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_GreaterThan() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
@@ -197,11 +198,11 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_Between() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
-        Query<Car> query = between(Car.CAR_ID, 88, 92);
+        Query<EntityHandle<Car>> query = between(Car.CAR_ID, 88, 92);
         assertEquals(collection.retrieve(query).size(), 5);
         assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91, 92));
 
@@ -224,10 +225,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     @Test
     public void indexQuantization_ComplexQuery() {
-        IndexedCollection<Car> collection = new ConcurrentIndexedCollection<>();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
         collection.addAll(CarFactory.createCollectionOfCars(100));
-        Query<Car> query = and(between(Car.CAR_ID, 96, 98), greaterThan(Car.CAR_ID, 95));
+        Query<EntityHandle<Car>> query = and(between(Car.CAR_ID, 96, 98), greaterThan(Car.CAR_ID, 95));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
         assertEquals(collection.retrieve(query).getMergeCost(), 10);
@@ -239,11 +240,11 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         assertEquals(carIdsFound, asList(96, 97, 98));
     }
 
-    static List<Integer> retrieveCarIds(IndexedCollection<Car> collection, Query<Car> query) {
-        ResultSet<Car> cars = collection.retrieve(query, queryOptions(orderBy(ascending(Car.CAR_ID))));
+    static List<Integer> retrieveCarIds(IndexedCollection<EntityHandle<Car>> collection, Query<EntityHandle<Car>> query) {
+        ResultSet<EntityHandle<Car>> cars = collection.retrieve(query, queryOptions(orderBy(ascending(Car.CAR_ID))));
         List<Integer> carIds = new ArrayList<>();
-        for (Car car : cars) {
-            carIds.add(car.getCarId());
+        for (EntityHandle<Car> car : cars) {
+            carIds.add(car.get().getCarId());
         }
         return carIds;
     }

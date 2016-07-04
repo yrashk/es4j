@@ -10,10 +10,10 @@ package com.eventsourcing.h2;
 import com.eventsourcing.Repository;
 import com.eventsourcing.h2.index.HashIndex;
 import com.eventsourcing.h2.index.UniqueIndex;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.Journal;
-import com.googlecode.cqengine.attribute.Attribute;
 import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;
@@ -25,6 +25,10 @@ import java.util.List;
 
 @Component(property = {"filename=index.db", "type=MVStoreIndexEngine"})
 public class MVStoreIndexEngine extends CQIndexEngine implements IndexEngine {
+
+    @Override public String getType() {
+        return "MVStoreIndexEngine";
+    }
 
     private MVStore store;
 

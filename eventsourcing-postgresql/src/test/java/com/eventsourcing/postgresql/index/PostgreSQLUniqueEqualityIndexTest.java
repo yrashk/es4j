@@ -8,10 +8,12 @@
 package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.UniqueIndexTest;
 import com.eventsourcing.postgresql.PostgreSQLTest;
-import com.googlecode.cqengine.attribute.Attribute;
+import org.testng.annotations.Test;
 
+@Test
 public class PostgreSQLUniqueEqualityIndexTest extends UniqueIndexTest<EqualityIndex> {
 
     @Override

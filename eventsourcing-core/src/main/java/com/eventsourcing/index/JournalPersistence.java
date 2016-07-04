@@ -10,12 +10,12 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Journal;
+import com.eventsourcing.JournalEntityHandle;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.persistence.Persistence;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.option.QueryOptions;
-import lombok.Getter;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -41,7 +41,8 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
     }
 
 
-    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>>, KeyObjectStore<UUID, T>
+    static abstract class JournalObjectStore<T extends Entity> implements ObjectStore<EntityHandle<T>>,
+            KeyObjectStore<UUID, EntityHandle<T>>
     {
 
         protected final Journal journal;
@@ -52,10 +53,8 @@ public abstract class JournalPersistence<T extends Entity> implements Persistenc
             this.klass = klass;
         }
 
-        @Override public T get(UUID key) {
-            @SuppressWarnings("unchecked")
-            T t = (T) journal.get(key).get();
-            return t;
+        @Override public EntityHandle<T> get(UUID key) {
+            return new JournalEntityHandle<>(journal, key);
         }
 
         @Override
