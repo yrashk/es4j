@@ -4,15 +4,27 @@ WIP
 **Backwards-incompatible changes**
 
 * [Core] `Entity`, `Command` and `Event` are now interfaces, the classes were moved to to `StandardEntity`, `StandardCommand` and `StandardEvent` ([#67](https://github.com/eventsourcing/es4j/pull/67))
+* [Core] Entity layouts are now constructor + getters driven, allowing
+for immutable entities ([#83](https://github.com/eventsourcing/es4j/pull/83), [#87](https://github.com/eventsourcing/es4j/pull/87))
+* [Layout] `new Layout<>(klass)` has been replaced with `Layout.forClass(klass)` ([#83](https://github.com/eventsourcing/es4j/pull/83))
+* [Core] `Command<Result>` signature has been changed to `Command<State,Result>`, `Command#events` return type has changed to `EventStream` to hold the state and `Command#onCompletion` has been renamed to `#result` ([#77](https://github.com/eventsourcing/es4j/pull/77), [#84](https://github.com/eventsourcing/es4j/pull/84))
 * [Core] Most of repository implementation related code was moved to `com.eventsourcing.repository` ([#64](https://github.com/eventsourcing/es4j/pull/64))
-* [Core] `new StandardRepository()` now will use localhost NTP server ([#66](https://github.com/eventsourcing/es4j/pull/66))
-* [Core] Renamed `MemoryLockProvider` to `LocalLockProvider` ([#69](https://github.com/eventsourcing/es4j/pull/69), [#70](https://github.com/eventsourcing/es4j/pull/70)
+* [Core] `new StandardRepository()` now will use localhost NTP server ([#76](https://github.com/eventsourcing/es4j/pull/66), [#66](https://github.com/eventsourcing/es4j/pull/76))
+* [Core] Renamed `MemoryLockProvider` to `LocalLockProvider` ([#69](https://github.com/eventsourcing/es4j/pull/69), [#70](https://github.com/eventsourcing/es4j/pull/70))
 * [Core] `Journal#commandEventsIterator` has been removed ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] `MemoryJournal` has been moved to `eventsourcing-inmem` ([#69](https://github.com/eventsourcing/es4j/pull/69))
+* [Layout] Layout serialization/deserialization framework
+can be extended to other byte-oriented encodings ([#74](https://github.com/eventsourcing/es4j/pull/74))
 
 **Bugfixes**
 
+* [Core] Plugging in indices did not work ([#94](https://github.com/eventsourcing/es4j/pull/94))
 * [Core] Entity static initialization can no longer hang the current thread ([#65](https://github.com/eventsourcing/es4j/pull/65))
+* [H2] MVStoreJournal#journal will no longer into an infinite recursion on
+having an exception during `CommandTerminatedExceptionally` journalling
+([#82](https://github.com/eventsourcing/es4j/pull/82))
+* [Core] OSGi `StandardRepository#activate()` now waits until repository is started ([#92](https://github.com/eventsourcing/es4j/pull/92))
+* [Core] byte[] equality did not work in MemoryIndexEngine ([#100](https://github.com/eventsourcing/es4j/pull/100))
 
 **Features**
 
@@ -22,11 +34,20 @@ WIP
 * [Migrations] Implemented [8/EMT](http://rfc.eventsourcing.com/spec:8/EMT) and `LayoutMigration` to standardize migrations ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] `EventCausalityEstablished` event-command causality indexing has been implemented ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] Better support for Kotlin in `Repository` ([#72](https://github.com/eventsourcing/es4j/pull/72))
+* Source and javadoc jars are now included into distribution ([#78](https://github.com/eventsourcing/es4j/pull/78))
+* [PostgreSQL] Implemented PostgreSQL journal ([#79](https://github.com/eventsourcing/es4j/pull/79))
+* [PostgreSQL] Implemented PostgreSQL equality indices ([#94](https://github.com/eventsourcing/es4j/pull/94))
+* [PostgreSQL] Implemented PostgreSQL-based lock provider `PostgreSQLLockProvider` ([#98](https://github.com/eventsourcing/es4j/pull/98))
+* [Core] Expose CascadingIndexEngine index decisions through JMX ([#94](https://github.com/eventsourcing/es4j/pull/94))
+* [Kotlin] Add basic support for Kotlin ([#88](https://github.com/eventsourcing/es4j/pull/88), [#99](https://github.com/eventsourcing/es4j/pull/99))
 
 **Specification compliance**
 
 * [Core] Layout and Property are now [7/LDL](http://rfc.eventsourcing.com/spec:7/LDL) compliant ([#61](https://github.com/eventsourcing/es4j/pull/61))
-
+* [Repository] `AbstractRepository` now adheres to [8/EMT](http://rfc.eventsourcing.com/spec:8/EMT) and records
+`EntityLayoutIntroduced` ([#91](https://github.com/eventsourcing/es4j/pull/91))
+* [Repository] `AbstractRepository` now adheres to the exception reporting
+specified in [9/RIG](http://rfc.eventsourcing.com/spec:9/RIG) ([#102](https://github.com/eventsourcing/es4j/pull/102))
 
 0.3.2
 ===
