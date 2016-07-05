@@ -13,6 +13,7 @@ import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.postgresql.index.EqualityIndex;
+import com.eventsourcing.postgresql.index.NavigableIndex;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -73,7 +74,11 @@ public class PostgreSQLIndexEngine extends CQIndexEngine implements IndexEngine 
                                                  attribute -> EqualityIndex.onAttribute(dataSource, attribute, false)),
                 new IndexCapabilities<Attribute>("Unique",
                                                  new IndexFeature[]{EQ, IN, QZ, UNIQUE},
-                                                 attribute -> EqualityIndex.onAttribute(dataSource, attribute, true))
+                                                 attribute -> EqualityIndex.onAttribute(dataSource, attribute, true)),
+                new IndexCapabilities<Attribute>("Navigable",
+                                                 new IndexFeature[]{IndexFeature.EQ, IndexFeature.IN, IndexFeature.QZ, IndexFeature.LT, IndexFeature.GT, IndexFeature.BT},
+                                                 attr -> NavigableIndex.onAttribute(dataSource, attr))
+
         );
     }
 
