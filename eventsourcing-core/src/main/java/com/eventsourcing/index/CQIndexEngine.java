@@ -13,6 +13,7 @@ import com.eventsourcing.Command;
 import com.eventsourcing.Repository;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
+import com.googlecode.cqengine.persistence.Persistence;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -42,12 +43,17 @@ public abstract class CQIndexEngine extends AbstractIndexEngine {
                 throw new IllegalArgumentException();
             }
 
-            IndexedCollection<EntityHandle<T>> indexedCollection = new ConcurrentIndexedCollection<>(tJournalPersistence);
+            IndexedCollection<EntityHandle<T>> indexedCollection = createIndexedCollection(tJournalPersistence);
             indexedCollections.put(klass.getName(), indexedCollection);
             return indexedCollection;
         } else {
             return existingCollection;
         }
+    }
+
+    protected <T extends Entity> IndexedCollection<EntityHandle<T>>
+              createIndexedCollection(Persistence<EntityHandle<T>, ? extends Comparable> persistence) {
+        return new ConcurrentIndexedCollection<>(persistence);
     }
 
     @Override

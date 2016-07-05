@@ -8,11 +8,19 @@
 package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
+import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.hash.HashIndex;
+import com.googlecode.cqengine.persistence.onheap.OnHeapPersistence;
 
 public class MemoryHashIndexTest extends EqualityIndexTest<HashIndex> {
+
+    @Override public <O extends Entity> IndexedCollection<EntityHandle<O>> createIndexedCollection(Class<O> klass) {
+        return new MemoryIndexEngine().createIndexedCollection(new OnHeapPersistence());
+    }
+
     @Override
     public <A, O extends Entity> HashIndex onAttribute(Attribute<O, A> attribute) {
-        return HashIndex.onAttribute(attribute);
+        return HashIndex.onAttribute(MemoryIndexEngine.compatibleAttribute(attribute));
     }
 }

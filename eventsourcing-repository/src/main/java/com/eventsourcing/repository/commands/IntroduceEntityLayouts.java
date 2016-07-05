@@ -55,8 +55,7 @@ public class IntroduceEntityLayouts extends StandardCommand<Lock, Void> {
         @Override public Stream<Event> apply(Class<? extends Entity> entity) {
         Layout<? extends Entity> layout = Layout.forClass(entity);
             byte[] fingerprint = layout.getHash();
-            Query<EntityHandle<EntityLayoutIntroduced>> query = equal(EntityLayoutIntroduced.FINGERPRINT,
-                                                                      Base64.getEncoder().encodeToString(fingerprint));
+            Query<EntityHandle<EntityLayoutIntroduced>> query = equal(EntityLayoutIntroduced.FINGERPRINT, fingerprint);
             try (ResultSet<EntityHandle<EntityLayoutIntroduced>> resultSet = repository
                     .query(EntityLayoutIntroduced.class,
                            query)) {
