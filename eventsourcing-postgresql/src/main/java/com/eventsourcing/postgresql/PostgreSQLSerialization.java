@@ -65,7 +65,7 @@ public class PostgreSQLSerialization {
             Layout<?> layout = ((ObjectTypeHandler) typeHandler).getLayout();
             byte[] fingerprint = layout.getHash();
             String encoded = BaseEncoding.base16().encode(fingerprint);
-            String typname = "layout_" + encoded;
+            String typname = "layout_v1_" + encoded;
 
             PreparedStatement check = connection
                     .prepareStatement("SELECT * FROM pg_catalog.pg_type WHERE lower(typname) = lower(?)");

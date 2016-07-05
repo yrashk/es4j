@@ -88,7 +88,7 @@ public class EqualityIndex<A, O extends Entity> extends AbstractAttributeIndex<A
             digest.update(layout.getHash());
             digest.update(attribute.getAttributeName().getBytes());
             String encodedHash = BaseEncoding.base16().encode(digest.digest());
-            tableName = "index_" + encodedHash + "_eq";
+            tableName = "index_v1_" + encodedHash + "_eq";
             if (unique) {
                 tableName += "_unique";
             }

@@ -190,7 +190,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
                 ReaderFunction reader = readerFunctions.get(hash);
                 Layout<?> layout = getLayout(bytes);
                 String columns = Joiner.on(", ").join(getParameters(layout, null));
-                String query = "SELECT " + columns + " FROM layout_" + hash + " WHERE uuid = ?::UUID";
+                String query = "SELECT " + columns + " FROM layout_v1_" + hash + " WHERE uuid = ?::UUID";
 
                 PreparedStatement s1 = connection.prepareStatement(query);
                 s1.setString(1, uuid.toString());
@@ -226,7 +226,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         Layout layout = getLayout(klass);
         String hash = BaseEncoding.base16().encode(layout.getHash());
 
-        PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_" + hash);
+        PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_v1_" + hash);
         return new EntityIterator<>(this, s, connection);
     }
 
@@ -254,7 +254,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         layoutsByHash.keySet().forEach(new Consumer<String>() {
             @SneakyThrows
             @Override public void accept(String hash) {
-                PreparedStatement s = connection.prepareStatement("DELETE FROM layout_" + hash);
+                PreparedStatement s = connection.prepareStatement("DELETE FROM layout_v1_" + hash);
                 s.execute();
                 s.close();
             }
@@ -279,7 +279,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         String hash = BaseEncoding.base16().encode(layout.getHash());
         Connection connection = dataSource.getConnection();
         PreparedStatement s = connection
-                .prepareStatement("SELECT count(uuid) FROM layout_" + hash);
+                .prepareStatement("SELECT count(uuid) FROM layout_v1_" + hash);
 
         long size;
         try (ResultSet resultSet = s.executeQuery()) {
@@ -356,7 +356,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
         public InsertFunction(Layout<?> layout) {
             this.layout = layout;
-            table = "layout_" +  BaseEncoding.base16().encode(layout.getHash());
+            table = "layout_v1_" +  BaseEncoding.base16().encode(layout.getHash());
             properties = layout.getProperties();
         }
 
@@ -424,14 +424,14 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
             String columns = defineColumns(connection, layout);
 
-            String createTable = "CREATE TABLE IF NOT EXISTS layout_" + encoded + " (" +
+            String createTable = "CREATE TABLE IF NOT EXISTS layout_v1_" + encoded + " (" +
                     "uuid UUID PRIMARY KEY," +
                     columns +
                     ")";
             PreparedStatement s = connection.prepareStatement(createTable);
             s.execute();
             s.close();
-            s = connection.prepareStatement("COMMENT ON TABLE layout_" + encoded + " IS '" + layout.getName() + "'");
+            s = connection.prepareStatement("COMMENT ON TABLE layout_v1_" + encoded + " IS '" + layout.getName() + "'");
             s.execute();
             s.close();
             connection.close();
