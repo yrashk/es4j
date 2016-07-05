@@ -11,8 +11,10 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.*;
 import com.eventsourcing.annotations.Index;
+import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
+import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
@@ -37,8 +39,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.googlecode.cqengine.query.QueryFactory.contains;
-import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static com.googlecode.cqengine.query.QueryFactory.*;
 import static org.testng.Assert.*;
 
 public abstract class RepositoryTest<T extends Repository> {
@@ -380,13 +381,28 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(o instanceof IllegalStateException);
         Optional<Entity> commandLookup = journal.get(command.uuid());
         assertTrue(commandLookup.isPresent());
+        assertTrue(command.hasTerminatedExceptionally(repository));
         try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
-                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()))) {
+                       and(all(CommandTerminatedExceptionally.class),
+                           existsIn(
+                                   indexEngine.getIndexedCollection(EventCausalityEstablished.class),
+                                   CommandTerminatedExceptionally.ID, EventCausalityEstablished.EVENT)))) {
             assertEquals(resultSet.size(), 1);
-            EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
-            assertEquals(result.get().className(), IllegalStateException.class.getName());
         }
+        assertEquals(command.exceptionalTerminationCause(repository).getClassName(), IllegalStateException.class
+                .getName());
+        try (ResultSet<EntityHandle<JavaExceptionOccurred>> resultSet = repository
+                .query(JavaExceptionOccurred.class,
+                       and(all(JavaExceptionOccurred.class),
+                           existsIn(
+                                   indexEngine.getIndexedCollection(EventCausalityEstablished.class),
+                                   JavaExceptionOccurred.ID, EventCausalityEstablished.EVENT)))) {
+            assertEquals(resultSet.size(), 1);
+            EntityHandle<JavaExceptionOccurred> result = resultSet.uniqueResult();
+            assertEquals(result.get().getClassName(), IllegalStateException.class.getName());
+        }
+
     }
 
 
@@ -431,10 +447,11 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(future.isCompletedExceptionally());
         try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
-                       equal(CommandTerminatedExceptionally.COMMAND_ID, command.uuid()))) {
+                       and(all(CommandTerminatedExceptionally.class),
+                           existsIn(
+                                   indexEngine.getIndexedCollection(EventCausalityEstablished.class),
+                                   CommandTerminatedExceptionally.ID, EventCausalityEstablished.EVENT)))) {
             assertEquals(resultSet.size(), 1);
-            EntityHandle<CommandTerminatedExceptionally> result = resultSet.uniqueResult();
-            assertEquals(result.get().className(), IllegalStateException.class.getName());
         }
         assertTrue(journal.get(command.uuid()).isPresent());
         assertFalse(journal.get(eventUUID).isPresent());

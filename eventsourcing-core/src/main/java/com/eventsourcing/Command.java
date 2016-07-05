@@ -7,6 +7,15 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.events.CommandTerminatedExceptionally;
+import com.eventsourcing.events.EventCausalityEstablished;
+import com.eventsourcing.events.JavaExceptionOccurred;
+import com.googlecode.cqengine.resultset.ResultSet;
+
+import static com.eventsourcing.index.EntityQueryFactory.all;
+import static com.googlecode.cqengine.query.QueryFactory.and;
+import static com.googlecode.cqengine.query.QueryFactory.existsIn;
+
 /**
  * Command is a request for changes in the domain. Unlike an event,
  * it is not a statement of fact as it might be rejected.
@@ -51,5 +60,42 @@ public interface Command<S, R> extends Entity<Command<S, R>> {
      */
     default R result(S state, Repository repository, LockProvider lockProvider) {
         return null;
+    }
+
+    /**
+     * Figure out if the command has terminated exceptionally by testing the presence of an associated
+     * {@link  CommandTerminatedExceptionally} event.
+     * @param repository
+     * @return <code>true</code> if the command has terminated exceptionally
+     */
+    default boolean hasTerminatedExceptionally(Repository repository) {
+        try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
+                .query(CommandTerminatedExceptionally.class,
+                       and(all(CommandTerminatedExceptionally.class),
+                           existsIn(
+                                   repository.getIndexEngine().getIndexedCollection(EventCausalityEstablished.class),
+                                   CommandTerminatedExceptionally.ID, EventCausalityEstablished.EVENT)))) {
+            return resultSet.isNotEmpty();
+        }
+    }
+
+    /**
+     * Figure out the cause of command termination by searching for {@link JavaExceptionOccurred} events, associated
+     * with the commend.
+     * @param repository
+     * @return an instance of {@link JavaExceptionOccurred} or <code>null</code> if none found
+     */
+    default JavaExceptionOccurred exceptionalTerminationCause(Repository repository) {
+        try (ResultSet<EntityHandle<JavaExceptionOccurred>> resultSet = repository
+                .query(JavaExceptionOccurred.class,
+                       and(all(JavaExceptionOccurred.class),
+                           existsIn(
+                                   repository.getIndexEngine().getIndexedCollection(EventCausalityEstablished.class),
+                                   JavaExceptionOccurred.ID, EventCausalityEstablished.EVENT)))) {
+            if (resultSet.isEmpty()) {
+                return null;
+            }
+            return resultSet.uniqueResult().get();
+        }
     }
 }
