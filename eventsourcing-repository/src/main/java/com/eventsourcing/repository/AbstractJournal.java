@@ -8,8 +8,10 @@
 package com.eventsourcing.repository;
 
 import com.eventsourcing.*;
+import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
+import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
@@ -73,8 +75,13 @@ public interface AbstractJournal extends Journal {
 
             // if we are having an exception NOT when journalling CommandTerminatedExceptionally
             if (events == null) {
+                CommandTerminatedExceptionally commandTerminatedExceptionally = new CommandTerminatedExceptionally();
                 journal(command, listener, lockProvider,
-                        Stream.of(new CommandTerminatedExceptionally(command.uuid(), e)));
+                        Stream.of(commandTerminatedExceptionally,
+                                  DescriptionChanged.builder()
+                                                    .description(e.getMessage())
+                                                    .reference(commandTerminatedExceptionally.uuid()).build(),
+                                  new JavaExceptionOccurred(e)));
             }
 
             throw e;

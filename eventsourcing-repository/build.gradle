@@ -1,4 +1,5 @@
 dependencies {
     compile project(':eventsourcing-core')
+    compile project(':eventsourcing-cep')
     compile project(':eventsourcing-migrations')
 }
