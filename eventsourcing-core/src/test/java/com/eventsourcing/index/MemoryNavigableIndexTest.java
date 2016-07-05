@@ -11,7 +11,9 @@ import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.quantizer.Quantizer;
+import org.testng.annotations.Test;
 
+@Test
 public class MemoryNavigableIndexTest extends NavigableIndexTest<NavigableIndex> {
 
     @Override
