@@ -44,6 +44,8 @@ contributors are free to publish their own roadmaps to help indicating their int
 
 * [Yurii Rashkovskii](https://github.com/yrashk/es4j/milestones/Roadmap)
 
+Also, there's a [centralized list of reported issues](https://github.com/eventsourcing/es4j/issues). These do not imply an actual roadmap, just what has been reported.
+
 # Snapshot versions
 
 Every successful build is published into a [separate Maven repository on Bintray](https://bintray.com/eventsourcing/maven-snapshots) (using a `git describe`
