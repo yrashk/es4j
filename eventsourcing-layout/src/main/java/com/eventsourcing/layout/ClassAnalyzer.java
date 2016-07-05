@@ -7,18 +7,15 @@
  */
 package com.eventsourcing.layout;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Parameter;
-
 public interface ClassAnalyzer {
     interface Parameter {
         String getName();
         Class<?> getType();
     }
-    interface Constructor {
+    interface Constructor<X> {
         boolean isLayoutConstructor();
         Parameter[] getParameters();
-        <X> java.lang.reflect.Constructor<X> getConstructor();
+        java.lang.reflect.Constructor<X> getConstructor();
     }
-    Constructor[] getConstructors(Class<?> klass);
+    <X> Constructor<X>[] getConstructors(Class<X> klass);
 }
