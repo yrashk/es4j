@@ -9,12 +9,10 @@ package com.eventsourcing.h2;
 
 import com.eventsourcing.*;
 import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.JournalEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
@@ -24,7 +22,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
-import lombok.experimental.Accessors;
 import lombok.extern.slf4j.Slf4j;
 import org.h2.mvstore.MVMap;
 import org.h2.mvstore.MVStore;
@@ -41,7 +38,6 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Component(
         service = Journal.class,
@@ -62,7 +58,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     private TransactionMap<byte[], Boolean> hashEvents;
     private TransactionMap<UUID, byte[]> eventHashes;
 
-    private MVMap<byte[], byte[]> layouts;
     private TransactionStore transactionStore;
     TransactionStore.Transaction readTx;
 
@@ -75,9 +70,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
 
     @SneakyThrows
     public MVStoreJournal() {
-        layoutInformationLayout = Layout.forClass(LayoutInformation.class);
-        layoutInformationSerializer = serialization.getSerializer(LayoutInformation.class);
-        layoutInformationDeserializer = serialization.getDeserializer(LayoutInformation.class);
     }
 
     @Activate
@@ -124,6 +116,10 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         transactionStore = new TransactionStore(this.store);
         transactionStore.init();
 
+        initReadTx();
+    }
+
+    private void initReadTx() {
         readTx = transactionStore.begin();
         commandPayloads = readTx.openMap("commandPayloads", new ObjectDataType(), new ByteBufferDataType());
         commandHashes = readTx.openMap("commandHashes");
@@ -131,8 +127,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         eventPayloads = readTx.openMap("eventPayloads", new ObjectDataType(), new ByteBufferDataType());
         eventHashes = readTx.openMap("eventHashes");
         hashEvents = readTx.openMap("hashEvents");
-
-        layouts = store.openMap("layouts");
     }
 
     @Override
@@ -202,10 +196,11 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         hashBuffer.putLong(command.uuid().getMostSignificantBits());
         hashBuffer.putLong(command.uuid().getLeastSignificantBits());
 
-
         ByteBuffer buffer = serialization.getSerializer(command.getClass()).serialize(command);
         buffer.rewind();
-        txCommandPayloads.tryPut(command.uuid(), buffer);
+
+        txCommandPayloads.tryPut(command.uuid(), ByteBuffer.wrap(buffer.array()));
+
         txHashCommands.tryPut(hashBuffer.array(), true);
         txCommandHashes.tryPut(command.uuid(), commandLayout.getHash());
         buffer.rewind();
@@ -226,7 +221,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         serializer.serialize(event, payloadBuffer);
         payloadBuffer.rewind();
 
-        tx0.txEventPayloads.tryPut(event.uuid(), payloadBuffer);
+        tx0.txEventPayloads.tryPut(event.uuid(), ByteBuffer.wrap(payloadBuffer.array()));
 
         ByteBuffer hashBuffer = ByteBuffer.allocate(20 + 16); // Based on SHA-1
 
@@ -252,6 +247,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         if (commandPayloads.containsKey(uuid)) {
             ByteBuffer payload = commandPayloads.get(uuid);
             payload.rewind();
+            assert payload.array().length > 0;
             byte[] bytes = commandHashes.get(uuid);
             Layout<Command<?, ?>> layout = getLayout(bytes);
             Command command = (Command) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
@@ -261,6 +257,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         if (eventPayloads.containsKey(uuid)) {
             ByteBuffer payload = eventPayloads.get(uuid);
             payload.rewind();
+            assert payload.array().length > 0;
             byte[] bytes = eventHashes.get(uuid);
             Layout<Event> layout = getLayout(bytes);
             Event event = (Event) serialization.getDeserializer(layout.getLayoutClass()).deserialize(payload);
@@ -301,7 +298,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         eventPayloads.clear();
         eventHashes.clear();
         hashEvents.clear();
-        layouts.clear();
     }
 
     @Override @SuppressWarnings("unchecked")
@@ -326,41 +322,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         throw new IllegalArgumentException();
     }
 
-    @Accessors(fluent = true)
-    public static class PropertyInformation {
-        @Getter
-        private final String name;
-
-        @Getter
-        private final String type;
-
-        public PropertyInformation(String name, String type) {
-            this.name = name;
-            this.type = type;
-        }
-    }
-
-    @Accessors(fluent = true)
-    public static class LayoutInformation {
-        @Getter
-        private final byte[] hash;
-
-        @Getter
-        private final String className;
-        @Getter
-        private final List<PropertyInformation> properties;
-
-        public LayoutInformation(byte[] hash, String className,
-                                 List<PropertyInformation> properties) {
-            this.hash = hash;
-            this.className = className;
-            this.properties = properties;
-        }
-    }
-
-    private final Layout<LayoutInformation> layoutInformationLayout;
-    private final ObjectSerializer<LayoutInformation> layoutInformationSerializer;
-    private final ObjectDeserializer<LayoutInformation> layoutInformationDeserializer;
 
     private static class LayoutFunction<X> implements Function<X, Layout> {
         private final Class<? extends Entity> klass;
@@ -382,13 +343,6 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
             String encodedHash = BaseEncoding.base16().encode(hash);
             layoutsByHash.put(encodedHash, layout);
             layoutsByClass.put(aClass.getName(), layout);
-            List<PropertyInformation> properties = layout.getProperties().stream()
-                    .map(property -> new PropertyInformation(property.getName(), property.getType()
-                                                                                        .getBriefDescription()))
-                     .collect(Collectors.toList());
-
-            LayoutInformation layoutInformation = new LayoutInformation(hash, aClass.getName(), properties);
-            layouts.put(hash, layoutInformationSerializer.serialize(layoutInformation).array());
         }
 
     }

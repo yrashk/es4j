@@ -8,14 +8,17 @@
 package com.eventsourcing.h2;
 
 import com.eventsourcing.repository.PersistentJournalTest;
+import lombok.SneakyThrows;
 import org.h2.mvstore.MVStore;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Test;
 
 import java.io.File;
 
 import static org.testng.Assert.assertTrue;
 
+@Test
 public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJournal> {
 
     public static final String FILENAME = "PersistentMVStoreJournalTest";
@@ -29,23 +32,30 @@ public class PersistentMVStoreJournalTest extends PersistentJournalTest<MVStoreJ
     }
 
     public PersistentMVStoreJournalTest() {
-        super(new MVStoreJournal(MVStore.open("nio:" + FILENAME)));
+        super(createJournal());
     }
 
+    protected static MVStoreJournal createJournal() {return new MVStoreJournal(MVStore.open("nio:" + FILENAME));}
+
     @Override
+    @SneakyThrows
     public void reopen() {
-        MVStore store = journal.getStore();
-        store.close();
-        journal.setStore(MVStore.open("nio:" + FILENAME));
-        journal.initializeStore();
+        journal.stopAsync().awaitTerminated();
+        journal = createJournal();
+        journal.setRepository(repository);
+        journal.startAsync().awaitRunning();
+        journal.onCommandsAdded(repository.getCommands());
+        journal.onEventsAdded(repository.getEvents());
     }
 
     @Override
     public void reopenAnother() {
-        MVStore store = journal.getStore();
-        store.close();
-        journal.setStore(MVStore.open(null));
-        journal.initializeStore();
+        journal.stopAsync().awaitTerminated();
+        journal = new MVStoreJournal(MVStore.open(null));
+        journal.setRepository(repository);
+        journal.startAsync().awaitRunning();
+        journal.onCommandsAdded(repository.getCommands());
+        journal.onEventsAdded(repository.getEvents());
     }
 
     @BeforeClass
