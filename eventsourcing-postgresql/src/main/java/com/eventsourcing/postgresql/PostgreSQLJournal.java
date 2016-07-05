@@ -12,9 +12,10 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.types.*;
+import com.eventsourcing.layout.types.ListTypeHandler;
+import com.eventsourcing.layout.types.ObjectTypeHandler;
+import com.eventsourcing.layout.types.OptionalTypeHandler;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.JournalEntityHandle;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 import com.google.common.util.concurrent.AbstractService;
@@ -30,7 +31,10 @@ import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
 import java.nio.ByteBuffer;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Savepoint;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,9 +43,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
-import static com.eventsourcing.postgresql.PostgreSQLSerialization.getValue;
-import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
+import static com.eventsourcing.postgresql.PostgreSQLSerialization.*;
 
 @Component(property = "type=PostgreSQLJournal", service = Journal.class)
 public class PostgreSQLJournal extends AbstractService implements Journal, AbstractJournal {

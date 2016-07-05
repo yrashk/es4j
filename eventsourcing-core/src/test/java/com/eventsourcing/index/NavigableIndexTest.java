@@ -7,12 +7,14 @@
  */
 package com.eventsourcing.index;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
+import com.google.common.collect.Iterators;
+import com.google.common.collect.Lists;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.index.AttributeIndex;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.KeyStatistics;
@@ -29,15 +31,16 @@ import java.util.*;
 import static com.googlecode.cqengine.query.QueryFactory.*;
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 // This test was originally copied from CQEngine in order to test
 // indices the same way CQEngine does.
 public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex & SortedKeyStatisticsIndex> {
 
-    public abstract <A extends Comparable<A>, O> NavigableIndex onAttribute(Attribute<O, A> attribute);
+    public abstract <A extends Comparable<A>, O extends Entity> NavigableIndex onAttribute(Attribute<O, A> attribute);
 
-    public abstract <A extends Comparable<A>, O> Index<O> withQuantizerOnAttribute(Quantizer<A> quantizer,
-                                                                                   Attribute<O, A> attribute);
+    public abstract <A extends Comparable<A>, O extends Entity> Index<EntityHandle<O>>
+           withQuantizerOnAttribute(Quantizer<A> quantizer, Attribute<O, A> attribute);
 
     public static <A> Set<A> setOf(A... values) {
         return new LinkedHashSet<>(Arrays.asList(values));
@@ -55,6 +58,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     public void getDistinctKeysAndCounts() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         SortedKeyStatisticsIndex<String, EntityHandle<Car>> MODEL_INDEX = onAttribute(Car.MODEL);
+        MODEL_INDEX.clear(noQueryOptions());
         collection.addIndex(MODEL_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -77,6 +81,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     public void getCountOfDistinctKeys() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        MANUFACTURER_INDEX.clear(noQueryOptions());
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -88,6 +93,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     public void getStatisticsForDistinctKeys() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        MANUFACTURER_INDEX.clear(noQueryOptions());
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -107,6 +113,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     public void getStatisticsForDistinctKeysDescending() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         SortedKeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX = onAttribute(Car.MANUFACTURER);
+        MANUFACTURER_INDEX.clear(noQueryOptions());
         collection.addIndex(MANUFACTURER_INDEX);
 
         collection.addAll(CarFactory.createCollectionOfCars(20));
@@ -123,9 +130,76 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     }
 
     @Test
+    public void retrieveLess() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<String, EntityHandle<Car>> PRICE_INDEX = onAttribute(Car.PRICE);
+        PRICE_INDEX.clear(noQueryOptions());
+        collection.addIndex(PRICE_INDEX);
+
+        collection.addAll(CarFactory.createCollectionOfCars(10));
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(lessThan(Car.PRICE, 3999.99))) {
+            assertEquals(resultSet.size(), 1);
+            assertEquals(resultSet.uniqueResult().get().getModel(), "Accord");
+        }
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(lessThanOrEqualTo(Car.PRICE, 3999.99))) {
+            assertEquals(resultSet.size(), 2);
+            ArrayList<EntityHandle<Car>> values = Lists.newArrayList(resultSet.iterator());
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("Fusion")));
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("Accord")));
+        }
+
+    }
+
+    @Test
+    public void retrieveGreater() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<String, EntityHandle<Car>> PRICE_INDEX = onAttribute(Car.PRICE);
+        PRICE_INDEX.clear(noQueryOptions());
+        collection.addIndex(PRICE_INDEX);
+
+        collection.addAll(CarFactory.createCollectionOfCars(10));
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(greaterThan(Car.PRICE, 8500.00))) {
+            assertEquals(resultSet.size(), 1);
+            assertEquals(resultSet.uniqueResult().get().getModel(), "M6");
+        }
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(greaterThanOrEqualTo(Car.PRICE, 8500.00))) {
+            assertEquals(resultSet.size(), 2);
+            ArrayList<EntityHandle<Car>> values = Lists.newArrayList(resultSet.iterator());
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("M6")));
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("Prius")));
+        }
+
+    }
+
+
+    @Test
+    public void retrieveBetween() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<String, EntityHandle<Car>> PRICE_INDEX = onAttribute(Car.PRICE);
+        PRICE_INDEX.clear(noQueryOptions());
+        collection.addIndex(PRICE_INDEX);
+
+        collection.addAll(CarFactory.createCollectionOfCars(10));
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(between(Car.PRICE, 8000.00, 9001.00))) {
+            assertEquals(resultSet.size(), 2);
+            ArrayList<EntityHandle<Car>> values = Lists.newArrayList(resultSet.iterator());
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("M6")));
+            assertTrue(values.stream().anyMatch(h -> h.get().getModel().contentEquals("Prius")));
+        }
+    }
+
+    @Test
     public void indexQuantization_SpanningTwoBucketsMidRange() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 20 because this query spans 2 buckets (each containing 10 objects)...
@@ -142,7 +216,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_FirstBucket() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
@@ -158,7 +235,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_LastBucket() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
@@ -175,7 +255,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_LessThan() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         assertEquals(collection.retrieve(lessThan(Car.CAR_ID, 5)).size(), 5);
@@ -187,7 +270,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_GreaterThan() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         assertEquals(collection.retrieve(greaterThan(Car.CAR_ID, 95)).size(), 4);
@@ -199,7 +285,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_Between() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         Query<EntityHandle<Car>> query = between(Car.CAR_ID, 88, 92);
@@ -226,18 +315,21 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     @Test
     public void indexQuantization_ComplexQuery() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
-        collection.addIndex(withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10), Car.CAR_ID));
+        Index<EntityHandle<Car>> index = withQuantizerOnAttribute(IntegerQuantizer.withCompressionFactor(10),
+                                                                  Car.CAR_ID);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
         Query<EntityHandle<Car>> query = and(between(Car.CAR_ID, 96, 98), greaterThan(Car.CAR_ID, 95));
-
-        // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(collection.retrieve(query).getMergeCost(), 10);
 
         // 3 objects match the query...
         assertEquals(collection.retrieve(query).size(), 3);
 
         List<Integer> carIdsFound = retrieveCarIds(collection, query);
         assertEquals(carIdsFound, asList(96, 97, 98));
+
+        // Merge cost should be 10, because objects matching this query are in a single bucket...
+        assertEquals(collection.retrieve(query).getMergeCost(), 10);
     }
 
     static List<Integer> retrieveCarIds(IndexedCollection<EntityHandle<Car>> collection, Query<EntityHandle<Car>> query) {
