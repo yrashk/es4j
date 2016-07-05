@@ -14,7 +14,6 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.google.common.collect.Iterables;
@@ -112,8 +111,8 @@ public class StandardRepository extends AbstractService implements Repository, R
         initialization.forEach(Runnable::run);
         initialization.clear();
 
-        commandConsumer = new DisruptorCommandConsumer(commands, physicalTimeProvider, this, journal, indexEngine,
-                                                       lockProvider);
+        commandConsumer = new CommandConsumerImpl(commands, physicalTimeProvider, this, journal, indexEngine,
+                                                  lockProvider);
         commandConsumer.startAsync().awaitRunning();
 
         journal.onCommandsAdded(commands);
