@@ -18,6 +18,7 @@ import com.googlecode.cqengine.index.support.CloseableIterable;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.googlecode.cqengine.index.support.KeyStatistics;
 import com.googlecode.cqengine.index.support.KeyStatisticsIndex;
+import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
 import org.testng.annotations.Test;
 
@@ -33,6 +34,10 @@ import static org.testng.Assert.assertTrue;
 // This test was originally copied from CQEngine in order to test
 // indices the same way CQEngine does.
 public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
+
+    public <O extends Entity> IndexedCollection<EntityHandle<O>> createIndexedCollection(Class<O> klass) {
+        return new ConcurrentIndexedCollection<>();
+    }
 
     public abstract <A, O extends Entity> HashIndex onAttribute(Attribute<O, A> attribute);
 
@@ -128,6 +133,33 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());
+    }
+
+    @Test
+    public void byteArrayEquality() {
+        IndexedCollection<EntityHandle<Car>> collection = createIndexedCollection(Car.class);
+        SimpleAttribute<Car, byte[]> attr = new SimpleAttribute<Car, byte[]>(Car.class,
+                                                                            (Class<EntityHandle<Car>>) ((Class<?>)getClass()),
+                                                                            byte[].class, "bytearray") {
+
+            @Override public byte[] getValue(Car object, QueryOptions queryOptions) {
+                return object.getManufacturer().getBytes();
+            }
+        };
+        HashIndex index = onAttribute(attr);
+        index.clear(noQueryOptions());
+
+        collection.addIndex(index);
+
+        collection.addAll(CarFactory.createCollectionOfCars(10));
+
+        ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(attr, "Honda".getBytes()));
+        assertTrue(cars.isNotEmpty());
+        assertTrue(StreamSupport.stream(cars.spliterator(), false)
+                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
+
+        cars.close();
+        index.clear(noQueryOptions());
     }
 
     @Test

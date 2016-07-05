@@ -11,19 +11,16 @@ import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.Indexing;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.LayoutName;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
-import java.util.Base64;
 import java.util.Optional;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
@@ -51,11 +48,11 @@ public class EntityLayoutIntroduced extends StandardEvent {
     }
 
     @Index({EQ, UNIQUE})
-    public static Attribute<EntityLayoutIntroduced, String> FINGERPRINT =
-            new SimpleAttribute<EntityLayoutIntroduced, String>("fingerprint") {
+    public static Attribute<EntityLayoutIntroduced, byte[]> FINGERPRINT =
+            new SimpleAttribute<EntityLayoutIntroduced, byte[]>("fingerprint") {
         @Override
-        public String getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
-            return Base64.getEncoder().encodeToString(entityLayoutIntroduced.fingerprint());
+        public byte[] getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
+            return entityLayoutIntroduced.fingerprint();
         }
     };
 }

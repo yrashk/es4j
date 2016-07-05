@@ -202,7 +202,7 @@ public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIn
 
     public Val<A, O> decodeVal(byte[] bytes) {
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
-        A attr = attributeDeserializer.deserialize(buffer);
+        A attr = attributeDeserializer.deserialize(attrTypeHandler, buffer);
         O obj = objectDeserializer.deserialize(buffer);
         return new Val<>(attr, obj);
     }

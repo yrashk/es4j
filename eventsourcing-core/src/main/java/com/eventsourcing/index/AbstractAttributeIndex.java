@@ -30,6 +30,7 @@ public abstract class AbstractAttributeIndex<A, O extends Entity>
     protected ObjectDeserializer<O> objectDeserializer;
 
     private final static Serialization serialization = BinarySerialization.getInstance();
+    protected final TypeHandler attrTypeHandler;
 
     /**
      * Protected constructor, called by subclasses.
@@ -47,7 +48,7 @@ public abstract class AbstractAttributeIndex<A, O extends Entity>
         AnnotatedParameterizedType cls = (AnnotatedParameterizedType) attribute.getClass().getAnnotatedSuperclass();
         AnnotatedType annotatedType = cls.getAnnotatedActualTypeArguments()[1];
 
-        TypeHandler attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
+        attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
         attributeSerializer = serialization.getSerializer(attrTypeHandler);
         attributeDeserializer = serialization.getDeserializer(attrTypeHandler);
 
