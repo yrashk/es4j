@@ -5,27 +5,37 @@
 
 # ![logo](https://eventsourcing.com/android-icon-48x48.png) Eventsourcing for Java
 
-Instead of mutating data in a database, it stores all changes (events) and causes (commands). This facilitates rapid application development and evolution by mitigating the inability to predict how future needs will drive data shape requirements as all causal information is persisted. It also provides a foundation for deep analytics, data recovery, audit trails and other associated benefits.
+## *Keep the past, because predicting future is hard*
 
-To learn what kind of problems ES4J addresses, please read [Why Use Eventsourcing Database](https://blog.eventsourcing.com/why-use-eventsourcing-database-6b5e2ac61848)
+Instead of mutating data in a database, Eventsourcing stores all changes (*events*) and what caused them (*commands*). To make this data useful,
+Eventsourcing builds indices over it.
+
+This helps developing applications faster because there is no need to worry
+about designing the *right* domain models upfront (or as close to *right* as possible). By keeping all the commands and events, we can enrich or change
+our domain models over time with very little friction. Furthermore, this approach removes a need to have a *one and only* domain model for every entity. We experience the world and reality in different ways, depending on circumstances and points of view, and our programs should be able to reflect that.
+
+To learn more about what kind of problems ES4J addresses, please read [Why Use Eventsourcing Database](https://blog.eventsourcing.com/why-use-eventsourcing-database-6b5e2ac61848)
 
 ## Key benefits
 
-* Flexibility of data aggregation and representation
+* Domain model flexibility
+* Late domain model binding
 * Persistence of causal information
-* Succinctly mapped application functionality
-* Undo/redo functionality
+* Serializable conflict resolution
 * Audit trail logging
+* Mapping application functionality
 
 ## Key features
 
-* Clean, succinct Command/Event model
-* Compact data storage layout
-* Using [Disruptor](https://lmax-exchange.github.io/disruptor/) for fast message processing
-* Using [CQengine](https://github.com/npgall/cqengine) for fast indexing and querying
-* In-memory and on-disk (*more persistent indices coming soon*) storage
+* Strongly typed schemas
+* Event migrations
+* Domain protocols
+* Batteries included (shared event languages)
+* Basic support for [Kotlin](http://kotlinlang.org)
 * Causality-preserving [Hybrid Logical Clocks](http://www.cse.buffalo.edu/tech-reports/2014-04.pdf)
+* In-memory, server (**PostgreSQL**) and on-disk (**H2/MVStore**) storage
 * Locking synchronization primitive
+* JMX-based introspection and management
 
 # Presentation
 
@@ -64,35 +74,25 @@ repositories {
 Maven configuration:
 
 ```xml
-<?xml version='1.0' encoding='UTF-8'?>
-<settings xsi:schemaLocation='http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd' xmlns='http://maven.apache.org/SETTINGS/1.0.0' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance'>
-<profiles>
-	<profile>
-		<repositories>
-			<repository>
-				<snapshots>
-					<enabled>false</enabled>
-				</snapshots>
-				<id>bintray-eventsourcing-maven-snapshots</id>
-				<name>bintray</name>
-				<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
-			</repository>
-		</repositories>
-		<id>bintray</id>
-	</profile>
-</profiles>
-<activeProfiles>
-	<activeProfile>bintray</activeProfile>
-</activeProfiles>
-</settings>
+<repository>
+	<id>bintray-eventsourcing-maven-snapshots</id>
+	<name>bintray</name>
+	<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
+</repository>
 ```
+
+# Contributing
+
+Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or ask a question.
+
+We use Unprotocols [C4 process](http://rfc.unprotocols.org/1/). In a nutshell, this means:
+
+* We merge pull requests rapidly (try!)
+* We are open to diverse ideas
+* We prefer code now over consensus later
+
+For more details, please refer to [CONTRIBUTING](CONTRIBUTING.md)
 
 # Related projects
 
 * [es4j-graphql](https://github.com/eventsourcing/es4j-graphql) A Relay.js/GraphQL adaptor for ES4J-based applications.
-
-# Contributing
-
-Contributions of all kinds (code, documentation, testing, artwork, etc.) are highly encouraged. Please open a GitHub issue if you want to suggest an idea or ask a question. We use Unprotocols [C4 process](http://rfc.unprotocols.org/1/).
-
-For more details, please refer to [CONTRIBUTING](CONTRIBUTING.md)
