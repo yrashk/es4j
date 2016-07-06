@@ -14,7 +14,7 @@ There is only one command/event pair (Rename/NameChanged) that takes and stores 
 public interface NameProtocol extends Protocol {
     public String name() {
         try (ResultSet<EntityHandle<NameChanged>> resultSet =
-             repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, id()),
+             repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, getId()),
                               queryOptions(orderBy(descending(attribute)),
                                            applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
              if (resultSet.isEmpty()) {
@@ -26,7 +26,7 @@ public interface NameProtocol extends Protocol {
 }
 ```
 
-The above protocol implements a `name()` function that retrieves the last `NameChange` for the particular model referenced by its UUID (`id()`).
+The above protocol implements a `name()` function that retrieves the last `NameChange` for the particular model referenced by its UUID (`getId()`).
 
 Now, all we have to do is to make every model implement this interface:
 

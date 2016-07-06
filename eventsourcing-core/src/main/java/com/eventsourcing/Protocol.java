@@ -32,7 +32,7 @@ package com.eventsourcing;
  * public interface NameProtocol extends Protocol {
  *     public String name() {
  *         try (ResultSet&lt;EntityHandle&lt;NameChanged&gt;&gt; resultSet =
- *              repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, id()),
+ *              repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, getId()),
  *                               queryOptions(orderBy(descending(attribute)),
  *                                            applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
  *              if (resultSet.isEmpty()) {
@@ -48,7 +48,7 @@ package com.eventsourcing;
  * <p>
  * <p>
  * The above protocol implements a {@code name()} function that retrieves the last {@code NameChange} for the particular
- * model referenced by its UUID ({@code id()}).
+ * model referenced by its UUID ({@code getId()}).
  * <p>
  * Now, all we have to do is to make every model implement this interface:
  * <p>

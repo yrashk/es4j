@@ -48,6 +48,6 @@ public class AddProductToOrder extends StandardCommand<ProductAddedToOrder, Orde
     @Override
     public Order.Item result(ProductAddedToOrder productAddedToOrder, Repository repository) {
         return Order.lookup(repository, orderId).get().items().stream().
-                filter(item -> item.id().equals(productAddedToOrder.uuid())).findFirst().get();
+                filter(item -> item.getId().equals(productAddedToOrder.uuid())).findFirst().get();
     }
 }

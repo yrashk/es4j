@@ -13,20 +13,18 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.examples.order.events.ProductCreated;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Getter;
-import lombok.experimental.Accessors;
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 
-@Accessors(fluent = true)
 public class Product implements Model, NameProtocol, PriceProtocol {
 
     @Getter
     private UUID id;
 
-    @Getter @Accessors(fluent = false)
+    @Getter
     private Repository repository;
 
     public Product(Repository repository, UUID id) {

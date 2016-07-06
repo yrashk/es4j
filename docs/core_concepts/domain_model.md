@@ -7,9 +7,8 @@ Typically it would have a constructor that takes a `Repository` and an identifie
 
 
 ```java
-@Accessors(fluent = true)
 class User {
-  @Getter
+  @Getter @Accessors(fluent = true)
   private String email;
 
   @Getter
@@ -35,7 +34,7 @@ public static Optional<User> lookup(Repository repository, String email) {
       return Optional.empty();
     } else {
       return Optional.of(
-        new User(repository).uuid(resultSet.uniqueResult().uuid()).email(email)
+        new User(repository, resultSet.uniqueResult().uuid()).email(email)
       );
     }
   }

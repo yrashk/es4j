@@ -15,7 +15,6 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.experimental.Accessors;
 
 import java.util.List;
 import java.util.Map;
@@ -27,13 +26,12 @@ import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
 
-@Accessors(fluent = true)
 public class Order {
 
     @Getter
     private UUID id;
 
-    @Getter @Accessors(fluent = false)
+    @Getter
     private Repository repository;
 
     public Order(Repository repository, UUID id) {
@@ -49,8 +47,6 @@ public class Order {
         private Product product;
         @Getter @Setter(AccessLevel.PACKAGE)
         private int quantity;
-
-
     }
 
     enum Status {
@@ -83,12 +79,12 @@ public class Order {
                                                                                   Product.lookup(repository,
                                                                                                  addition.productId())
                                                                                          .get(), addition.quantity())).
-                                                         collect(Collectors.toMap(Item::id, Function.identity()));
+                                                         collect(Collectors.toMap(Item::getId, Function.identity()));
             try (ResultSet<EntityHandle<ItemQuantityAdjusted>> adjustments = repository
                     .query(ItemQuantityAdjusted.class, in(ItemQuantityAdjusted.ITEM_ID, items.keySet()))) {
                 adjustments.forEach(adj -> {
                     ItemQuantityAdjusted itemQuantityAdjusted = adj.get();
-                    items.get(itemQuantityAdjusted.itemId()).quantity(itemQuantityAdjusted.quantity());
+                    items.get(itemQuantityAdjusted.itemId()).setQuantity(itemQuantityAdjusted.quantity());
                 });
             }
             return items.values().stream().collect(Collectors.toList());

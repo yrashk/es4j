@@ -15,6 +15,5 @@ import java.util.UUID;
  */
 public interface Model {
     Repository getRepository();
-
-    UUID id();
+    UUID getId();
 }
