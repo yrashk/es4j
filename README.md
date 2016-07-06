@@ -5,7 +5,7 @@
 
 # ![logo](https://eventsourcing.com/android-icon-48x48.png) Eventsourcing for Java
 
-## *Keep the past, because predicting future is hard*
+### *Keep the past, because predicting future is hard*
 
 Instead of mutating data in a database, Eventsourcing stores all changes (*events*) and what caused them (*commands*). To make this data useful,
 Eventsourcing builds indices over it.
