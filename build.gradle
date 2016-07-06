@@ -20,6 +20,14 @@ plugins {
 apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
 apply plugin: 'nebula-aggregate-javadocs'
 
+if (hasProperty("snapshot") && gitVersion().toString().contentEquals("unspecified")) {
+    throw new GradleException('snapshot version `unspecified');
+}
+
+def gitVsn = gitVersion()
+
+println("Git version ${gitVsn}")
+
 release {
     tagTemplate = 'v${version}'
     failOnPublishNeeded = false
@@ -50,7 +58,7 @@ allprojects {
 }
 
 subprojects {
-    version = rootProject.version
+    version = rootProject.hasProperty('snapshot') ? gitVsn : project.version
 
     apply plugin: 'java'
     apply plugin: 'osgi'
@@ -112,7 +120,7 @@ subprojects {
                 artifact javadocJar
                 groupId 'com.eventsourcing'
                 artifactId project.name
-                version rootProject.hasProperty('snapshot') ? gitVersion() : project.version
+                version project.version
             }
         }
     }
@@ -129,7 +137,7 @@ subprojects {
             licenses = ['MPL-2.0']
             vcsUrl = 'https://github.com/eventsourcing/es4j'
             version {
-                name = !rootProject.hasProperty('snapshot') ? project.version : gitVersion()
+                name = project.version
             }
         }
     }
