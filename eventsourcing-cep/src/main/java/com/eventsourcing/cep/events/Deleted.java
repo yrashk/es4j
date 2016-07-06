@@ -13,6 +13,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.Indexing;
 import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
@@ -50,6 +51,11 @@ public class Deleted extends StandardEvent {
             return deleted.timestamp();
         }
     };
+
+    @LayoutConstructor
+    public Deleted(UUID reference) {
+        this.reference = reference;
+    }
 
     @Builder
     public Deleted(UUID reference, HybridTimestamp timestamp) {
