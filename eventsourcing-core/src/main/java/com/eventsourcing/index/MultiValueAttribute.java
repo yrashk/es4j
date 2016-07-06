@@ -14,6 +14,8 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 public abstract class MultiValueAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute
         .MultiValueAttribute<EntityHandle<O>, A> implements Attribute<O, A> {
 
+    private Class<O> objectType;
+
     public MultiValueAttribute() {
         super();
     }
@@ -22,12 +24,15 @@ public abstract class MultiValueAttribute<O extends Entity, A> extends com.googl
         super(attributeName);
     }
 
-    public MultiValueAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType) {
-        super(objectType, attributeType);
+    public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
+        super(handleType, attributeType);
+        this.objectType = objectType;
     }
 
-    public MultiValueAttribute(Class<EntityHandle<O>> objectType, Class<A> attributeType, String attributeName) {
-        super(objectType, attributeType, attributeName);
+    public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String
+            attributeName) {
+        super(handleType, attributeType, attributeName);
+        this.objectType = objectType;
     }
 
     @Override
@@ -38,7 +43,7 @@ public abstract class MultiValueAttribute<O extends Entity, A> extends com.googl
     public abstract Iterable<A> getValues(O object, QueryOptions queryOptions);
 
     @Override public Class<O> getEffectiveObjectType() {
-        return Attribute.readGenericObjectType(getClass(), getAttributeName());
+        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
     }
 
 }

@@ -9,8 +9,11 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
@@ -23,7 +26,10 @@ import com.googlecode.cqengine.index.support.SortedKeyStatisticsIndex;
 import com.googlecode.cqengine.quantizer.IntegerQuantizer;
 import com.googlecode.cqengine.quantizer.Quantizer;
 import com.googlecode.cqengine.query.Query;
+import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
+import lombok.SneakyThrows;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.annotations.Test;
 
 import java.util.*;
@@ -339,6 +345,32 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
             carIds.add(car.get().getCarId());
         }
         return carIds;
+    }
+
+    @Test
+    public void serializableComparable() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        NavigableIndex index = onAttribute(Car.TIMESTAMP);
+        index.clear(noQueryOptions());
+        collection.addIndex(index);
+
+        Car car1 = CarFactory.createCar(1);
+        Car car2 = CarFactory.createCar(2);
+
+        HybridTimestamp ts1 = new HybridTimestamp(TimeStamp.getNtpTime(new Date().getTime()).ntpValue(), 1);
+        HybridTimestamp ts2 = new HybridTimestamp(TimeStamp.getNtpTime(new Date().getTime() + 1000).ntpValue(), 0);
+
+        car1.timestamp(ts1);
+        car2.timestamp(ts2);
+
+        collection.add(new ResolvedEntityHandle<>(car1));
+        collection.add(new ResolvedEntityHandle<>(car2));
+
+        try (ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(greaterThan(Car.TIMESTAMP, ts1))) {
+            assertEquals(resultSet.size(), 1);
+            assertEquals(resultSet.uniqueResult().get().getModel(), "Taurus");
+        }
+
     }
 
 

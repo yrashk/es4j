@@ -8,6 +8,7 @@
 package com.eventsourcing.models;
 
 import com.eventsourcing.StandardEntity;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.MultiValueAttribute;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -79,6 +80,13 @@ public class Car extends StandardEntity {
     public static final SimpleAttribute<Car, Double> PRICE = new SimpleAttribute<Car, Double>("price") {
         public Double getValue(Car car, QueryOptions queryOptions) { return car.price; }
     };
+
+    public static final SimpleAttribute<Car, HybridTimestamp> TIMESTAMP = new SimpleAttribute<Car, HybridTimestamp>("ts") {
+        @Override public HybridTimestamp getValue(Car object, QueryOptions queryOptions) {
+            return object.timestamp();
+        }
+    };
+
 
     public static final MultiValueAttribute<Car, String> FEATURES = new MultiValueAttribute<Car, String>("features") {
         public Iterable<String> getValues(Car car, QueryOptions queryOptions) { return car.features; }
