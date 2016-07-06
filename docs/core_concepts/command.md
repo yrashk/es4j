@@ -8,9 +8,8 @@ Defining a command is pretty straightforward, through subclassing `StandardComma
 public class CreateUser extends StandardCommand<User, Void> {
   @Getter
   private final String email;
-  @Builder
-  public CreateUser(HybridTimestamp timestamp, String email) {
-    super(timestamp);
+
+  public CreateUser(String email) {
     this.email = email;
   }
 }
@@ -32,6 +31,6 @@ A more important part of any command is being able to generate events. This is d
 ```java
 @Override
 public EventStream<Void> events(Repository repository) {
-  return EventStream.of(UserCreated.builder().email(email).build());
+  return EventStream.of(new UserCreated(email));
 }
 ```
