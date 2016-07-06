@@ -13,6 +13,8 @@ import com.eventsourcing.layout.SerializableComparable;
 import lombok.Getter;
 import org.apache.commons.net.ntp.TimeStamp;
 
+import java.util.Date;
+
 /**
  * HybridTimestamp implements <a href="http://www.cse.buffalo.edu/tech-reports/2014-04.pdf">Hybrid Logical Clock</a>,
  * currently heavily inspired by a corresponding <a href="https://github.com/tschottdorf/hlc-rs">Rust library</a>.
@@ -28,11 +30,11 @@ public class HybridTimestamp implements Comparable<HybridTimestamp>, Serializabl
     long logicalCounter;
 
     public HybridTimestamp() {
-        this(null, 0, 0);
+        this(null);
     }
 
     public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider) {
-        this(physicalTimeProvider, 0, 0);
+        this(physicalTimeProvider, new TimeStamp(new Date(0)).ntpValue(), 0);
     }
 
     public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider, long timestamp) {
@@ -118,8 +120,7 @@ public class HybridTimestamp implements Comparable<HybridTimestamp>, Serializabl
      * @return updated timestamp
      */
     public long update(HybridTimestamp ts) {
-        long timestamp = ts.timestamp();
-        return update(timestamp >> 16, timestamp << 48 >> 48);
+        return update(ts.getLogicalTime(), ts.getLogicalCounter());
     }
 
     /**

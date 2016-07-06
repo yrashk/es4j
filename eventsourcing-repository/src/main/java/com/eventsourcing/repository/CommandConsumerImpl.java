@@ -218,6 +218,7 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
         this.indexEngine = indexEngine;
         this.lockProvider = lockProvider;
         this.timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
         for (Class<? extends Command> cmd : commandClasses) {
             Layout<? extends Command> layout = Layout.forClass(cmd);
             layouts.put(cmd, layout);
