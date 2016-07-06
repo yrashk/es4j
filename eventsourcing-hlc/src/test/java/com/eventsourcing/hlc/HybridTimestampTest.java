@@ -16,10 +16,12 @@ import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.binary.ObjectBinarySerializer;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.SneakyThrows;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.List;
 
 import static org.testng.Assert.assertEquals;
@@ -60,6 +62,13 @@ public class HybridTimestampTest {
     }
 
     @Test
+    public void initialTimestamp() {
+        HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
+        TimeStamp ntpTime = new TimeStamp(timestamp.getLogicalTime());
+        assertEquals(ntpTime.getDate(), new Date(0));
+    }
+
+    @Test
     public void testTimestamp() {
         HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
         timestamp.update();
@@ -97,7 +106,7 @@ public class HybridTimestampTest {
     @Test
     public void test() {
         long ts, ts_;
-        HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider);
+        HybridTimestamp timestamp = new HybridTimestamp(physicalTimeProvider, 0, 0);
 
         ts = (long) 1 << 32 | 0;
         physicalTimeProvider.setPhysicalTime(ts);

@@ -11,7 +11,6 @@ import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.*;
 import com.eventsourcing.annotations.Index;
-import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
@@ -29,9 +28,13 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.*;
 import lombok.experimental.Accessors;
+import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.Assert;
 import org.testng.annotations.*;
 
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
+import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -49,6 +52,7 @@ public abstract class RepositoryTest<T extends Repository> {
     private IndexEngine indexEngine;
     private LocalLockProvider lockProvider;
     private NTPServerTimeProvider timeProvider;
+    private TimeStamp startTime;
 
     public RepositoryTest(T repository) {
         this.repository = repository;
@@ -56,6 +60,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
     @BeforeClass
     public void setUpEnv() throws Exception {
+        startTime = new TimeStamp(new Date());
         repository
                 .addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
@@ -144,6 +149,16 @@ public abstract class RepositoryTest<T extends Repository> {
             }
         };
 
+    }
+
+    @Test @SneakyThrows
+    public void initialTimestamp() {
+        HybridTimestamp t = repository.getTimestamp();
+        long ts = t.timestamp();
+        TimeStamp soon = new TimeStamp(new Date(new Date().toInstant().plus(1, ChronoUnit.SECONDS).toEpochMilli()));
+        TimeStamp t1 = new TimeStamp(ts);
+        assertTrue(HybridTimestamp.compare(t1, startTime) > 0);
+        assertTrue(HybridTimestamp.compare(t1, soon) < 0);
     }
 
     @Test
