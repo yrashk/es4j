@@ -87,7 +87,8 @@ public class EqualityIndex<A, O extends Entity> extends PostgreSQLAttributeIndex
             }
             String create = "CREATE TABLE IF NOT EXISTS " + getTableName() + " (" +
                     "\"key\" " + attributeType + ",\n" +
-                    "\"object\" UUID" +
+                    "\"object\" UUID,\n" +
+                    "PRIMARY KEY(\"key\", \"object\")" +
                     ")";
             try (PreparedStatement s = connection.prepareStatement(create)) {
                 s.executeUpdate();

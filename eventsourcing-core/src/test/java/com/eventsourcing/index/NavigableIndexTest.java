@@ -373,5 +373,33 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
     }
 
+    @Test
+    public void reindexData() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<Double, EntityHandle<Car>> PRICE_INDEX =
+                (KeyStatisticsIndex<Double, EntityHandle<Car>>) onAttribute(Car.PRICE);
+        PRICE_INDEX.clear(noQueryOptions());
+
+        Set<EntityHandle<Car>> cars = CarFactory.createCollectionOfCars(10);
+
+        collection.addAll(cars);
+
+        collection.addIndex(PRICE_INDEX);
+
+        IndexedCollection<EntityHandle<Car>> collection1 = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<Double, EntityHandle<Car>> PRICE_INDEX_1 =
+                (KeyStatisticsIndex<Double, EntityHandle<Car>>) onAttribute(Car.PRICE);
+
+        collection1.addAll(cars);
+
+        collection1.addIndex(PRICE_INDEX_1);
+
+
+        assertEquals((int)PRICE_INDEX.getCountForKey(9000.23, noQueryOptions()), 1);
+        assertEquals((int)PRICE_INDEX_1.getCountForKey(9000.23, noQueryOptions()), 1);
+
+        PRICE_INDEX.clear(noQueryOptions());
+        PRICE_INDEX_1.clear(noQueryOptions());
+    }
 
 }

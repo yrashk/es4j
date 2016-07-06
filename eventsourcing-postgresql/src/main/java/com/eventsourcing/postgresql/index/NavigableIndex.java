@@ -108,7 +108,8 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             String attributeType = PostgreSQLSerialization.getMappedType(connection, attributeTypeHandler);
             String create = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                     "\"key\" " + attributeType + ",\n" +
-                    "\"object\" UUID" +
+                    "\"object\" UUID," +
+                    "PRIMARY KEY(\"key\", \"object\")" +
                     ")";
             try (PreparedStatement s = connection.prepareStatement(create)) {
                 s.executeUpdate();
