@@ -9,13 +9,14 @@ package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.index.*;
 import com.eventsourcing.index.AbstractAttributeIndex;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.KeyObjectStore;
 import com.eventsourcing.layout.Layout;
+import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
+import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
@@ -35,10 +36,7 @@ import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
@@ -46,6 +44,17 @@ import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
 public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
     protected KeyObjectStore<UUID, EntityHandle<O>> keyObjectStore;
+
+    protected static <A, O extends Entity> Attribute<O, ?> serializableComparable(Attribute<O, A> attribute) {
+        if (SerializableComparable.class.isAssignableFrom(attribute.getAttributeType())) {
+            Class<?> type = SerializableComparable.getType(attribute.getAttributeType());
+            @SuppressWarnings("unchecked")
+            MultiValueAttribute newAttribute = new SerializableComparableAttribute<>(attribute, type);
+            return newAttribute;
+        } else {
+            return attribute;
+        }
+    }
 
     /**
      * Protected constructor, called by subclasses.
@@ -422,6 +431,28 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             return new CloseableResultSet<>(rs, query, queryOptions);
         } else {
             throw new IllegalArgumentException("Unsupported query: " + query);
+        }
+    }
+
+    private static class SerializableComparableAttribute<O extends Entity, A> extends MultiValueAttribute<O, Object> {
+
+        private final Attribute<O, A> attribute;
+
+        public SerializableComparableAttribute(Attribute<O, A> attribute, Class<?> type) {
+            super(attribute.getEffectiveObjectType(), attribute.getObjectType(), (Class<Object>) type,
+                  attribute.getAttributeName());
+            this.attribute = attribute;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override public Iterable<Object> getValues(Entity object, QueryOptions queryOptions) {
+            Iterable<A> iterable = attribute.getValues(new ResolvedEntityHandle(object), queryOptions);
+            ArrayList values = new ArrayList<>();
+            for (A value : iterable) {
+                SerializableComparable value1 = (SerializableComparable) value;
+                values.add(value1.getSerializableComparable());
+            }
+            return values;
         }
     }
 

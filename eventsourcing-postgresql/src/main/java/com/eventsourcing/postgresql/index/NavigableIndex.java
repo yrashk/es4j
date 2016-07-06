@@ -58,12 +58,12 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
 
     public static <A extends Comparable<A>, O extends Entity> NavigableIndex<A, O> onAttribute(DataSource dataSource,
                                                                                                Attribute<O, A> attribute) {
-        return new NavigableIndex<>(dataSource, attribute);
+        return new NavigableIndex<>(dataSource, (Attribute<O, A>) serializableComparable(attribute));
     }
 
     public static <A extends Comparable<A>, O extends Entity> NavigableIndex<A, O>
            withQuantizerOnAttribute(DataSource dataSource, Quantizer<A> quantizer, Attribute<O, A> attribute) {
-        return new NavigableIndex<A, O>(dataSource, attribute) {
+        return new NavigableIndex<A, O>(dataSource, (Attribute<O, A>) serializableComparable(attribute)) {
             @Override public boolean isQuantized() {
                 return true;
             }
