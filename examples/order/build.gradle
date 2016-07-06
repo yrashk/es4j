@@ -49,7 +49,6 @@ dependencies {
 
     compile "com.eventsourcing:eventsourcing-core:${eventsourcingVersion}"
     compile "com.eventsourcing:eventsourcing-inmem:${eventsourcingVersion}"
-    compile "com.eventsourcing:eventsourcing-h2:${eventsourcingVersion}"
 }
 
 test.useTestNG()

@@ -32,7 +32,7 @@ public class OrderTest extends EventsourcingTest {
     public void cancel() {
         Order order = repository.publish(CreateOrder.builder().build()).get();
         assertEquals(order.status(), Order.Status.OPEN);
-        repository.publish(CancelOrder.builder().id(order.id()).build()).get();
+        repository.publish(CancelOrder.builder().id(order.getId()).build()).get();
         assertEquals(order.status(), Order.Status.CANCELLED);
     }
 
@@ -42,17 +42,17 @@ public class OrderTest extends EventsourcingTest {
         CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
         Order order = repository.publish(CreateOrder.builder().build()).get();
-        AddProductToOrder addProductToOrder = AddProductToOrder.builder().orderId(order.id())
-                                                   .productId(product.id()).quantity(10).build();
+        AddProductToOrder addProductToOrder = AddProductToOrder.builder().orderId(order.getId())
+                                                   .productId(product.getId()).quantity(10).build();
         Order.Item item = repository.publish(addProductToOrder).get();
         assertFalse(order.items().isEmpty());
-        assertEquals(order.items().get(0).id(), item.id());
-        assertEquals(order.items().get(0).product().id(), product.id());
-        assertEquals(order.items().get(0).quantity(), 10);
-        Order.Item item1 = repository.publish(AddProductToOrder.builder().orderId(order.id()).productId(product.id())
+        assertEquals(order.items().get(0).getId(), item.getId());
+        assertEquals(order.items().get(0).getProduct().getId(), product.getId());
+        assertEquals(order.items().get(0).getQuantity(), 10);
+        Order.Item item1 = repository.publish(AddProductToOrder.builder().orderId(order.getId()).productId(product.getId())
                                                                .quantity(10).build()).get();
         assertEquals(order.items().size(), 2);
-        assertNotEquals(item1.id(), item.id());
+        assertNotEquals(item1.getId(), item.getId());
     }
 
     @Test
@@ -61,14 +61,14 @@ public class OrderTest extends EventsourcingTest {
         CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
         Order order = repository.publish(CreateOrder.builder().build()).get();
-        Order.Item item = repository.publish(AddProductToOrder.builder().orderId(order.id()).productId(product.id())
+        Order.Item item = repository.publish(AddProductToOrder.builder().orderId(order.getId()).productId(product.getId())
                                                               .quantity(10).build()).get();
-        Order.Item item1 = repository.publish(AddProductToOrder.builder().orderId(order.id()).productId(product.id())
+        Order.Item item1 = repository.publish(AddProductToOrder.builder().orderId(order.getId()).productId(product.getId())
                                                               .quantity(10).build()).get();
 
-        repository.publish(RemoveItemFromOrder.builder().itemId(item.id()).build()).get();
+        repository.publish(RemoveItemFromOrder.builder().itemId(item.getId()).build()).get();
         assertEquals(order.items().size(), 1);
-        assertEquals(order.items().get(0).id(), item1.id());
+        assertEquals(order.items().get(0).getId(), item1.getId());
     }
 
     @Test
@@ -77,9 +77,9 @@ public class OrderTest extends EventsourcingTest {
         CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
         Order order = repository.publish(CreateOrder.builder().build()).get();
-        Order.Item item = repository.publish(AddProductToOrder.builder().orderId(order.id()).productId(product.id())
+        Order.Item item = repository.publish(AddProductToOrder.builder().orderId(order.getId()).productId(product.getId())
                                                               .quantity(10).build()).get();
-        repository.publish(AdjustItemQuantity.builder().itemId(item.id()).quantity(20).build()).get();
-        assertEquals(order.items().get(0).quantity(), 20);
+        repository.publish(AdjustItemQuantity.builder().itemId(item.getId()).quantity(20).build()).get();
+        assertEquals(order.items().get(0).getQuantity(), 20);
     }
 }

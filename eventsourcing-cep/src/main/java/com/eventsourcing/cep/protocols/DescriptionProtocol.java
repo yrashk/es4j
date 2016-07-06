@@ -21,7 +21,7 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
 public interface DescriptionProtocol extends Protocol {
     default String description() {
         try (ResultSet<EntityHandle<DescriptionChanged>> resultSet =
-                     getRepository().query(DescriptionChanged.class, equal(DescriptionChanged.REFERENCE_ID, id()),
+                     getRepository().query(DescriptionChanged.class, equal(DescriptionChanged.REFERENCE_ID, getId()),
                                            queryOptions(orderBy(descending(DescriptionChanged.TIMESTAMP)),
                                                         applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
             if (resultSet.isEmpty()) {

@@ -31,7 +31,7 @@ public class ProductTest extends EventsourcingTest {
     public void renaming() {
         CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
-        repository.publish(Rename.builder().id(product.id()).name("New Widget").build()).get();
+        repository.publish(Rename.builder().id(product.getId()).name("New Widget").build()).get();
         assertEquals(product.name(), "New Widget");
     }
 
@@ -39,7 +39,7 @@ public class ProductTest extends EventsourcingTest {
     public void changingPrice() {
         CreateProduct widget = CreateProduct.builder().name("Widget").price(new BigDecimal("100.50")).build();
         Product product = repository.publish(widget).get();
-        repository.publish(ChangePrice.builder().id(product.id()).price(new BigDecimal("699.99")).build()).get();
+        repository.publish(ChangePrice.builder().id(product.getId()).price(new BigDecimal("699.99")).build()).get();
         assertEquals(product.price(), new BigDecimal("699.99"));
     }
 

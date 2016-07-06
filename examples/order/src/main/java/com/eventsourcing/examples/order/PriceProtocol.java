@@ -16,8 +16,8 @@ import static com.googlecode.cqengine.query.QueryFactory.equal;
 
 public interface PriceProtocol extends Protocol, QueryUtilities {
     default BigDecimal price() {
-        return last(getRepository(), PriceChanged.class, equal(PriceChanged.REFERENCE_ID, id()), PriceChanged.TIMESTAMP)
-                .
-                        orElse(PriceChanged.builder().price(BigDecimal.ZERO).build()).price();
+        return last(getRepository(), PriceChanged.class,
+                    equal(PriceChanged.REFERENCE_ID, getId()), PriceChanged.TIMESTAMP)
+                .orElse(PriceChanged.builder().price(BigDecimal.ZERO).build()).price();
     }
 }

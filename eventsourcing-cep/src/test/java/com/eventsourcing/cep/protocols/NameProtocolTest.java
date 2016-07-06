@@ -61,10 +61,9 @@ public class NameProtocolTest extends RepositoryTest {
         }
     }
 
-    @Accessors(fluent = true)
     public static class TestModel implements Model, NameProtocol {
 
-        @Getter @Accessors(fluent = false)
+        @Getter
         private final Repository repository;
 
         @Getter
@@ -85,17 +84,17 @@ public class NameProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        Rename rename = new Rename(model.id(), "Name #1");
+        Rename rename = new Rename(model.getId(), "Name #1");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #1");
 
-        Rename renameBefore = Rename.builder().id(model.id()).name("Name #0").timestamp(timestamp).build();
+        Rename renameBefore = Rename.builder().id(model.getId()).name("Name #0").timestamp(timestamp).build();
         assertTrue(renameBefore.timestamp().compareTo(rename.timestamp()) < 0);
         repository.publish(renameBefore).get();
         assertEquals(model.name(), "Name #1"); // earlier change shouldn't affect the name
 
 
-        rename = new Rename(model.id(), "Name #2");
+        rename = new Rename(model.getId(), "Name #2");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #2");
     }

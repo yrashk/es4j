@@ -25,7 +25,7 @@ public interface DeletedProtocol extends Protocol {
     default Optional<Deleted> deleted() {
         try (ResultSet<EntityHandle<Deleted>> resultSet =
                      getRepository().query(Deleted.class,
-                                           and(equal(Deleted.REFERENCE_ID, id()),
+                                           and(equal(Deleted.REFERENCE_ID, getId()),
                                                not(existsIn(getRepository().getIndexEngine()
                                                                        .getIndexedCollection(Undeleted.class),
                                                         Deleted.ID, Undeleted.DELETED_ID))),

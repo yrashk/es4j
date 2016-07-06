@@ -17,7 +17,7 @@ public interface NameProtocol extends Protocol, QueryUtilities {
     default String name() {
         return last(getRepository(),
                     NameChanged.class,
-                    equal(NameChanged.REFERENCE_ID, id()), NameChanged.TIMESTAMP)
+                    equal(NameChanged.REFERENCE_ID, getId()), NameChanged.TIMESTAMP)
                 .orElse(NameChanged.builder().name("Unnamed").build()).name();
     }
 }
