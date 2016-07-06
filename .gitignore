@@ -4,6 +4,9 @@
 *.iml
 *.ipr
 *.iws
+# GitBook
+node_modules
+_book
 # Delombok
 */src/delombok
 # Builds
