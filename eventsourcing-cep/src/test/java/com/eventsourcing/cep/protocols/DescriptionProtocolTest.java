@@ -11,6 +11,7 @@ import com.eventsourcing.*;
 import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.Repository;
+import com.eventsourcing.layout.LayoutConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -35,6 +36,12 @@ public class DescriptionProtocolTest extends RepositoryTest {
         private final UUID id;
         @Getter
         private final String description;
+
+        @LayoutConstructor
+        public ChangeDescription(UUID id, String description) {
+            this.id = id;
+            this.description = description;
+        }
 
         @Builder
         public ChangeDescription(HybridTimestamp timestamp, UUID id, String description) {
@@ -81,9 +88,7 @@ public class DescriptionProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        ChangeDescription changeDescription = ChangeDescription.builder()
-                                                               .id(model.id())
-                                                               .description("Description #1").build();
+        ChangeDescription changeDescription = new ChangeDescription(model.id(), "Description #1");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #1");
 
@@ -95,9 +100,7 @@ public class DescriptionProtocolTest extends RepositoryTest {
         assertEquals(model.description(), "Description #1"); // earlier change shouldn't affect the description
 
 
-        changeDescription = ChangeDescription.builder()
-                                             .id(model.id())
-                                             .description("Description #2").build();
+        changeDescription = new ChangeDescription(model.id(), "Description #2");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #2");
     }

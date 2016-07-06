@@ -11,6 +11,7 @@ import com.eventsourcing.StandardEvent;
 import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
@@ -34,6 +35,12 @@ public class DescriptionChanged extends StandardEvent {
     final UUID reference;
     @Getter
     final String description;
+
+    @LayoutConstructor
+    public DescriptionChanged(UUID reference, String description) {
+        this.reference = reference;
+        this.description = description;
+    }
 
     @Builder
     public DescriptionChanged(UUID reference, String description, HybridTimestamp timestamp) {

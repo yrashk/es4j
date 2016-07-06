@@ -45,6 +45,9 @@ public class DeletedProtocolTest extends RepositoryTest {
             this.id = id;
         }
 
+        public Delete(UUID id) {
+            this.id = id;
+        }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
@@ -70,6 +73,11 @@ public class DeletedProtocolTest extends RepositoryTest {
             super(timestamp);
             this.id = id;
         }
+
+        public Undelete(UUID id) {
+            this.id = id;
+        }
+
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
@@ -102,7 +110,7 @@ public class DeletedProtocolTest extends RepositoryTest {
     public void deletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
         assertFalse(model.deleted().isPresent());
-        Delete delete = Delete.builder().id(model.id()).build();
+        Delete delete = new Delete(model.id());
         repository.publish(delete).get();
         assertTrue(model.deleted().isPresent());
     }
@@ -110,9 +118,9 @@ public class DeletedProtocolTest extends RepositoryTest {
     @Test @SneakyThrows
     public void undeletion() {
         TestModel model = new TestModel(repository, UUID.randomUUID());
-        Delete delete = Delete.builder().id(model.id()).build();
+        Delete delete = new Delete(model.id());
         repository.publish(delete).get();
-        Undelete undelete = Undelete.builder().id(delete.eventId).build();
+        Undelete undelete = new Undelete(delete.eventId);
         repository.publish(undelete).get();
         assertFalse(model.deleted().isPresent());
     }

@@ -11,6 +11,7 @@ import com.eventsourcing.*;
 import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.Repository;
+import com.eventsourcing.layout.LayoutConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -35,6 +36,12 @@ public class NameProtocolTest extends RepositoryTest {
         private final UUID id;
         @Getter
         private final String name;
+
+        @LayoutConstructor
+        public Rename(UUID id, String name) {
+            this.id = id;
+            this.name = name;
+        }
 
         @Builder
         public Rename(HybridTimestamp timestamp, UUID id, String name) {
@@ -78,7 +85,7 @@ public class NameProtocolTest extends RepositoryTest {
 
         TestModel model = new TestModel(repository, UUID.randomUUID());
 
-        Rename rename = Rename.builder().id(model.id()).name("Name #1").build();
+        Rename rename = new Rename(model.id(), "Name #1");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #1");
 
@@ -88,7 +95,7 @@ public class NameProtocolTest extends RepositoryTest {
         assertEquals(model.name(), "Name #1"); // earlier change shouldn't affect the name
 
 
-        rename = Rename.builder().id(model.id()).name("Name #2").build();
+        rename = new Rename(model.id(), "Name #2");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #2");
     }
