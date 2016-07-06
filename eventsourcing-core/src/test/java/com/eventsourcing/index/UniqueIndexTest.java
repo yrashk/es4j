@@ -10,11 +10,14 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.StandardEntity;
+import com.eventsourcing.models.Car;
+import com.eventsourcing.models.CarFactory;
 import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.AttributeIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
+import com.googlecode.cqengine.index.support.KeyStatisticsIndex;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -23,6 +26,7 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static com.googlecode.cqengine.query.QueryFactory.noQueryOptions;
@@ -184,6 +188,31 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
         assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
         index.clear(noQueryOptions());
+    }
+
+    @Test
+    public void reindexData() {
+        IndexedCollection<EntityHandle<Car>> cars = new ConcurrentIndexedCollection<>();
+        UniqueIndex index = onAttribute(Car.FEATURES);
+        index.clear(noQueryOptions());
+
+        // Add some objects to the collection...
+        cars.add(new ResolvedEntityHandle<>(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof"))));
+        cars.add(new ResolvedEntityHandle<>(new Car(2, "ford taurus", "bar", Arrays.asList("radio", "cd player"))));
+
+
+        cars.addIndex(index);
+
+        IndexedCollection<EntityHandle<Car>> cars1 = new ConcurrentIndexedCollection<>();
+        UniqueIndex index1 = onAttribute(Car.FEATURES);
+        cars1.addAll(cars);
+
+        cars1.addIndex(index1);
+
+        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
+
+        index.clear(noQueryOptions());
+        index1.clear(noQueryOptions());
     }
 
 }

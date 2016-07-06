@@ -200,4 +200,33 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());
     }
+
+    @Test
+    public void reindexData() {
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
+        MANUFACTURER_INDEX.clear(noQueryOptions());
+
+        Set<EntityHandle<Car>> cars = CarFactory.createCollectionOfCars(10);
+
+        collection.addAll(cars);
+
+        collection.addIndex(MANUFACTURER_INDEX);
+
+        IndexedCollection<EntityHandle<Car>> collection1 = new ConcurrentIndexedCollection<>();
+        KeyStatisticsIndex<String, EntityHandle<Car>> MANUFACTURER_INDEX1 =
+                (KeyStatisticsIndex<String, EntityHandle<Car>>) onAttribute(Car.MANUFACTURER);
+
+        collection1.addAll(cars);
+
+        collection1.addIndex(MANUFACTURER_INDEX1);
+
+
+        assertEquals((int)MANUFACTURER_INDEX.getCountForKey("Honda", noQueryOptions()), 3);
+        assertEquals((int)MANUFACTURER_INDEX1.getCountForKey("Honda", noQueryOptions()), 3);
+
+        MANUFACTURER_INDEX.clear(noQueryOptions());
+        MANUFACTURER_INDEX1.clear(noQueryOptions());
+    }
 }

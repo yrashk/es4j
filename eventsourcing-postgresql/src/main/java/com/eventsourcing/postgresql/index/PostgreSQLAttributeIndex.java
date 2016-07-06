@@ -191,7 +191,9 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         try(Connection connection = getDataSource().getConnection()) {
             connection.setAutoCommit(false);
             String insert = "INSERT INTO " + getTableName() + " VALUES (" + getParameter(connection, getAttributeTypeHandler(),
-                                                                                    null) + ", ?::UUID)";
+                                                                                    null) + ", ?::UUID) " +
+                    (queryOptions.get(OnConflictDo.class) == null ? "" :
+                            "ON CONFLICT DO " + queryOptions.get(OnConflictDo.class));
             try (PreparedStatement s = connection.prepareStatement(insert)) {
                 while (iterator.hasNext()) {
                     EntityHandle<O> object = iterator.next();
@@ -268,6 +270,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         } else {
             this.keyObjectStore = new SetKeyObjectStore(objectStore, queryOptions);
         }
+        queryOptions.put(OnConflictDo.class, OnConflictDo.NOTHING);
         addAll(objectStore, queryOptions);
     }
 
@@ -615,6 +618,8 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         return attributeValue;
     }
 
-
+    protected enum OnConflictDo {
+        UPDATE, NOTHING
+    }
 
 }
