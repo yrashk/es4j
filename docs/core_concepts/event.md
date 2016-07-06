@@ -11,9 +11,7 @@ public class UserCreated extends StandardEvent {
   @Getter
   private final String email;
 
-  @Builder
-  public UserCreated(HybridTimestamp timestamp, String email) {
-    super(timestamp);
+  public UserCreated(String email) {
     this.email = email;
   }
 }
