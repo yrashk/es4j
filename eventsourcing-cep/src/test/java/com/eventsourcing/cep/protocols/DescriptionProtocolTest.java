@@ -23,7 +23,7 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-public class DescriptionProtocolTest extends RepositoryTest {
+public class DescriptionProtocolTest extends RepositoryUsingTest {
 
     public DescriptionProtocolTest() {
         super(DescriptionChanged.class.getPackage(), DescriptionProtocolTest.class.getPackage());

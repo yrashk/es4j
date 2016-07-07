@@ -25,7 +25,7 @@ import java.util.UUID;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
-public class DeletedProtocolTest extends RepositoryTest {
+public class DeletedProtocolTest extends RepositoryUsingTest {
 
 
     public DeletedProtocolTest() {
