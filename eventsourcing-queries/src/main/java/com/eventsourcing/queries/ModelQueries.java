@@ -11,7 +11,10 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Attribute;
+import com.googlecode.cqengine.IndexedCollection;
+import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.resultset.ResultSet;
 
 import java.util.Optional;
@@ -47,4 +50,5 @@ public interface ModelQueries extends Model, LatestAssociatedEntryQuery {
             }
         }
     }
+
 }
