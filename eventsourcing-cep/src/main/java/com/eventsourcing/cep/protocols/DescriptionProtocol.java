@@ -7,27 +7,22 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Protocol;
+import com.eventsourcing.queries.ModelQueries;
 import com.eventsourcing.cep.events.DescriptionChanged;
-import com.googlecode.cqengine.query.option.EngineThresholds;
-import com.googlecode.cqengine.resultset.ResultSet;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
 
-import static com.googlecode.cqengine.query.QueryFactory.*;
+import java.util.Optional;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
-public interface DescriptionProtocol extends Protocol {
+public interface DescriptionProtocol extends Protocol, ModelQueries {
     default String description() {
-        try (ResultSet<EntityHandle<DescriptionChanged>> resultSet =
-                     getRepository().query(DescriptionChanged.class, equal(DescriptionChanged.REFERENCE_ID, getId()),
-                                           queryOptions(orderBy(descending(DescriptionChanged.TIMESTAMP)),
-                                                        applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
-            if (resultSet.isEmpty()) {
-                return null;
-            }
-            return resultSet.iterator().next().get().description();
+        Optional<DescriptionChanged> last = latestAssociatedEntity(DescriptionChanged.class, DescriptionChanged.REFERENCE_ID, DescriptionChanged.TIMESTAMP);
+        if (last.isPresent()) {
+            return last.get().description();
+        } else {
+            return null;
         }
     }
 }

@@ -47,7 +47,7 @@ package com.eventsourcing;
  * </pre>
  * <p>
  * <p>
- * The above protocol implements a {@code name()} function that retrieves the last {@code NameChange} for the particular
+ * The above protocol implements a {@code name()} function that retrieves the latestAssociatedEntity {@code NameChange} for the particular
  * model referenced by its UUID ({@code getId()}).
  * <p>
  * Now, all we have to do is to make every model implement this interface:
