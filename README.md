@@ -41,9 +41,13 @@ To learn more about what kind of problems ES4J addresses, please read [Why Use E
 
 You can find our current slide deck at https://eventsourcing.com/presentation
 
+# Downloading and installing
+
+To start using ES4J, please follow the [installation instructions](http://es4j-doc.eventsourcing.com/getting_started/install.html).
+
 # Documentation
 
-Installation instructions and documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
+Documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
 
 We strive to specify the building blocks behind Eventsourcing and its ecosystem as succinct specifications, you can find the current list of them at [rfc.eventsourcing.com](http://rfc.eventsourcing.com)
 
@@ -55,31 +59,6 @@ contributors are free to publish their own roadmaps to help indicating their int
 * [Yurii Rashkovskii](https://github.com/yrashk/es4j/milestones/Roadmap)
 
 Also, there's a [centralized list of reported issues](https://github.com/eventsourcing/es4j/issues). These do not imply an actual roadmap, just what has been reported.
-
-# Snapshot versions
-
-Every successful build is published into a [separate Maven repository on Bintray](https://bintray.com/eventsourcing/maven-snapshots) (using a `git describe`
-version), you can find the last snapshot version mentioned in a badge at the top of this file.
-
-Gradle configuration:
-
-```groovy
-repositories {
-    maven {
-        url  "http://dl.bintray.com/eventsourcing/maven-snapshots"
-    }
-}
-```
-
-Maven configuration:
-
-```xml
-<repository>
-	<id>bintray-eventsourcing-maven-snapshots</id>
-	<name>bintray</name>
-	<url>http://dl.bintray.com/eventsourcing/maven-snapshots</url>
-</repository>
-```
 
 # Contributing
 

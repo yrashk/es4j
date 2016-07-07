@@ -27,7 +27,7 @@ before_script:
 script:
   - ./gradlew check
   - ./gradlew publishToMavenLocal
-  - cd examples/order && ./gradlew check
+  - cd examples/foodsourcing && ./gradlew check
 after_success:
   - cd ../.. && ./gradlew -Psnapshot=true bintrayUpload
 env:

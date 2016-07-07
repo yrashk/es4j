@@ -1,7 +1,6 @@
 # Layout
 
-ES4J uses a concept of layout to give a deterministic shape to any object
-(POJO). Layout allows to specify what class properties are included into serialized object's representation and unique class identifier (hash). Other
+ES4J uses a concept of layout to give a deterministic shape to any class. Layout allows to specify what class properties are included into serialized object's representation and unique class identifier (hash). Other
 ES4J components use it to serialize, deserialize and identify classes according to their layout.
 
 
