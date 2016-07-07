@@ -23,7 +23,7 @@ import java.util.UUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-public class NameProtocolTest extends RepositoryTest {
+public class NameProtocolTest extends RepositoryUsingTest {
 
     public NameProtocolTest() {
         super(NameChanged.class.getPackage(), NameProtocolTest.class.getPackage());

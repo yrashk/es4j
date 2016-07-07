@@ -5,27 +5,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.cep.protocols;
+package com.eventsourcing.queries;
 
+import com.eventsourcing.LocalLockProvider;
+import com.eventsourcing.PackageCommandSetProvider;
+import com.eventsourcing.PackageEventSetProvider;
 import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
-import com.eventsourcing.LocalLockProvider;
-import com.eventsourcing.PackageCommandSetProvider;
-import com.eventsourcing.PackageEventSetProvider;
 import com.eventsourcing.repository.StandardRepository;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-public abstract class RepositoryTest {
+public class RepositoryUsingTest {
 
     private final Package[] packages;
     protected Repository repository;
     protected LocalLockProvider lockProvider;
     protected NTPServerTimeProvider timeProvider;
 
-    public RepositoryTest(Package ...packages) {
+    public RepositoryUsingTest(Package ...packages) {
         this.packages = packages;
     }
 

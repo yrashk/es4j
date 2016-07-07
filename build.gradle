@@ -212,5 +212,7 @@ dependencies {
 afterReleaseBuild.dependsOn project(':eventsourcing-layout').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-hlc').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-core').tasks.findByName("bintrayUpload")
+afterReleaseBuild.dependsOn project(':eventsourcing-queries').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-h2').tasks.findByName("bintrayUpload")
 afterReleaseBuild.dependsOn project(':eventsourcing-cep').tasks.findByName("bintrayUpload")
+

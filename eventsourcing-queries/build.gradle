@@ -1,5 +1,4 @@
 dependencies {
     compile project(':eventsourcing-core')
-    compile project(':eventsourcing-queries')
     testCompile project(':eventsourcing-inmem')
 }
