@@ -8,6 +8,7 @@
 package com.eventsourcing.events;
 
 import com.eventsourcing.StandardEvent;
+import com.eventsourcing.annotations.Index;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -71,6 +72,7 @@ public class JavaExceptionOccurred extends StandardEvent {
                 map(StackTraceElement::new).collect(Collectors.toList());
     }
 
+    @Index
     public static Attribute<JavaExceptionOccurred, UUID> ID = new
             SimpleAttribute<JavaExceptionOccurred, UUID>("id") {
                 @Override public UUID getValue(JavaExceptionOccurred object, QueryOptions queryOptions) {
