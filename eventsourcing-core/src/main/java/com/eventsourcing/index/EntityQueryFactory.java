@@ -16,9 +16,9 @@ import com.googlecode.cqengine.query.simple.SimpleQuery;
 
 import java.util.Collections;
 
-public class EntityQueryFactory {
+public interface EntityQueryFactory {
 
-    public static class All<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
+    class All<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
 
         final Class<O> attributeType;
 
@@ -89,7 +89,7 @@ public class EntityQueryFactory {
      * @param <O> The type of the objects in the collection
      * @return A query which matches all objects in the collection
      */
-    public static <O extends Entity> Query<EntityHandle<O>> all(Class<O> objectType) {
+    static <O extends Entity> Query<EntityHandle<O>> all(Class<O> objectType) {
         return new All<>(objectType);
     }
 
