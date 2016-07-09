@@ -7,15 +7,10 @@
  */
 package com.eventsourcing.index;
 
-import com.eventsourcing.EntityHandle;
-import com.eventsourcing.Repository;
-import com.eventsourcing.StandardCommand;
+import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.inmem.MemoryJournal;
-import com.eventsourcing.LocalLockProvider;
-import com.eventsourcing.PackageCommandSetProvider;
-import com.eventsourcing.PackageEventSetProvider;
 import com.eventsourcing.repository.StandardRepository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Builder;

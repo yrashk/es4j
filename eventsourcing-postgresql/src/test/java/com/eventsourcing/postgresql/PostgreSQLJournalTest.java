@@ -9,26 +9,25 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.index.CascadingIndexEngine;
+import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.layout.LayoutConstructor;
-import com.eventsourcing.Journal;
-import com.eventsourcing.Repository;
 import com.eventsourcing.repository.JournalTest;
-import com.eventsourcing.PackageCommandSetProvider;
-import com.eventsourcing.PackageEventSetProvider;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import org.postgresql.ds.PGSimpleDataSource;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
-import javax.sql.DataSource;
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.util.*;
 
+import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
 import static org.apache.commons.lang3.ArrayUtils.toObject;
 import static org.testng.Assert.*;
 
@@ -36,8 +35,25 @@ import static org.testng.Assert.*;
 public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
 
+    @SneakyThrows
+    static PostgreSQLJournal createJournal() {
+        recreateSchema();
+        return new PostgreSQLJournal(dataSource);
+    }
+
+    static void recreateSchema() throws SQLException {
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement s = connection.prepareStatement("DROP SCHEMA IF EXISTS public CASCADE")) {
+                s.executeUpdate();
+            }
+            try (PreparedStatement s = connection.prepareStatement("CREATE SCHEMA public")) {
+                s.executeUpdate();
+            }
+        }
+    }
+
     public PostgreSQLJournalTest() {
-        super(new PostgreSQLJournal(PostgreSQLTest.dataSource));
+        super(createJournal());
     }
 
     @BeforeClass @Override public void setUpEnv() throws Exception {
@@ -55,6 +71,24 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
         @Builder
         public SomeValue(String value) {this.value = value;}
+    }
+
+    @Accessors(fluent = true)
+    public static class SomeValue1 {
+        @Getter
+        private final List<SomeValue2> value;
+
+        @Builder
+        public SomeValue1(List<SomeValue2> value) {this.value = value;}
+    }
+
+    @Accessors(fluent = true)
+    public static class SomeValue2 {
+        @Getter
+        private final SomeValue value;
+
+        @Builder
+        public SomeValue2(SomeValue value) {this.value = value;}
     }
 
     @Accessors(fluent = true)
@@ -115,6 +149,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         private final SomeValue value;
 
         @Getter
+        private final SomeValue1 value1;
+
+        @Getter
         private final List<List<String>> list;
 
         @Getter
@@ -130,7 +167,8 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         public TestClass(byte pByte, Byte oByte, byte[] pByteArr, Byte[] oByteArr, short pShort, Short oShort, int pInt,
                          Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
                          Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
-                         E e, SomeValue value, List<List<String>> list, Optional<String> optional,
+                         E e, SomeValue value, SomeValue1 value1, List<List<String>> list,
+                         Optional<String> optional,
                          BigDecimal bigDecimal, Date date) {
             this.pByte = pByte;
             this.oByte = oByte;
@@ -152,6 +190,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             this.uuid = uuid;
             this.e = e;
             this.value = value;
+            this.value1 = value1;
             this.list = list;
             this.optional = optional;
             this.bigDecimal = bigDecimal;
@@ -248,6 +287,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         assertNotNull(test.value);
         assertEquals(test.value.value, "");
 
+        assertNotNull(test.value1);
+        assertTrue(test.value1.value().isEmpty());
+
         assertNotNull(test.list);
         assertEquals(test.list.size(), 0);
 
@@ -305,6 +347,11 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
         assertEquals(serializationResult(TestClass.builder().value(new SomeValue("test")).build())
                              .value().value(), "test");
+
+        assertEquals(serializationResult(
+                TestClass.builder()
+                         .value1(new SomeValue1(Collections.singletonList(new SomeValue2(new SomeValue("test")))))
+                         .build()).value1().value().get(0).value().value(), "test");
 
         ArrayList<List<String>> l = new ArrayList<>();
         ArrayList<String> l1 = new ArrayList<>();

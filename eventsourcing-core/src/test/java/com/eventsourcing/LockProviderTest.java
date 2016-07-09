@@ -7,6 +7,7 @@
  */
 package com.eventsourcing;
 
+import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
 import java.util.concurrent.CompletableFuture;
@@ -33,13 +34,14 @@ public abstract class LockProviderTest<T extends LockProvider> {
     }
 
     @Test(timeOut = 2000)
+    @SneakyThrows
     public void waiting() {
         Lock lock = lockProvider.lock("test");
-        CompletableFuture<Void> future = new CompletableFuture<>();
+        CompletableFuture<Lock> future = new CompletableFuture<>();
         new Thread() {
             @Override public void run() {
-                lockProvider.lock("test");
-                future.complete(null);
+                Lock lock1 = lockProvider.lock("test");
+                future.complete(lock1);
             }
         }.start();
         try {
@@ -53,6 +55,7 @@ public abstract class LockProviderTest<T extends LockProvider> {
         lock.unlock();
         future.join();
         assertTrue(future.isDone() && !future.isCancelled());
+        future.get().unlock();
     }
 
 }

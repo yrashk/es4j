@@ -9,8 +9,6 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.LockProviderTest;
 
-import static org.testng.Assert.*;
-
 public class PostgreSQLLockProviderTest extends LockProviderTest<PostgreSQLLockProvider> {
 
     public PostgreSQLLockProviderTest() {

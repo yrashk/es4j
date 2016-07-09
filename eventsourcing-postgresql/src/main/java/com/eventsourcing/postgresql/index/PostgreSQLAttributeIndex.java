@@ -9,8 +9,10 @@ package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.index.*;
 import com.eventsourcing.index.AbstractAttributeIndex;
+import com.eventsourcing.index.Attribute;
+import com.eventsourcing.index.KeyObjectStore;
+import com.eventsourcing.index.MultiValueAttribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
@@ -27,9 +29,9 @@ import com.googlecode.cqengine.query.simple.Equal;
 import com.googlecode.cqengine.query.simple.Has;
 import com.googlecode.cqengine.resultset.ResultSet;
 import com.googlecode.cqengine.resultset.closeable.CloseableResultSet;
+import com.impossibl.postgres.jdbc.PGSQLIntegrityConstraintViolationException;
 import lombok.Getter;
 import lombok.SneakyThrows;
-import org.postgresql.util.PSQLException;
 
 import javax.sql.DataSource;
 import java.sql.BatchUpdateException;
@@ -78,7 +80,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         Connection connection = getDataSource().getConnection();
         PreparedStatement s = connection.prepareStatement("SELECT DISTINCT key FROM " + getTableName() + " ORDER BY key");
         return () -> new PostgreSQLStatementIterator<A>(s, connection, true) {
-            @Override public A next() {
+            @Override public A fetchNext() {
                 return (A) PostgreSQLSerialization.getValue(resultSet, new AtomicInteger(1), getAttributeTypeHandler());
             }
         };
@@ -129,7 +131,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             @Override public CloseableIterator<KeyStatistics<A>> iterator() {
                 return new PostgreSQLStatementIterator<KeyStatistics<A>>(s, connection, true) {
                     @SneakyThrows
-                    @Override public KeyStatistics<A> next() {
+                    @Override public KeyStatistics<A> fetchNext() {
                         A key = (A) PostgreSQLSerialization
                                 .getValue(resultSet, new AtomicInteger(1), getAttributeTypeHandler());
                         int count = resultSet.getInt(2);
@@ -153,7 +155,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             @Override public CloseableIterator<KeyValue<A, EntityHandle<O>>> iterator() {
                 return new PostgreSQLStatementIterator<KeyValue<A, EntityHandle<O>>>(s, connection, true) {
                     @SneakyThrows
-                    @Override public KeyValue<A, EntityHandle<O>> next() {
+                    @Override public KeyValue<A, EntityHandle<O>> fetchNext() {
                         AtomicInteger i = new AtomicInteger(1);
                         A key = (A) PostgreSQLSerialization.getValue(resultSet, i, getAttributeTypeHandler());
                         UUID uuid = UUID.fromString(resultSet.getString(i.get()));
@@ -214,8 +216,8 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
                     s.executeBatch();
                 } catch (BatchUpdateException e) {
                     connection.rollback();
-                    SQLException nextException = e.getNextException();
-                    if (nextException instanceof PSQLException) {
+                    Throwable nextException = e.getCause();
+                    if (nextException instanceof PGSQLIntegrityConstraintViolationException) {
                         if (nextException.getMessage().contains("duplicate key value violates unique constraint")) {
                             throw new UniqueIndex.UniqueConstraintViolatedException(nextException.getMessage());
                         } else {
@@ -293,7 +295,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         int i = setValue(connection, s, 1, lowerBound, getAttributeTypeHandler());
         setValue(connection, s, i, upperBound, getAttributeTypeHandler());
         return () -> new PostgreSQLStatementIterator<A>(s, connection, true) {
-            @Override public A next() {
+            @Override public A fetchNext() {
                 return (A) PostgreSQLSerialization.getValue(resultSet, new AtomicInteger(1), getAttributeTypeHandler());
             }
         };
@@ -305,7 +307,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         PreparedStatement s = connection.prepareStatement("SELECT DISTINCT key FROM " + getTableName() + " ORDER BY " +
                                                                   "key DESC");
         return () -> new PostgreSQLStatementIterator<A>(s, connection, true) {
-            @Override public A next() {
+            @Override public A fetchNext() {
                 return (A) PostgreSQLSerialization.getValue(resultSet, new AtomicInteger(1), getAttributeTypeHandler());
             }
         };
@@ -352,7 +354,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             @Override public CloseableIterator<KeyValue<A, EntityHandle<O>>> iterator() {
                 return new PostgreSQLStatementIterator<KeyValue<A, EntityHandle<O>>>(s, connection, true) {
                     @SneakyThrows
-                    @Override public KeyValue<A, EntityHandle<O>> next() {
+                    @Override public KeyValue<A, EntityHandle<O>> fetchNext() {
                         AtomicInteger i = new AtomicInteger(1);
                         A key = (A) PostgreSQLSerialization.getValue(resultSet, i, getAttributeTypeHandler());
                         UUID uuid = UUID.fromString(resultSet.getString(i.get()));
@@ -370,7 +372,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             final Equal<EntityHandle<O>, A> equal = (Equal<EntityHandle<O>, A>) query;
             Connection connection = getDataSource().getConnection();
 
-            int size = 0;
+            int size;
             A value = ((Equal<EntityHandle<O>, A>) query).getValue();
 
             try(PreparedStatement counter = connection
@@ -392,7 +394,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
                 @SneakyThrows
-                @Override public EntityHandle<O> next() {
+                @Override public EntityHandle<O> fetchNext() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }
@@ -423,7 +425,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
                                                                                                                      connection,
                                                                                                                      isMutable()) {
                 @SneakyThrows
-                @Override public EntityHandle<O> next() {
+                @Override public EntityHandle<O> fetchNext() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }

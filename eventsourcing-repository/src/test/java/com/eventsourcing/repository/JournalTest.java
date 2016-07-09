@@ -13,6 +13,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
+import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -223,11 +224,13 @@ public abstract class JournalTest<T extends Journal> {
             }
         });
 
-        Iterator<EntityHandle<TestCommand>> commandIterator = journal.commandIterator(TestCommand.class);
+        CloseableIterator<EntityHandle<TestCommand>> commandIterator = journal.commandIterator(TestCommand.class);
 
         List<EntityHandle<TestCommand>> commands = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(commandIterator, Spliterator.IMMUTABLE), false)
                 .collect(Collectors.toList());
+
+        commandIterator.close();
 
         assertEquals(commands.size(), 2);
         assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command1.uuid())));
@@ -235,11 +238,12 @@ public abstract class JournalTest<T extends Journal> {
 
         assertEquals(events.size(), 4);
 
-        Iterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);
+        CloseableIterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);
         List<UUID> iteratedEvents = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(eventIterator, Spliterator.IMMUTABLE), false)
                 .map(EntityHandle::uuid)
                 .collect(Collectors.toList());
+        eventIterator.close();
         assertTrue(iteratedEvents.containsAll(events.stream().filter(e -> e instanceof TestEvent)
                                                     .map(Event::uuid)
                                                     .collect(Collectors.toList())));

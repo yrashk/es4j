@@ -7,15 +7,11 @@
  */
 package com.eventsourcing.jmh;
 
-import com.eventsourcing.Repository;
+import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.Journal;
-import com.eventsourcing.LocalLockProvider;
-import com.eventsourcing.PackageCommandSetProvider;
-import com.eventsourcing.PackageEventSetProvider;
 import com.eventsourcing.repository.StandardRepository;
 import lombok.SneakyThrows;
 import org.openjdk.jmh.annotations.*;

@@ -75,4 +75,14 @@ public class Property<T> {
         this.typeHandler = typeHandler;
         this.getter = getter;
     }
+
+    @Override public int hashCode() {
+        return 31 * getName().hashCode() + 31 * type.hashCode();
+    }
+
+    @Override public boolean equals(Object obj) {
+        return obj instanceof Property &&
+                ((Property) obj).getName().contentEquals(getName()) &&
+                ((Property) obj).getType().equals(getType());
+    }
 }
