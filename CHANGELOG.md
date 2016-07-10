@@ -4,6 +4,8 @@ WIP
 **Backwards-incompatible changes**
 
 * [Core] `Entity`, `Command` and `Event` are now interfaces, the classes were moved to to `StandardEntity`, `StandardCommand` and `StandardEvent` ([#67](https://github.com/eventsourcing/es4j/pull/67))
+* [Core] `Model#id()` has been renamed to `Model#getId()` for consistency of
+the interface ([#114](https://github.com/eventsourcing/es4j/pull/114))
 * [Core] Entity layouts are now constructor + getters driven, allowing
 for immutable entities ([#83](https://github.com/eventsourcing/es4j/pull/83), [#87](https://github.com/eventsourcing/es4j/pull/87))
 * [Layout] `new Layout<>(klass)` has been replaced with `Layout.forClass(klass)` ([#83](https://github.com/eventsourcing/es4j/pull/83))
@@ -25,6 +27,8 @@ having an exception during `CommandTerminatedExceptionally` journalling
 ([#82](https://github.com/eventsourcing/es4j/pull/82))
 * [Core] OSGi `StandardRepository#activate()` now waits until repository is started ([#92](https://github.com/eventsourcing/es4j/pull/92))
 * [Core] byte[] equality did not work in MemoryIndexEngine ([#100](https://github.com/eventsourcing/es4j/pull/100))
+* [HLC] Fixed initialization of HybridTimestamp and updating with another
+HybridTimestamp ([#112](https://github.com/eventsourcing/es4j/pull/112))
 
 **Features**
 
@@ -34,9 +38,12 @@ having an exception during `CommandTerminatedExceptionally` journalling
 * [Migrations] Implemented [8/EMT](http://rfc.eventsourcing.com/spec:8/EMT) and `LayoutMigration` to standardize migrations ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] `EventCausalityEstablished` event-command causality indexing has been implemented ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] Better support for Kotlin in `Repository` ([#72](https://github.com/eventsourcing/es4j/pull/72))
-* Source and javadoc jars are now included into distribution ([#78](https://github.com/eventsourcing/es4j/pull/78))
+* [Queries] `LatestAssociatedEntryQuery` query has been added ([#115](https://github.com/eventsourcing/es4j/pull/115))
+* [Queries] `IsLatestEntity` query has been added ([#117](https://github.com/eventsourcing/es4j/pull/117))
+* [Queries] `ModelQueries.lookup` helper for looking up an entity by ID
+has been added ([#116](https://github.com/eventsourcing/es4j/pull/116))
 * [PostgreSQL] Implemented PostgreSQL journal ([#79](https://github.com/eventsourcing/es4j/pull/79))
-* [PostgreSQL] Implemented PostgreSQL equality indices ([#94](https://github.com/eventsourcing/es4j/pull/94))
+* [PostgreSQL] Implemented PostgreSQL equality and navigable indices ([#94](https://github.com/eventsourcing/es4j/pull/94), [#104](https://github.com/eventsourcing/es4j/pull/104))
 * [PostgreSQL] Implemented PostgreSQL-based lock provider `PostgreSQLLockProvider` ([#98](https://github.com/eventsourcing/es4j/pull/98))
 * [Core] Expose CascadingIndexEngine index decisions through JMX ([#94](https://github.com/eventsourcing/es4j/pull/94))
 * [Kotlin] Add basic support for Kotlin ([#88](https://github.com/eventsourcing/es4j/pull/88), [#99](https://github.com/eventsourcing/es4j/pull/99))
@@ -48,6 +55,11 @@ having an exception during `CommandTerminatedExceptionally` journalling
 `EntityLayoutIntroduced` ([#91](https://github.com/eventsourcing/es4j/pull/91))
 * [Repository] `AbstractRepository` now adheres to the exception reporting
 specified in [9/RIG](http://rfc.eventsourcing.com/spec:9/RIG) ([#102](https://github.com/eventsourcing/es4j/pull/102))
+
+**Misc**
+
+* Source and javadoc jars are now included into distribution ([#78](https://github.com/eventsourcing/es4j/pull/78))
+
 
 0.3.2
 ===
