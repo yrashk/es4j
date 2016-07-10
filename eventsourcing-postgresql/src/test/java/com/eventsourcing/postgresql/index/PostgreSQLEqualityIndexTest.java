@@ -13,9 +13,6 @@ import com.eventsourcing.index.EqualityIndexTest;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-
 import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
 
 @Test

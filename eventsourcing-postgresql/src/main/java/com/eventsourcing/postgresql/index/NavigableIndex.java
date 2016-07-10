@@ -161,7 +161,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
                 @SneakyThrows
-                @Override public EntityHandle<O> next() {
+                @Override public EntityHandle<O> fetchNext() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }
@@ -201,7 +201,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
                 @SneakyThrows
-                @Override public EntityHandle<O> next() {
+                @Override public EntityHandle<O> fetchNext() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }
@@ -248,7 +248,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
                 @SneakyThrows
-                @Override public EntityHandle<O> next() {
+                @Override public EntityHandle<O> fetchNext() {
                     UUID uuid = UUID.fromString(resultSet.getString(1));
                     return keyObjectStore.get(uuid);
                 }

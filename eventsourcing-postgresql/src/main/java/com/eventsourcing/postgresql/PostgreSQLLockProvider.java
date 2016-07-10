@@ -82,6 +82,7 @@ public class PostgreSQLLockProvider extends AbstractService implements LockProvi
                 s.setLong(1, key);
                 s.execute();
             }
+            connection.close();
             locked = false;
         }
 

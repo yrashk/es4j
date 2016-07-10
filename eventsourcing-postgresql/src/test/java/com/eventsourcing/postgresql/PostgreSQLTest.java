@@ -7,9 +7,9 @@
  */
 package com.eventsourcing.postgresql;
 
+import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.postgresql.ds.PGSimpleDataSource;
 
 import javax.sql.DataSource;
 
@@ -17,15 +17,19 @@ public class PostgreSQLTest {
     public static final DataSource dataSource;
 
     static {
-        PGSimpleDataSource ds = new PGSimpleDataSource();
-        String port = System.getenv("PGPORT") == null ? "5432" : System.getenv("PGPORT");
-        ds.setUrl("jdbc:postgresql://localhost:" + port + "/eventsourcing?user=eventsourcing&password=eventsourcing");
-        ds.setCurrentSchema("public");
+        PGDataSource ds = new PGDataSource();
+        ds.setHost("localhost");
+        ds.setDatabase("eventsourcing");
+        ds.setUser("eventsourcing");
+        ds.setPassword("eventsourcing");
+        ds.setPort(System.getenv("PGPORT") == null ? 5432 : Integer.valueOf(System.getenv("PGPORT")));
+        ds.setHousekeeper(false);
 
         HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(100);
+        config.setMaximumPoolSize(50);
         config.setDataSource(ds);
-        config.setLeakDetectionThreshold(2000);
+        config.setLeakDetectionThreshold(3000);
+        config.setConnectionInitSql("SET log_statement = 'all'; SET search_path = 'public'");
 
         dataSource = new HikariDataSource(config);
     }

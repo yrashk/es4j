@@ -343,7 +343,13 @@ public class Layout<T> {
                 Object o = serialization.getDeserializer(typeHandler).deserialize(typeHandler, buffer);
                 args[i] = o;
             }
+            Class<?> constructorArgType = constructor.getParameterTypes()[i];
+            if (!isAssignableFrom(constructorArgType, args[i].getClass())) {
+                throw new IllegalArgumentException("Property " + property.getName() + ": expected " +
+                                                   constructorArgType + ", got " + args[i].getClass());
+            }
         }
+
         T t = constructor.newInstance(args);
         if (!setters.isEmpty()) {
             for (Map.Entry<String, MethodHandle> entry : setters.entrySet()) {
@@ -354,6 +360,35 @@ public class Layout<T> {
             }
         }
         return t;
+    }
+
+    private boolean isAssignableFrom(Class<?> base, Class<?> klass) {
+        return toNonPrimitiveClass(base).isAssignableFrom(toNonPrimitiveClass(klass));
+    }
+
+    private Class<?> toNonPrimitiveClass(Class<?> klass) {
+        if (klass.equals(Byte.TYPE)) {
+            return Byte.class;
+        }
+        if (klass.equals(Short.TYPE)) {
+            return Short.class;
+        }
+        if (klass.equals(Integer.TYPE)) {
+            return Integer.class;
+        }
+        if (klass.equals(Long.TYPE)) {
+            return Long.class;
+        }
+        if (klass.equals(Boolean.TYPE)) {
+            return Boolean.class;
+        }
+        if (klass.equals(Float.TYPE)) {
+            return Float.class;
+        }
+        if (klass.equals(Double.TYPE)) {
+            return Double.class;
+        }
+        return klass;
     }
 
     private Optional<Object> findProperty(Map<Property<T>, Object> properties, String name) {

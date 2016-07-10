@@ -10,11 +10,9 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
 import com.eventsourcing.repository.ResolvedEntityHandle;
-import com.google.common.collect.Iterators;
 import com.google.common.collect.Lists;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
@@ -26,9 +24,7 @@ import com.googlecode.cqengine.index.support.SortedKeyStatisticsIndex;
 import com.googlecode.cqengine.quantizer.IntegerQuantizer;
 import com.googlecode.cqengine.quantizer.Quantizer;
 import com.googlecode.cqengine.query.Query;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
-import lombok.SneakyThrows;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.annotations.Test;
 
@@ -209,10 +205,14 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 20 because this query spans 2 buckets (each containing 10 objects)...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 47, 53)).getMergeCost(), 20);
+        ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(between(Car.CAR_ID, 47, 53));
+        assertEquals(resultSet.getMergeCost(), 20);
+        resultSet.close();
 
         // 7 objects match the query (between is inclusive)...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 47, 53)).size(), 7);
+        resultSet = collection.retrieve(between(Car.CAR_ID, 47, 53));
+        assertEquals(resultSet.size(), 7);
+        resultSet.close();
 
         // The matching objects are...
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 47, 53));
@@ -229,10 +229,14 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 2, 4)).getMergeCost(), 10);
+        ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(between(Car.CAR_ID, 2, 4));
+        assertEquals(resultSet.getMergeCost(), 10);
+        resultSet.close();
 
         // 3 objects match the query...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 2, 4)).size(), 3);
+        resultSet = collection.retrieve(between(Car.CAR_ID, 2, 4));
+        assertEquals(resultSet.size(), 3);
+        resultSet.close();
 
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 2, 4));
         assertEquals(carIdsFound, asList(2, 3, 4));
@@ -248,10 +252,14 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 96, 98)).getMergeCost(), 10);
+        ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(between(Car.CAR_ID, 96, 98));
+        assertEquals(resultSet.getMergeCost(), 10);
+        resultSet.close();
 
         // 3 objects match the query...
-        assertEquals(collection.retrieve(between(Car.CAR_ID, 96, 98)).size(), 3);
+        resultSet = collection.retrieve(between(Car.CAR_ID, 96, 98));
+        assertEquals(resultSet.size(), 3);
+        resultSet.close();
 
         List<Integer> carIdsFound = retrieveCarIds(collection, between(Car.CAR_ID, 96, 98));
         assertEquals(carIdsFound, asList(96, 97, 98));
@@ -282,10 +290,23 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         collection.addIndex(index);
         collection.addAll(CarFactory.createCollectionOfCars(100));
 
-        assertEquals(collection.retrieve(greaterThan(Car.CAR_ID, 95)).size(), 4);
-        assertEquals(collection.retrieve(greaterThan(Car.CAR_ID, 85)).size(), 14);
-        assertEquals(collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 95)).size(), 5);
-        assertEquals(collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 85)).size(), 15);
+        ResultSet<EntityHandle<Car>> resultSet;
+
+        resultSet = collection.retrieve(greaterThan(Car.CAR_ID, 95));
+        assertEquals(resultSet.size(), 4);
+        resultSet.close();
+
+        resultSet = collection.retrieve(greaterThan(Car.CAR_ID, 85));
+        assertEquals(resultSet.size(), 14);
+        resultSet.close();
+
+        resultSet = collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 95));
+        assertEquals(resultSet.size(), 5);
+        resultSet.close();
+
+        resultSet = collection.retrieve(greaterThanOrEqualTo(Car.CAR_ID, 85));
+        assertEquals(resultSet.size(), 15);
+        resultSet.close();
     }
 
     @Test
@@ -302,19 +323,29 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, true, 92, true);
-        assertEquals(collection.retrieve(query).size(), 5);
+        ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(query);
+        assertEquals(resultSet.size(), 5);
+        resultSet.close();
+
         assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, false, 92, true);
-        assertEquals(collection.retrieve(query).size(), 4);
+        resultSet = collection.retrieve(query);
+        assertEquals(resultSet.size(), 4);
+        resultSet.close();
+
         assertEquals(retrieveCarIds(collection, query), asList(89, 90, 91, 92));
 
         query = between(Car.CAR_ID, 88, true, 92, false);
-        assertEquals(collection.retrieve(query).size(), 4);
+        resultSet = collection.retrieve(query);
+        assertEquals(resultSet.size(), 4);
+        resultSet.close();
         assertEquals(retrieveCarIds(collection, query), asList(88, 89, 90, 91));
 
         query = between(Car.CAR_ID, 88, false, 92, false);
-        assertEquals(collection.retrieve(query).size(), 3);
+        resultSet = collection.retrieve(query);
+        assertEquals(resultSet.size(), 3);
+        resultSet.close();
         assertEquals(retrieveCarIds(collection, query), asList(89, 90, 91));
     }
 
@@ -329,13 +360,17 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         Query<EntityHandle<Car>> query = and(between(Car.CAR_ID, 96, 98), greaterThan(Car.CAR_ID, 95));
 
         // 3 objects match the query...
-        assertEquals(collection.retrieve(query).size(), 3);
+        ResultSet<EntityHandle<Car>> resultSet = collection.retrieve(query);
+        assertEquals(resultSet.size(), 3);
+        resultSet.close();
 
         List<Integer> carIdsFound = retrieveCarIds(collection, query);
         assertEquals(carIdsFound, asList(96, 97, 98));
 
         // Merge cost should be 10, because objects matching this query are in a single bucket...
-        assertEquals(collection.retrieve(query).getMergeCost(), 10);
+        resultSet = collection.retrieve(query);
+        assertEquals(resultSet.getMergeCost(), 10);
+        resultSet.close();
     }
 
     static List<Integer> retrieveCarIds(IndexedCollection<EntityHandle<Car>> collection, Query<EntityHandle<Car>> query) {
@@ -344,6 +379,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         for (EntityHandle<Car> car : cars) {
             carIds.add(car.get().getCarId());
         }
+        cars.close();
         return carIds;
     }
 

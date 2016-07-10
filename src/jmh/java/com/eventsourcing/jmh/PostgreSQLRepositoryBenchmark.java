@@ -7,13 +7,13 @@
  */
 package com.eventsourcing.jmh;
 
+import com.eventsourcing.Journal;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.postgresql.PostgreSQLJournal;
-import com.eventsourcing.Journal;
+import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.postgresql.ds.PGSimpleDataSource;
 
 public class PostgreSQLRepositoryBenchmark extends RepositoryBenchmark {
     @Override protected IndexEngine createIndex() {
@@ -21,12 +21,17 @@ public class PostgreSQLRepositoryBenchmark extends RepositoryBenchmark {
     }
 
     @Override protected Journal createJournal() {
-        PGSimpleDataSource dataSource = new PGSimpleDataSource();
-        dataSource.setUrl("jdbc:postgresql://localhost/eventsourcing?user=eventsourcing&password=eventsourcing");
+        PGDataSource ds = new PGDataSource();
+        ds.setHost("localhost");
+        ds.setDatabase("eventsourcing");
+        ds.setUser("eventsourcing");
+        ds.setPassword("eventsourcing");
+        ds.setPort(System.getenv("PGPORT") == null ? 5432 : Integer.valueOf(System.getenv("PGPORT")));
+        ds.setHousekeeper(false);
 
         HikariConfig config = new HikariConfig();
         config.setMaximumPoolSize(30);
-        config.setDataSource(dataSource);
+        config.setDataSource(ds);
 
         return new PostgreSQLJournal(new HikariDataSource(config));
     }

@@ -22,6 +22,8 @@ public abstract class PostgreSQLStatementIterator<T> implements CloseableIterato
     protected final PreparedStatement statement;
     protected final Connection connection;
 
+    private boolean nextCalled = true;
+
     @SneakyThrows
     public PostgreSQLStatementIterator(PreparedStatement statement, Connection connection, boolean lazy) {
         this.statement = statement;
@@ -39,15 +41,25 @@ public abstract class PostgreSQLStatementIterator<T> implements CloseableIterato
             resultSet = statement.executeQuery();
         }
 
-        if (resultSet.next()) {
-            return true;
+        if (nextCalled) {
+            nextCalled = false;
+            if (resultSet.next()) {
+                return true;
+            } else {
+                close();
+                return false;
+            }
         } else {
-            close();
-            return false;
+            return true;
         }
     }
 
-    public abstract T next();
+    @Override public T next() {
+        nextCalled = true;
+        return fetchNext();
+    }
+
+    protected abstract T fetchNext();
 
     @SneakyThrows
     @Override

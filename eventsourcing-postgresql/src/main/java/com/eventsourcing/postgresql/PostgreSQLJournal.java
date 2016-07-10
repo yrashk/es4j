@@ -12,9 +12,6 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.types.ListTypeHandler;
-import com.eventsourcing.layout.types.ObjectTypeHandler;
-import com.eventsourcing.layout.types.OptionalTypeHandler;
 import com.eventsourcing.repository.AbstractJournal;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
@@ -31,10 +28,7 @@ import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
 import java.nio.ByteBuffer;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.Savepoint;
+import java.sql.*;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -132,56 +126,11 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         return event1;
     }
 
-    private void extractParameter(List<String> list, Property p, TypeHandler typeHandler, String context) {
-        if (typeHandler instanceof ObjectTypeHandler) {
-            ObjectTypeHandler handler = (ObjectTypeHandler) typeHandler;
-            String ctx = context == null ? "(\"" + p.getName() + "\")" : context + "." + "\"" + p.getName() + "\"";
-            list.addAll(getParameters(handler.getLayout(), ctx));
-        } else
-        if (typeHandler instanceof OptionalTypeHandler) {
-            extractParameter(list, p, ((OptionalTypeHandler) typeHandler).getWrappedHandler(), context);
-        } else 
-        if (typeHandler instanceof ListTypeHandler &&
-                ((ListTypeHandler) typeHandler).getWrappedHandler() instanceof ObjectTypeHandler) {
-            ObjectTypeHandler handler = (ObjectTypeHandler) ((ListTypeHandler) typeHandler).getWrappedHandler();
-            @SuppressWarnings("unchecked")
-            List<? extends Property<?>> ps = handler.getLayout().getProperties();
-            for (Property px : ps) {
-                if (context == null) {
-                    list.add(
-                            "(SELECT array_agg((i).\"" + px.getName() + "\") FROM unnest(\"" + p.getName() + "\") " +
-                                    "AS " +
-                                    "i)");
-                } else {
-                    list.add("(SELECT array_agg((i).\"" + px.getName() + "\") FROM unnest("+context+".\"" + p.getName
-                            () +
-                            "\") " +
-                            "AS i)");
-                }
-            }
-        } else {
-            String s = "\"" + p.getName() + "\"";
-            if (context == null) {
-                list.add(s);
-            } else {
-                list.add(context + "." + s);
-            }
-        }
-    }
-
-    private List<String> getParameters(Layout<?> layout, String context) {
-        ArrayList<String> list = new ArrayList<>();
-        List<? extends Property<?>> properties = layout.getProperties();
-        for (Property<?> property : properties) {
-            extractParameter(list, property, property.getTypeHandler(), context);
-        }
-        return list;
-    }
-
     @SneakyThrows
     @Override public <T extends Entity> Optional<T> get(UUID uuid) {
             Optional<T> result;
         Connection connection = dataSource.getConnection();
+        refreshConnectionRegistry(connection);
         PreparedStatement s = connection
                 .prepareStatement("SELECT layout FROM eventsourcing.layouts WHERE uuid = ?::UUID");
         s.setString(1, uuid.toString());
@@ -191,7 +140,9 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
                 String hash = BaseEncoding.base16().encode(bytes);
                 ReaderFunction reader = readerFunctions.get(hash);
                 Layout<?> layout = getLayout(bytes);
-                String columns = Joiner.on(", ").join(getParameters(layout, null));
+                String columns = Joiner.on(", ")
+                                       .join(layout.getProperties().stream()
+                                                   .map(p -> "\"" + p.getName() + "\"").collect(Collectors.toList()));
                 String query = "SELECT " + columns + " FROM layout_v1_" + hash + " WHERE uuid = ?::UUID";
 
                 PreparedStatement s1 = connection.prepareStatement(query);
@@ -244,7 +195,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
 
         @SneakyThrows
         @Override
-        public EntityHandle<R> next() {
+        public EntityHandle<R> fetchNext() {
             return new JournalEntityHandle<>(journal, UUID.fromString(resultSet.getString(1)));
         }
     }
@@ -263,7 +214,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         });
         PreparedStatement check = connection
                 .prepareStatement("SELECT * from pg_catalog.pg_tables WHERE tablename = 'layouts' AND schemaname = ?");
-        check.setString(1, connection.getSchema());
+        check.setString(1, "eventsourcing");
         try (ResultSet resultSet = check.executeQuery()) {
             if (resultSet.next()) {
                 PreparedStatement s = connection.prepareStatement("DELETE FROM eventsourcing.layouts");
@@ -385,12 +336,14 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
                 i = setValue(connection, s, i, value, property.getTypeHandler());
             }
             s.execute();
+
             PreparedStatement layoutsInsertion = connection.prepareStatement("INSERT INTO eventsourcing.layouts " +
                                                                                      "VALUES (?::UUID, " +
                                                                                      "?)");
             layoutsInsertion.setString(1, uuid.toString());
             layoutsInsertion.setBytes(2, layout.getHash());
-            layoutsInsertion.execute();
+            layoutsInsertion.executeUpdate();
+
             s.close();
             return uuid;
         }
@@ -427,13 +380,12 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             String columns = defineColumns(connection, layout);
 
             String createTable = "CREATE TABLE IF NOT EXISTS layout_v1_" + encoded + " (" +
-                    "uuid UUID PRIMARY KEY," +
-                    columns +
-                    ")";
+                    "uuid UUID PRIMARY KEY," + columns + ")";
             PreparedStatement s = connection.prepareStatement(createTable);
             s.execute();
             s.close();
-            s = connection.prepareStatement("COMMENT ON TABLE layout_v1_" + encoded + " IS '" + layout.getName() + "'");
+            s = connection.prepareStatement("COMMENT ON TABLE layout_v1_" + encoded + " IS '" +
+                                                    layout.getName() + "'");
             s.execute();
             s.close();
             connection.close();

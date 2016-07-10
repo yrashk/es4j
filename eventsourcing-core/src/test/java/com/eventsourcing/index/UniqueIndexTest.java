@@ -10,14 +10,11 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.StandardEntity;
-import com.eventsourcing.models.Car;
-import com.eventsourcing.models.CarFactory;
 import com.eventsourcing.repository.ResolvedEntityHandle;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.AttributeIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
-import com.googlecode.cqengine.index.support.KeyStatisticsIndex;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -26,7 +23,6 @@ import org.testng.annotations.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static com.googlecode.cqengine.query.QueryFactory.noQueryOptions;
@@ -167,8 +163,12 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         cars.add(new ResolvedEntityHandle<>(new Car(1, "ford focus", "foo", Arrays.asList("spare tyre", "sunroof"))));
         cars.add(new ResolvedEntityHandle<>(new Car(2, "ford taurus", "bar", Arrays.asList("radio", "cd player"))));
 
-        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
-        assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
+        ResultSet<EntityHandle<Car>> radio = cars.retrieve(equal(Car.FEATURES, "radio"));
+        assertEquals(radio.size(), 1);
+        radio.close();
+        ResultSet<EntityHandle<Car>> unknown = cars.retrieve(equal(Car.FEATURES, "unknown"));
+        assertEquals(unknown.size(), 0);
+        unknown.close();
         index.clear(noQueryOptions());
     }
 
@@ -185,8 +185,12 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
         // Add some indexes...
         cars.addIndex(index);
 
-        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
-        assertEquals(cars.retrieve(equal(Car.FEATURES, "unknown")).size(), 0);
+        ResultSet<EntityHandle<Car>> radio = cars.retrieve(equal(Car.FEATURES, "radio"));
+        assertEquals(radio.size(), 1);
+        radio.close();
+        ResultSet<EntityHandle<Car>> unknown = cars.retrieve(equal(Car.FEATURES, "unknown"));
+        assertEquals(unknown.size(), 0);
+        unknown.close();
         index.clear(noQueryOptions());
     }
 
@@ -209,7 +213,9 @@ public abstract class UniqueIndexTest<UniqueIndex extends AttributeIndex> {
 
         cars1.addIndex(index1);
 
-        assertEquals(cars.retrieve(equal(Car.FEATURES, "radio")).size(), 1);
+        ResultSet<EntityHandle<Car>> radio = cars.retrieve(equal(Car.FEATURES, "radio"));
+        assertEquals(radio.size(), 1);
+        radio.close();
 
         index.clear(noQueryOptions());
         index1.clear(noQueryOptions());
