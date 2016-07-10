@@ -11,10 +11,7 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-public abstract class MultiValueAttribute<O extends Entity, A> extends com.googlecode.cqengine.attribute
-        .MultiValueAttribute<EntityHandle<O>, A> implements Attribute<O, A> {
-
-    private Class<O> objectType;
+public abstract class MultiValueAttribute<O extends Entity, A> extends AbstractAttribute<O, A> {
 
     public MultiValueAttribute() {
         super();
@@ -25,14 +22,12 @@ public abstract class MultiValueAttribute<O extends Entity, A> extends com.googl
     }
 
     public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
-        super(handleType, attributeType);
-        this.objectType = objectType;
+        super(objectType, handleType, attributeType);
     }
 
-    public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String
-            attributeName) {
-        super(handleType, attributeType, attributeName);
-        this.objectType = objectType;
+    public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType,
+                               String attributeName) {
+        super(objectType, handleType, attributeType, attributeName);
     }
 
     @Override
@@ -42,8 +37,7 @@ public abstract class MultiValueAttribute<O extends Entity, A> extends com.googl
 
     public abstract Iterable<A> getValues(O object, QueryOptions queryOptions);
 
-    @Override public Class<O> getEffectiveObjectType() {
-        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
+    @Override public boolean canEqual(Object other) {
+        return other instanceof MultiValueAttribute;
     }
-
 }

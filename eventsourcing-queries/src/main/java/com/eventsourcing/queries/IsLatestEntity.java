@@ -135,7 +135,7 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
         List<Query<O>> conditions = StreamSupport.stream(values.spliterator(), false)
                                                  .map(v -> greaterThan(timestampAttribute, v))
                                                  .collect(Collectors.toList());
-        Query<O> timestampQuery = new Or<>(conditions);
+        Query<O> timestampQuery = conditions.size() == 1 ? conditions.get(0) : new Or<>(conditions);
         try (ResultSet<O> resultSet = collection.retrieve(and(
                 actualQuery,
                 timestampQuery))) {

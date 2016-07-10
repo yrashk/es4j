@@ -13,6 +13,7 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Collections;
 
 /**
  * An extension of {@link com.googlecode.cqengine.attribute.SimpleAttribute} that hides
@@ -21,11 +22,7 @@ import java.lang.reflect.Type;
  * @param <O>
  * @param <A>
  */
-public abstract class SimpleAttribute<O extends Entity, A>
-        extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A>
-        implements Attribute<O, A> {
-
-    private Class<O> objectType;
+public abstract class SimpleAttribute<O extends Entity, A> extends AbstractAttribute<O, A> {
 
     public SimpleAttribute() {
         super();
@@ -36,24 +33,29 @@ public abstract class SimpleAttribute<O extends Entity, A>
     }
 
     public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
-        super(handleType, attributeType);
-        this.objectType = objectType;
+        super(objectType, handleType, attributeType);
     }
 
-    public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String attributeName) {
-        super(handleType, attributeType, attributeName);
-        this.objectType = objectType;
+    public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType,
+                           String attributeName) {
+        super(objectType, handleType, attributeType, attributeName);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
+    public Iterable<A> getValues(EntityHandle<O> object, QueryOptions queryOptions) {
+        return Collections.singletonList(getValue(object, queryOptions));
+    }
+
     public A getValue(EntityHandle<O> object, QueryOptions queryOptions) {
         return getValue(object.get(), queryOptions);
     }
 
     public abstract A getValue(O object, QueryOptions queryOptions);
 
-    @Override public Class<O> getEffectiveObjectType() {
-        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
+    @Override public boolean canEqual(Object other) {
+        return other instanceof SimpleAttribute;
     }
-
 }
