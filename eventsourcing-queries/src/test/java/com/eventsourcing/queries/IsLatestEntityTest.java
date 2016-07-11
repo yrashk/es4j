@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
+import static com.googlecode.cqengine.query.QueryFactory.and;
 import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -54,6 +55,13 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
                 return object.reference();
             }
         };
+        @Index
+        public static SimpleAttribute<TestEvent, String> TEST = new SimpleAttribute<TestEvent, String>("test") {
+                    @Override public String getValue(TestEvent object, QueryOptions queryOptions) {
+                        return object.test();
+                    }
+                };
+
         @Index({EQ, LT, GT})
         public static SimpleAttribute<TestEvent, HybridTimestamp> TIMESTAMP = new
                 SimpleAttribute<TestEvent, HybridTimestamp>("timestamp") {
@@ -96,6 +104,26 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
         try (ResultSet<EntityHandle<TestEvent>> resultSet = repository.query(TestEvent.class, query)) {
             assertEquals(resultSet.size(), 1);
             assertEquals(resultSet.uniqueResult().get().test(), "test2");
+        }
+    }
+
+
+    @Test @SneakyThrows
+    public void testWithConditions() {
+        UUID uuid1 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        repository.publish(new TestCommand("test0", uuid1)).get();
+        repository.publish(new TestCommand("test1", uuid1)).get();
+        repository.publish(new TestCommand("test2", uuid2)).get();
+
+        IndexedCollection<EntityHandle<TestEvent>> coll = repository.getIndexEngine().getIndexedCollection
+                (TestEvent.class);
+        Query<EntityHandle<TestEvent>> latestEntity = isLatestEntity(coll, equal(TestEvent.REFERENCE_ID, uuid1),
+                                                                     TestEvent.TIMESTAMP);
+        Query<EntityHandle<TestEvent>> query = and(latestEntity, equal(TestEvent.TEST, "test1"));
+        try (ResultSet<EntityHandle<TestEvent>> resultSet = repository.query(TestEvent.class, query)) {
+            assertEquals(resultSet.size(), 1);
+            assertEquals(resultSet.uniqueResult().get().test(), "test1");
         }
     }
 
