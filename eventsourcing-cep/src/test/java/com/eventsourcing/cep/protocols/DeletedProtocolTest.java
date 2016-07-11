@@ -14,14 +14,18 @@ import com.eventsourcing.StandardCommand;
 import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.cep.events.Undeleted;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.queries.ModelCollectionQuery;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
+import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
@@ -103,6 +107,10 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
             this.id = id;
         }
 
+        public static Optional<TestModel> lookup(Repository repository, UUID id) {
+            return Optional.of(new TestModel(repository, id));
+        }
+
     }
 
     @Test @SneakyThrows
@@ -122,6 +130,48 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
         Undelete undelete = new Undelete(delete.eventId);
         repository.publish(undelete).get();
         assertFalse(model.deleted().isPresent());
+    }
+
+    @Test @SneakyThrows
+    public void queryNonDeleted() {
+        TestModel model = new TestModel(repository, UUID.randomUUID());
+
+        Collection<TestModel> models = ModelCollectionQuery
+                .query(repository, DeletedProtocol.deleted(TestModel::lookup));
+
+        assertEquals(models.size(), 0);
+
+    }
+
+
+    @Test @SneakyThrows
+    public void queryUndeleted() {
+        TestModel model = new TestModel(repository, UUID.randomUUID());
+        assertFalse(model.deleted().isPresent());
+        Delete delete = new Delete(model.getId());
+        repository.publish(delete).get();
+        Undelete undelete = new Undelete(delete.eventId);
+        repository.publish(undelete).get();
+
+        Collection<TestModel> models = ModelCollectionQuery
+                .query(repository, DeletedProtocol.deleted(TestModel::lookup));
+
+        assertEquals(models.size(), 0);
+
+    }
+
+    @Test @SneakyThrows
+    public void queryDeleted() {
+        TestModel model = new TestModel(repository, UUID.randomUUID());
+        assertFalse(model.deleted().isPresent());
+        Delete delete = new Delete(model.getId());
+        repository.publish(delete).get();
+
+        Collection<TestModel> models = ModelCollectionQuery
+                .query(repository, DeletedProtocol.deleted(TestModel::lookup));
+
+        assertEquals(models.size(), 1);
+
     }
 
 }
