@@ -12,12 +12,15 @@ import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.Repository;
 import com.eventsourcing.layout.LayoutConstructor;
+import com.eventsourcing.queries.ModelCollectionQuery;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
@@ -77,6 +80,10 @@ public class DescriptionProtocolTest extends RepositoryUsingTest {
             this.id = id;
         }
 
+        public static Optional<TestModel> lookup(Repository repository, UUID uuid) {
+            return Optional.of(new TestModel(repository, uuid));
+        }
+
     }
 
     @Test
@@ -102,5 +109,22 @@ public class DescriptionProtocolTest extends RepositoryUsingTest {
         changeDescription = new ChangeDescription(model.getId(), "Description #2");
         repository.publish(changeDescription).get();
         assertEquals(model.description(), "Description #2");
+    }
+
+    @Test
+    @SneakyThrows
+    public void query() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
+        NameProtocolTest.TestModel model = new NameProtocolTest.TestModel(repository, UUID.randomUUID());
+
+        ChangeDescription changeDescription = new ChangeDescription(model.getId(), "Description");
+        repository.publish(changeDescription).get();
+
+        Collection<TestModel> models = ModelCollectionQuery.query(repository, DescriptionProtocol.described("Description", TestModel::lookup));
+
+        assertEquals(models.size(), 1);
+        assertTrue(models.stream().anyMatch(m -> m.description().contentEquals("Description")));
     }
 }

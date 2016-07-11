@@ -12,12 +12,16 @@ import com.eventsourcing.cep.events.NameChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.Repository;
 import com.eventsourcing.layout.LayoutConstructor;
+import com.eventsourcing.queries.ModelCollectionQuery;
+import com.eventsourcing.queries.ModelQueries;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.testng.annotations.Test;
 
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.testng.Assert.assertEquals;
@@ -74,6 +78,10 @@ public class NameProtocolTest extends RepositoryUsingTest {
             this.id = id;
         }
 
+        public static Optional<TestModel> lookup(Repository repository, UUID uuid) {
+            return Optional.of(new TestModel(repository, uuid));
+        }
+
     }
 
     @Test
@@ -97,5 +105,23 @@ public class NameProtocolTest extends RepositoryUsingTest {
         rename = new Rename(model.getId(), "Name #2");
         repository.publish(rename).get();
         assertEquals(model.name(), "Name #2");
+    }
+
+    @Test
+    @SneakyThrows
+    public void query() {
+        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
+        timestamp.update();
+
+        TestModel model = new TestModel(repository, UUID.randomUUID());
+
+        Rename rename = new Rename(model.getId(), "Name");
+        repository.publish(rename).get();
+
+        Collection<TestModel> models = ModelCollectionQuery
+                .query(repository, NameProtocol.named("Name", TestModel::lookup));
+
+        assertEquals(models.size(), 1);
+        assertTrue(models.stream().anyMatch(m -> m.name().contentEquals("Name")));
     }
 }
