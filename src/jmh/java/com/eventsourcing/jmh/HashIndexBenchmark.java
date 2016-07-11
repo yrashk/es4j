@@ -10,7 +10,7 @@ package com.eventsourcing.jmh;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.jmh.models.Car;
 import com.eventsourcing.jmh.models.CarFactory;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.hash.HashIndex;

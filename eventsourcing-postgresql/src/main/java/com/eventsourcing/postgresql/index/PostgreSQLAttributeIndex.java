@@ -18,7 +18,7 @@ import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.index.unique.UniqueIndex;

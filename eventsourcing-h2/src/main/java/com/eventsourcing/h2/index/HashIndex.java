@@ -11,7 +11,7 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.AbstractHashingAttributeIndex;
 import com.eventsourcing.index.Attribute;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.google.common.collect.Iterators;
 import com.google.common.hash.HashFunction;
 import com.google.common.hash.Hashing;
