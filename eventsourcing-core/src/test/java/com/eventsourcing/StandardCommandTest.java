@@ -16,9 +16,15 @@ import static org.testng.Assert.*;
 
 public class StandardCommandTest {
 
+    public static class SomeEvent extends StandardEvent {}
+
     @Value
     public static class SomeCommand extends StandardCommand<Void, Void> {
         String a;
+
+        @Override public EventStream<Void> events() throws Exception {
+            return EventStream.of(new SomeEvent());
+        }
     }
 
     @Test
@@ -28,6 +34,13 @@ public class StandardCommandTest {
         assertEquals(layout.getProperties().size(), 2);
         assertNotNull(layout.getProperty("a"));
         assertNotNull(layout.getProperty("timestamp"));
+    }
+
+    @Test
+    @SneakyThrows
+    public void passthrough() {
+        EventStream<Void> eventStream = new SomeCommand("a").events(null, null);
+        assertTrue(eventStream.getStream().anyMatch(e -> e instanceof SomeEvent));
     }
 
 }

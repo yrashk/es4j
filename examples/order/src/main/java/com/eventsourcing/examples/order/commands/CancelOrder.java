@@ -29,7 +29,7 @@ public class CancelOrder extends StandardCommand<Void, Void> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(OrderCancelled.builder().id(id).build());
     }
 }

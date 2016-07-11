@@ -114,7 +114,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             return EventStream.of(TestEvent.builder().string(string).build());
         }
     }

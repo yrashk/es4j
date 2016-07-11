@@ -40,7 +40,7 @@ public class LayoutMigrationTest extends RepositoryTest {
             super(timestamp);
         }
 
-        @Override public EventStream<Void> events(Repository repository) throws Exception {
+        @Override public EventStream<Void> events() throws Exception {
             return EventStream.of(TestEvent1.builder().x(0).build());
         }
     }

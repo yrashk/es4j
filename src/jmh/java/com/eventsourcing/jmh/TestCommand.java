@@ -20,7 +20,7 @@ public class TestCommand extends StandardCommand<Void, String> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) {
+    public EventStream<Void> events() {
         return EventStream.of(TestEvent.builder().string("test").build());
     }
 

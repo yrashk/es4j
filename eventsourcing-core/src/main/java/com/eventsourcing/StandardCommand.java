@@ -24,6 +24,18 @@ public abstract class StandardCommand<S, R> extends StandardEntity<Command<S, R>
     /**
      * Returns a stream of events that should be recorded. By default, an empty stream returned.
      *
+     * @return stream of events
+     * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
+     *                   be recorded
+     */
+
+    public EventStream<S> events() throws Exception {
+        return EventStream.empty();
+    }
+
+    /**
+     * Returns a stream of events that should be recorded. By default, calls {@link #events()}
+     *
      * @param repository Configured repository
      * @return stream of events
      * @throws Exception if the command is to be rejected, an exception has to be thrown. In this case, no events will
@@ -31,7 +43,7 @@ public abstract class StandardCommand<S, R> extends StandardEntity<Command<S, R>
      */
 
     public EventStream<S> events(Repository repository) throws Exception {
-        return EventStream.empty();
+        return events();
     }
 
     @Override public EventStream<S> events(Repository repository, LockProvider lockProvider) throws

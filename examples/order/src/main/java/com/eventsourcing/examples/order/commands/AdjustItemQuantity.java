@@ -33,7 +33,7 @@ public class AdjustItemQuantity extends StandardCommand<Void, Void> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(ItemQuantityAdjusted.builder().itemId(itemId).quantity(quantity).build());
     }
 }

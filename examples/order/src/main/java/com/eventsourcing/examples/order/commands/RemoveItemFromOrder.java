@@ -30,7 +30,7 @@ public class RemoveItemFromOrder extends StandardCommand<Void, Void> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(ItemRemovedFromOrder.builder().itemId(itemId).build());
     }
 }

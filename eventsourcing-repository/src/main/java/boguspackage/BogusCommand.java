@@ -21,7 +21,7 @@ public class BogusCommand extends StandardCommand<Void, String> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(BogusEvent.builder().build());
     }
 

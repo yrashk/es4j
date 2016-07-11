@@ -224,7 +224,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             this.t = t;
         }
 
-        @Override public EventStream<SerializationEvent> events(Repository repository) throws Exception {
+        @Override public EventStream<SerializationEvent> events() throws Exception {
             SerializationEvent.SerializationEventBuilder builder = SerializationEvent.builder();
             if (t != null) {
                 builder.test(t);

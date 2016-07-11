@@ -32,7 +32,7 @@ public class Rename extends StandardCommand<Void, String> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(NameChanged.builder().id(id).name(name).build());
     }
 
