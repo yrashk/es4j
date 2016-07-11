@@ -8,7 +8,7 @@
 package com.eventsourcing.models;
 
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.googlecode.concurrenttrees.common.LazyIterator;
 
 import java.util.*;

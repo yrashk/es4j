@@ -12,7 +12,7 @@ import com.eventsourcing.EntityHandle;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.google.common.collect.Lists;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;

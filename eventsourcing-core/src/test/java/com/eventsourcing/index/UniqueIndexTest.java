@@ -10,7 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.StandardEntity;
-import com.eventsourcing.repository.ResolvedEntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.AttributeIndex;
