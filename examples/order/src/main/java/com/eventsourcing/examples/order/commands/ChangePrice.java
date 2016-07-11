@@ -33,7 +33,7 @@ public class ChangePrice extends StandardCommand<Void, BigDecimal> {
     }
 
     @Override
-    public EventStream<Void> events(Repository repository) throws Exception {
+    public EventStream<Void> events() throws Exception {
         return EventStream.of(PriceChanged.builder().id(id).price(price).build());
     }
 

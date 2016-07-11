@@ -54,7 +54,7 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) throws Exception {
+        public EventStream<Void> events() throws Exception {
             Deleted reference = Deleted.builder().reference(id).build();
             eventId = reference.uuid();
             return EventStream.of(reference);
@@ -84,7 +84,7 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
 
 
         @Override
-        public EventStream<Void> events(Repository repository) throws Exception {
+        public EventStream<Void> events() throws Exception {
             return EventStream.of(Undeleted.builder().deleted(id).build());
         }
 

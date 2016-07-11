@@ -70,7 +70,7 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
         private String test;
         private UUID reference;
 
-        @Override public EventStream<Void> events(Repository repository) throws Exception {
+        @Override public EventStream<Void> events() throws Exception {
             TestEvent event = new TestEvent(test, reference);
             return EventStream.of(event);
         }

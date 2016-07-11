@@ -55,7 +55,7 @@ public class NameProtocolTest extends RepositoryUsingTest {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) throws Exception {
+        public EventStream<Void> events() throws Exception {
             return EventStream.of(NameChanged.builder().reference(id).name(name).timestamp(timestamp()).build());
         }
 

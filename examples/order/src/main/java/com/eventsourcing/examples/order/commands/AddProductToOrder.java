@@ -39,7 +39,7 @@ public class AddProductToOrder extends StandardCommand<ProductAddedToOrder, Orde
     }
 
     @Override
-    public EventStream<ProductAddedToOrder> events(Repository repository) throws Exception {
+    public EventStream<ProductAddedToOrder> events() throws Exception {
         ProductAddedToOrder addedToOrder = ProductAddedToOrder.builder()
                 .orderId(orderId).productId(productId).quantity(quantity).build();
         return EventStream.ofWithState(addedToOrder, addedToOrder);

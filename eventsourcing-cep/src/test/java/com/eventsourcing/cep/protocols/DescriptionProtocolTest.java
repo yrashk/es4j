@@ -54,7 +54,7 @@ public class DescriptionProtocolTest extends RepositoryUsingTest {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) throws Exception {
+        public EventStream<Void> events() throws Exception {
             return EventStream.of(DescriptionChanged.builder()
                     .reference(id)
                     .description(description)

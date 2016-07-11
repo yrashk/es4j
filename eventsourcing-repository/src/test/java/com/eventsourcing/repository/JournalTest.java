@@ -113,7 +113,7 @@ public abstract class JournalTest<T extends Journal> {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) throws Exception {
+        public EventStream<Void> events() throws Exception {
             return EventStream.of(Stream.generate(() -> {
                 throw new IllegalStateException();
             }));

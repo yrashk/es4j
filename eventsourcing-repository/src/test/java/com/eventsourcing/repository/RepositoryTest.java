@@ -131,7 +131,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             return EventStream.of(TestEvent.builder().string(value).build());
         }
 
@@ -263,7 +263,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             return EventStream.of(new Event[]{
                                   TestEvent.builder().string("test").timestamp(eventTimestamp).build(),
                                   TestEvent.builder().string("followup").build()});
@@ -384,7 +384,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             throw new IllegalStateException();
         }
     }
@@ -441,7 +441,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             return EventStream.of(Stream.concat(Stream.of(
                     TestEvent.builder().string("test").build().uuid(eventUUID)),
                                  Stream.generate(() -> {
@@ -553,7 +553,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Override
-        public EventStream<Void> events(Repository repository) {
+        public EventStream<Void> events() {
             return EventStream.of(TestOptionalEvent.builder().optional(optional).build());
         }
 

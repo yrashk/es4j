@@ -37,7 +37,7 @@ public class CreateProduct extends StandardCommand<ProductCreated, Product> {
     }
 
     @Override
-    public EventStream<ProductCreated> events(Repository repository) throws Exception {
+    public EventStream<ProductCreated> events() throws Exception {
         ProductCreated productCreated = ProductCreated.builder().build();
         NameChanged nameChanged = NameChanged.builder().id(productCreated.uuid()).name(name).build();
         PriceChanged priceChanged = PriceChanged.builder().id(productCreated.uuid()).price(price).build();

@@ -37,7 +37,7 @@ public class ModelQueriesTest extends RepositoryUsingTest {
     }
 
     public static class TestCommand extends StandardCommand<TestEvent, UUID> {
-        @Override public EventStream<TestEvent> events(Repository repository) throws Exception {
+        @Override public EventStream<TestEvent> events() throws Exception {
             TestEvent event = new TestEvent();
             return EventStream.ofWithState(event, event);
         }

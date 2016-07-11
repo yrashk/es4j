@@ -20,7 +20,7 @@ public class CreateOrder extends StandardCommand<OrderCreated, Order> {
     public CreateOrder() {}
 
     @Override
-    public EventStream<OrderCreated> events(Repository repository) throws Exception {
+    public EventStream<OrderCreated> events() throws Exception {
         OrderCreated orderCreated = OrderCreated.builder().build();
         return EventStream.ofWithState(orderCreated, orderCreated);
     }
