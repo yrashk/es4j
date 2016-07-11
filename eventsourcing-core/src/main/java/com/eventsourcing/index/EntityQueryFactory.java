@@ -63,7 +63,7 @@ public interface EntityQueryFactory {
 
         @Override
         protected int calcHashCode() {
-            return 3866481; // chosen randomly
+            return 38664811; // chosen randomly
         }
 
         @Override
@@ -93,4 +93,79 @@ public interface EntityQueryFactory {
         return new All<>(objectType);
     }
 
+    class None<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
+
+        final Class<O> attributeType;
+
+        public None(Class<O> attributeType) {
+            super(new Attribute<EntityHandle<O>, O>() {
+                @Override
+                public Class<EntityHandle<O>> getObjectType() {
+                    return null;
+                }
+
+                @Override
+                public Class<O> getAttributeType() {
+                    return attributeType;
+                }
+
+                @Override
+                public String getAttributeName() {
+                    return "true";
+                }
+
+                @Override
+                public Iterable<O> getValues(EntityHandle<O> object, QueryOptions queryOptions) {
+                    return Collections.singletonList(object.get());
+                }
+            });
+            this.attributeType = attributeType;
+        }
+
+
+        @Override
+        protected boolean matchesSimpleAttribute(
+                com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, O> attribute, EntityHandle<O> object,
+                QueryOptions queryOptions) {
+            return true;
+        }
+
+        @Override
+        protected boolean matchesNonSimpleAttribute(Attribute<EntityHandle<O>, O> attribute, EntityHandle<O> object,
+                                                    QueryOptions queryOptions) {
+            return true;
+        }
+
+        @Override
+        protected int calcHashCode() {
+            return 1357656690; // chosen randomly
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof None)) return false;
+            None that = (None) o;
+            return this.attributeType.equals(that.attributeType);
+        }
+
+        @Override
+        public String toString() {
+            return "none(" + super.getAttribute().getAttributeType().getSimpleName() + ".class)";
+        }
+    }
+
+    /**
+     * Creates a query which matches none of the objects in the collection.
+     * <p>
+     * <p>
+     * This is equivalent to a literal boolean 'false'.
+     *
+     * @param <O> The type of the objects in the collection
+     * @return A query which matches none of the objects in the collection
+     */
+
+    static <O extends Entity> Query<EntityHandle<O>> none(Class<O> objectType) {
+        return new None<>(objectType);
+    }
 }
