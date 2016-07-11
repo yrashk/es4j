@@ -58,6 +58,14 @@ public class NameChanged extends StandardEvent {
         }
     };
 
+    @Index({EQ})
+    public static SimpleAttribute<NameChanged, String> NAME = new SimpleAttribute<NameChanged, String>
+            ("name") {
+        @Override public String getValue(NameChanged nameChanged, QueryOptions queryOptions) {
+            return nameChanged.name();
+        }
+    };
+
     @Index({LT, GT, EQ})
     public static SimpleAttribute<NameChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<NameChanged, HybridTimestamp>
             ("timestamp") {

@@ -7,13 +7,25 @@
  */
 package com.eventsourcing.cep.protocols;
 
+import com.eventsourcing.EntityHandle;
+import com.eventsourcing.Model;
 import com.eventsourcing.Protocol;
+import com.eventsourcing.Repository;
+import com.eventsourcing.queries.ModelCollectionQuery;
+import com.eventsourcing.queries.ModelLoader;
 import com.eventsourcing.queries.ModelQueries;
 import com.eventsourcing.cep.events.NameChanged;
+import com.googlecode.cqengine.resultset.ResultSet;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
 
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.BiFunction;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+import static com.googlecode.cqengine.query.QueryFactory.equal;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface NameProtocol extends Protocol, ModelQueries {
@@ -24,5 +36,28 @@ public interface NameProtocol extends Protocol, ModelQueries {
         } else {
             return null;
         }
+    }
+
+    class NamedModelCollectionQuery<T extends NameProtocol> implements ModelCollectionQuery<T> {
+
+        private final String name;
+        private final ModelLoader<T> loader;
+
+        public NamedModelCollectionQuery(String name, ModelLoader<T> loader) {
+            this.name = name;
+            this.loader = loader;
+        }
+
+        @Override public Stream<T> getCollectionStream(Repository repository) {
+            ResultSet<EntityHandle<NameChanged>> resultSet = repository
+                    .query(NameChanged.class, equal(NameChanged.NAME, name));
+            return StreamSupport.stream(resultSet.spliterator(), false)
+                                .map(h -> loader.load(repository, h.get().reference()).get())
+                                .onClose(resultSet::close);
+        }
+    }
+
+    static <T extends NameProtocol> ModelCollectionQuery<T> named(String name, ModelLoader<T> loader) {
+        return new NamedModelCollectionQuery<>(name, loader);
     }
 }

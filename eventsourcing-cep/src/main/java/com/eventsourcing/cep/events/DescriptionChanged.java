@@ -57,6 +57,14 @@ public class DescriptionChanged extends StandardEvent {
         }
     };
 
+    @Index({EQ})
+    public static SimpleAttribute<DescriptionChanged, String> DESCRIPTION = new SimpleAttribute<DescriptionChanged, String>
+            ("description") {
+        @Override public String getValue(DescriptionChanged descriptionChanged, QueryOptions queryOptions) {
+            return descriptionChanged.description();
+        }
+    };
+
     @Index({LT, GT, EQ})
     public static SimpleAttribute<DescriptionChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<DescriptionChanged, HybridTimestamp>
             ("timestamp") {
