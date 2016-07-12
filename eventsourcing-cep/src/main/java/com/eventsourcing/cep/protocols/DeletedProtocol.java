@@ -7,15 +7,17 @@
  */
 package com.eventsourcing.cep.protocols;
 
+import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Protocol;
 import com.eventsourcing.Repository;
+import com.eventsourcing.cep.events.Deleted;
+import com.eventsourcing.cep.events.Undeleted;
 import com.eventsourcing.queries.ModelCollectionQuery;
 import com.eventsourcing.queries.ModelLoader;
 import com.eventsourcing.queries.ModelQueries;
-import com.eventsourcing.cep.events.Deleted;
-import com.eventsourcing.cep.events.Undeleted;
 import com.googlecode.cqengine.IndexedCollection;
+import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.logical.Not;
 import com.googlecode.cqengine.resultset.ResultSet;
@@ -23,13 +25,13 @@ import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static com.googlecode.cqengine.query.QueryFactory.*;
-import static com.eventsourcing.index.EntityQueryFactory.*;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface DeletedProtocol extends Protocol, ModelQueries {
@@ -72,7 +74,45 @@ public interface DeletedProtocol extends Protocol, ModelQueries {
         }
     }
 
+    class NotDeletedModelCollectionQuery<E extends Entity, T extends DeletedProtocol> implements
+            ModelCollectionQuery<T> {
+
+        private final Class<E> klass;
+        private final Attribute<EntityHandle<E>, UUID> idAttribute;
+        private final ModelLoader<T> loader;
+
+        public NotDeletedModelCollectionQuery(Class<E> klass,
+                                              Attribute<EntityHandle<E>, UUID> idAttribute,
+                                              ModelLoader<T> loader) {
+            this.klass = klass;
+            this.idAttribute = idAttribute;
+            this.loader = loader;
+        }
+
+        @Override public Stream<T> getCollectionStream(Repository repository) {
+            IndexedCollection<EntityHandle<Deleted>> deletedCollection =
+                    repository.getIndexEngine().getIndexedCollection(Deleted.class);
+            IndexedCollection<EntityHandle<Undeleted>> undeletedCollection =
+                    repository.getIndexEngine().getIndexedCollection(Undeleted.class);
+
+            ResultSet<EntityHandle<E>> resultSet = repository
+                    .query(klass, not(existsIn(deletedCollection, idAttribute, Deleted.REFERENCE_ID,
+                                               not(existsIn(undeletedCollection, Deleted.ID, Undeleted.DELETED_ID)))));
+
+            return StreamSupport.stream(resultSet.spliterator(), false)
+                                .map(h -> loader.load(repository, h.get().uuid()).get())
+                                .onClose(resultSet::close);
+        }
+
+    }
+
     static <T extends DeletedProtocol> ModelCollectionQuery<T> deleted(ModelLoader<T> loader) {
         return new DeletedModelCollectionQuery<>(loader);
     }
+
+    static <E extends Entity, T extends DeletedProtocol> ModelCollectionQuery<T>
+           notDeleted(Class<E> klass, Attribute<EntityHandle<E>, UUID> idAttribute, ModelLoader<T> loader) {
+        return new NotDeletedModelCollectionQuery<>(klass, idAttribute, loader);
+    }
+
 }
