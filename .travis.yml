@@ -29,7 +29,7 @@ script:
   - ./gradlew publishToMavenLocal
   - cd examples/order && ./gradlew check
 after_success:
-  - cd ../.. && ./gradlew -Psnapshot=true :eventsourcing-core:bintrayUpload :eventsourcing-layout:bintrayUpload :eventsourcing-hlc:bintrayUpload :eventsourcing-h2:bintrayUpload :eventsourcing-cep:bintrayUpload :eventsourcing-migrations:bintrayUpload :eventsourcing-postgresql:bintrayUpload :eventsourcing-inmem:bintrayUpload :eventsourcing-repository:bintrayUpload
+  - cd ../.. && ./gradlew -Psnapshot=true bintrayUpload
 env:
   global:
     - PGPORT=5433
