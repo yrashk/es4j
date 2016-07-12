@@ -394,7 +394,7 @@ public class Layout<T> {
     private Optional<Object> findProperty(Map<Property<T>, Object> properties, String name) {
         for (Map.Entry<Property<T>, Object> entry : properties.entrySet()) {
             if (entry.getKey().getName().contentEquals(name)) {
-                return Optional.of(entry.getValue());
+                return Optional.ofNullable(entry.getValue());
             }
         }
         return Optional.empty();

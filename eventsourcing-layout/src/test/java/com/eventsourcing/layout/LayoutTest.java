@@ -346,6 +346,16 @@ public class LayoutTest {
         assertFalse(instance.isB());
     }
 
+    @Test
+    @SneakyThrows
+    public void nullValueInConstructorArgs() {
+        Layout<Initializer> layout = Layout.forClass(Initializer.class);
+        HashMap<Property<Initializer>, Object> properties = new HashMap<>();
+        properties.put(layout.getProperty("a"), null);
+        Initializer instance = layout.instantiate(properties);
+        assertEquals(instance.getA(), "");
+    }
+
     public static class Base0Class {
         @Getter @Setter
         private String a;
