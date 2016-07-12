@@ -15,8 +15,7 @@ public interface NameProtocol extends Protocol {
     public String name() {
         try (ResultSet<EntityHandle<NameChanged>> resultSet =
              repository.query(NameChanged.class, equal(NameChanged.REFERENCE_ID, getId()),
-                              queryOptions(orderBy(descending(attribute)),
-                                           applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
+                              queryOptions(orderBy(descending(attribute))))) {
              if (resultSet.isEmpty()) {
                  return null;
              }
@@ -31,9 +30,10 @@ The above protocol implements a `name()` function that retrieves the last `NameC
 Now, all we have to do is to make every model implement this interface:
 
 ```java
-public class Product implements Model, NameProtocol { ... }
-public class Widget implements Model, NameProtocol { ... }
-public class Company implements Model, NameProtocol { ... }
+public class Restaurant implements Model, NameProtocol { ... }
+public class MenuItem implements Model, NameProtocol { ... }
 ```
 
 This approach helps reducing the number of commands and events that needs to exist to serve similar purposes.
+
+Some of the most standard protocols (such as `NameProtocol`, `DescriptionProtocol` and `DeletedProtocol`) are implemented in the `eventsourcing-cep` module.

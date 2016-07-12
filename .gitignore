@@ -4,6 +4,7 @@
 *.iml
 *.ipr
 *.iws
+*.idea
 # GitBook
 node_modules
 _book

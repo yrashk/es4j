@@ -3,16 +3,9 @@
 Event is a statement of a fact that has occurred once the command that initiated
 it, along with other events, has been successfully recorded.
 
-Defining an event is quite similar to command, by subclassing `Event`:
+Defining an event is quite similar to command, by subclassing `StandardEvent`:
 
 
 ```java
-public class UserCreated extends StandardEvent {
-  @Getter
-  private final String email;
-
-  public UserCreated(String email) {
-    this.email = email;
-  }
-}
+public class RestaurantRegistered extends StandardEvent {}
 ```

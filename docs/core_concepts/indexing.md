@@ -1,25 +1,25 @@
 # Indexing
 
-What if we want to find users by their email? The simplest way is to apply `@Index` annotation to `UserCreated#email`'s getter:
+What if we want to find an entity by value of a property The simplest way is to apply `@Index` annotation to a propety's getter:
 
 ```java
-private String email;
+private String name;
 
 @Index({EQ})
-public String email() { return email; }
+public String name() { return name; }
 
-public static Attribute<UserCreated, String> EMAIL = Indexing.getAttribute(UserCreated.class, "email");
+public static Attribute<MyEvent, String> NAME = Indexing.getAttribute(MyEvent.class, "name");
 ```
 
 If you need to process one or more attributes, you can use a more involved SimpleAttribute and apply `@Index` directly to it
 instead.
 
-```
+```java
 @Index({EQ})
-public static Attribute<UserCreated, String> MANGLED_EMAIL = new SimpleAttribute<UserCreated, String>("mangledEmail") {
+public static Attribute<MyEvent, String> LOWERCASE_NAME = new SimpleAttribute<MyEvent, String>("name") {
     @Override
-    public String getValue(UserCreated userCreated, QueryOptions queryOptions) {
-        return userCreated.email().replace("@"," at ");
+    public String getValue(MyEvent object, QueryOptions queryOptions) {
+        return object.name().toLowerCase();
     }
   };
 ```
