@@ -5,12 +5,8 @@
 -- License, v. 2.0. If a copy of the MPL was not distributed with this
 -- file, You can obtain one at http://mozilla.org/MPL/2.0/.
 --
-CREATE TYPE hlc_timestamp AS (
-  logicalCounter BIGINT,
-  logicalTime    BIGINT
-);
 
-CREATE OR REPLACE FUNCTION hybrid_timestamp(ts hlc_timestamp)
+CREATE OR REPLACE FUNCTION hybrid_timestamp(logicalCounter BIGINT, logicalTime BIGINT)
     RETURNS TIMESTAMP
     AS $$
     DECLARE
@@ -18,7 +14,7 @@ CREATE OR REPLACE FUNCTION hybrid_timestamp(ts hlc_timestamp)
     seconds bigint;
     fraction bigint;
     BEGIN
-      SELECT ((ts."logicalTime"::bit(64) >> 16 << 16) | (ts."logicalCounter"::bit(64) << 48 >> 48)) INTO ntp;
+      SELECT ((logicalTime::bit(64) >> 16 << 16) | (logicalCounter::bit(64) << 48 >> 48)) INTO ntp;
       seconds := ((ntp >> 32 << 32))::bit(32)::bigint;
       fraction := (ntp)::bit(32)::int;
       fraction := round(fraction::bigint / 4294967296)::bigint::bit(32)::bigint;

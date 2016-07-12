@@ -29,7 +29,7 @@ public class PostgreSQLTest {
         config.setMaximumPoolSize(50);
         config.setDataSource(ds);
         config.setLeakDetectionThreshold(3000);
-        config.setConnectionInitSql("SET log_statement = 'all'; SET search_path = 'public'");
+        config.setConnectionInitSql("SET log_statement = 'all'");
 
         dataSource = new HikariDataSource(config);
     }
