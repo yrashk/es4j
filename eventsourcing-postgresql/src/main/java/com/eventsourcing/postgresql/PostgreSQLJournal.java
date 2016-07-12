@@ -15,20 +15,24 @@ import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
+import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.Value;
-import org.flywaydb.core.Flyway;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
 import javax.sql.DataSource;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Savepoint;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -132,7 +136,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         Connection connection = dataSource.getConnection();
         refreshConnectionRegistry(connection);
         PreparedStatement s = connection
-                .prepareStatement("SELECT layout FROM eventsourcing.layouts WHERE uuid = ?::UUID");
+                .prepareStatement("SELECT layout FROM layouts_v1 WHERE uuid = ?::UUID");
         s.setString(1, uuid.toString());
         try (ResultSet resultSet = s.executeQuery()) {
             if (resultSet.next()) {
@@ -217,7 +221,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         check.setString(1, "eventsourcing");
         try (ResultSet resultSet = check.executeQuery()) {
             if (resultSet.next()) {
-                PreparedStatement s = connection.prepareStatement("DELETE FROM eventsourcing.layouts");
+                PreparedStatement s = connection.prepareStatement("DELETE FROM layouts_v1");
                 s.execute();
                 s.close();
             }
@@ -263,13 +267,22 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         notifyStarted();
     }
 
+    @SneakyThrows
     private void ensureLatestSchemaVersion() {
-        Flyway flyway = new Flyway();
-        flyway.setClassLoader(getClass().getClassLoader());
-        flyway.setLocations("com/eventsourcing/postgresql/migrations");
-        flyway.setDataSource(dataSource);
-        flyway.setSchemas("eventsourcing");
-        flyway.migrate();
+        try (Connection connection = dataSource.getConnection()) {
+            try (PreparedStatement s = connection
+                    .prepareStatement("CREATE TABLE IF NOT EXISTS layouts_v1 (\n" +
+                                              "  uuid   UUID PRIMARY KEY,\n" +
+                                              "  layout BYTEA NOT NULL\n" +
+                                              ")")) {
+                s.executeUpdate();
+            }
+            String timestampFunction = CharStreams.toString(new InputStreamReader(getClass().getResourceAsStream
+                    ("timestamp_function.sql")));
+            try (PreparedStatement s = connection.prepareStatement(timestampFunction)) {
+                s.executeUpdate();
+            }
+        }
     }
 
     @Override protected void doStop() {
@@ -337,7 +350,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
             }
             s.execute();
 
-            PreparedStatement layoutsInsertion = connection.prepareStatement("INSERT INTO eventsourcing.layouts " +
+            PreparedStatement layoutsInsertion = connection.prepareStatement("INSERT INTO layouts_v1 " +
                                                                                      "VALUES (?::UUID, " +
                                                                                      "?)");
             layoutsInsertion.setString(1, uuid.toString());

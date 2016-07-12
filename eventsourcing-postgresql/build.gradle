@@ -5,9 +5,6 @@ dependencies {
 
     compile 'com.eventsourcing:pgjdbc-ng:0.7.0-89abc52'
 
-    // Migrations
-    compile 'org.flywaydb:flyway-core:4.0.3'
-
     // Connection pool
     compile 'com.zaxxer:HikariCP:2.4.6'
 }
