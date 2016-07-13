@@ -8,7 +8,6 @@
 package foodsourcing.commands;
 
 import com.eventsourcing.EventStream;
-import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.layout.LayoutConstructor;
 import foodsourcing.OpeningHours;

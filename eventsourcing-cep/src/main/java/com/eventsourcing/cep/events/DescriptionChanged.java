@@ -8,12 +8,11 @@
 package com.eventsourcing.cep.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -49,27 +48,11 @@ public class DescriptionChanged extends StandardEvent {
         this.description = description;
     }
 
-    @Index
-    public static SimpleAttribute<DescriptionChanged, UUID> REFERENCE_ID = new SimpleAttribute<DescriptionChanged, UUID>
-            ("reference_id") {
-        @Override public UUID getValue(DescriptionChanged descriptionChanged, QueryOptions queryOptions) {
-            return descriptionChanged.reference();
-        }
-    };
+    public static SimpleIndex<DescriptionChanged, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
 
-    @Index({EQ})
-    public static SimpleAttribute<DescriptionChanged, String> DESCRIPTION = new SimpleAttribute<DescriptionChanged, String>
-            ("description") {
-        @Override public String getValue(DescriptionChanged descriptionChanged, QueryOptions queryOptions) {
-            return descriptionChanged.description();
-        }
-    };
+    public static SimpleIndex<DescriptionChanged, String> DESCRIPTION = (object, queryOptions) -> object.description();
 
     @Index({LT, GT, EQ})
-    public static SimpleAttribute<DescriptionChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<DescriptionChanged, HybridTimestamp>
-            ("timestamp") {
-        @Override public HybridTimestamp getValue(DescriptionChanged descriptionChanged, QueryOptions queryOptions) {
-            return descriptionChanged.timestamp();
-        }
-    };
+    public static SimpleIndex<DescriptionChanged, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object
+            .timestamp();
 }

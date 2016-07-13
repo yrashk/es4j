@@ -8,15 +8,16 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.MultiValueAttribute;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.MultiValueIndex;
+import com.eventsourcing.index.SimpleIndex;
+import com.eventsourcing.layout.SerializableComparable;
 import foodsourcing.OpeningHours;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
 import java.time.DayOfWeek;
 import java.util.List;
@@ -24,7 +25,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
-import com.eventsourcing.layout.SerializableComparable;
 
 @Value
 @Accessors(fluent = true)
@@ -34,20 +34,14 @@ public class WorkingHoursChanged extends StandardEvent {
     private DayOfWeek dayOfWeek;
     private List<OpeningHours> openDuring;
 
-    @Index
-    public static SimpleAttribute<WorkingHoursChanged, UUID> REFERENCE_ID = new SimpleAttribute<WorkingHoursChanged, UUID>("referenceId") {
-        @Override public UUID getValue(WorkingHoursChanged object, QueryOptions queryOptions) {
-            return object.reference();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<WorkingHoursChanged, UUID> REFERENCE_ID =
+            (workingHoursChanged, queryOptions) -> workingHoursChanged.reference();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<WorkingHoursChanged, HybridTimestamp> TIMESTAMP =
-            new SimpleAttribute<WorkingHoursChanged, HybridTimestamp>("timestamp") {
-                @Override public HybridTimestamp getValue(WorkingHoursChanged object, QueryOptions queryOptions) {
-                    return object.timestamp();
-                }
-            };
+    public static SimpleIndex<WorkingHoursChanged, HybridTimestamp> TIMESTAMP =
+            (workingHoursChanged, queryOptions) -> workingHoursChanged.timestamp();
 
     @Value
     public static class OpeningHoursBoundary
@@ -81,35 +75,25 @@ public class WorkingHoursChanged extends StandardEvent {
         }
     }
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static MultiValueAttribute<WorkingHoursChanged, OpeningHoursBoundary> OPENING_AT =
-            new MultiValueAttribute<WorkingHoursChanged, OpeningHoursBoundary>("openingAt") {
-                @Override public Iterable<OpeningHoursBoundary> getValues(WorkingHoursChanged object,
-                                                                          QueryOptions queryOptions) {
-                    return object.openDuring().stream()
+    public static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> OPENING_AT =
+            (workingHoursChanged, queryOptions) ->
+                    workingHoursChanged.openDuring().stream()
                             .map(openingHours ->
-                                              new OpeningHoursBoundary(object.dayOfWeek(), openingHours.from()))
+                                              new OpeningHoursBoundary(workingHoursChanged.dayOfWeek(), openingHours.from()))
                             .collect(Collectors.toList());
-                }
-            };
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static MultiValueAttribute<WorkingHoursChanged, OpeningHoursBoundary> CLOSING_AT =
-            new MultiValueAttribute<WorkingHoursChanged, OpeningHoursBoundary>("closingAt") {
-                @Override public Iterable<OpeningHoursBoundary> getValues(WorkingHoursChanged object,
-                                                                          QueryOptions queryOptions) {
-                    return object.openDuring().stream()
+    public static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> CLOSING_AT =
+            (workingHoursChanged, queryOptions) ->
+                    workingHoursChanged.openDuring().stream()
                                  .map(openingHours ->
-                                              new OpeningHoursBoundary(object.dayOfWeek(), openingHours.till()))
+                                              new OpeningHoursBoundary(workingHoursChanged.dayOfWeek(), openingHours.till()))
                                  .collect(Collectors.toList());
-                }
-            };
-    @Index
-    public static SimpleAttribute<WorkingHoursChanged, DayOfWeek> DAY_OF_WEEK =
-            new SimpleAttribute<WorkingHoursChanged, DayOfWeek>("dayOfWeek") {
-                @Override public DayOfWeek getValue(WorkingHoursChanged object, QueryOptions queryOptions) {
-                    return object.dayOfWeek();
-                }
-            };
+    @NonFinal
+    public static SimpleIndex<WorkingHoursChanged, DayOfWeek> DAY_OF_WEEK =
+            (workingHoursChanged, queryOptions) -> workingHoursChanged.dayOfWeek();
 
 }

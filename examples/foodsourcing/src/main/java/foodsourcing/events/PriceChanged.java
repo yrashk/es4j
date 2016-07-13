@@ -8,13 +8,13 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
 import java.math.BigDecimal;
 import java.util.UUID;
@@ -28,19 +28,13 @@ public class PriceChanged extends StandardEvent {
     private UUID reference;
     private BigDecimal price;
 
-    @Index
-    public static SimpleAttribute<PriceChanged, UUID> REFERENCE_ID = new SimpleAttribute<PriceChanged, UUID>("referenceId") {
-        @Override public UUID getValue(PriceChanged object, QueryOptions queryOptions) {
-            return object.reference();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<PriceChanged, UUID> REFERENCE_ID =
+            (priceChanged, queryOptions) -> priceChanged.reference();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<PriceChanged, HybridTimestamp> TIMESTAMP =
-            new SimpleAttribute<PriceChanged, HybridTimestamp>("timestamp") {
-                @Override public HybridTimestamp getValue(PriceChanged object, QueryOptions queryOptions) {
-                    return object.timestamp();
-                }
-            };
+    public static SimpleIndex<PriceChanged, HybridTimestamp> TIMESTAMP =
+            (priceChanged, queryOptions) -> priceChanged.timestamp();
 
 }

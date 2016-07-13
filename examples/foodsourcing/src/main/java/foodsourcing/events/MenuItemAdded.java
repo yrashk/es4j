@@ -8,12 +8,11 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.SimpleIndex;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
 import java.util.UUID;
 
@@ -24,17 +23,9 @@ public class MenuItemAdded extends StandardEvent {
 
     private UUID reference;
 
-    @Index
-    public static SimpleAttribute<MenuItemAdded, UUID> ID = new SimpleAttribute<MenuItemAdded, UUID>("id") {
-        @Override public UUID getValue(MenuItemAdded object, QueryOptions queryOptions) {
-            return object.uuid();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<MenuItemAdded, UUID> ID = (menuItemAdded, queryOptions) -> menuItemAdded.uuid();
 
-    @Index
-    public static SimpleAttribute<MenuItemAdded, UUID> REFERENCE_ID = new SimpleAttribute<MenuItemAdded, UUID>("referenceId") {
-        @Override public UUID getValue(MenuItemAdded object, QueryOptions queryOptions) {
-            return object.reference();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<MenuItemAdded, UUID> REFERENCE_ID = (menuItemAdded, queryOptions) -> menuItemAdded.reference();
 }

@@ -8,10 +8,10 @@
 package com.eventsourcing.queries;
 
 import com.eventsourcing.EventStream;
-import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.SimpleIndex;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
@@ -29,11 +29,7 @@ public class ModelQueriesTest extends RepositoryUsingTest {
     }
 
     public static class TestEvent extends StandardEvent {
-        public static SimpleAttribute<TestEvent, UUID> ID = new SimpleAttribute<TestEvent, UUID>("uuid") {
-            @Override public UUID getValue(TestEvent object, QueryOptions queryOptions) {
-                return object.uuid();
-            }
-        };
+        public static SimpleIndex<TestEvent, UUID> ID = (object, queryOptions) -> object.uuid();
     }
 
     public static class TestCommand extends StandardCommand<TestEvent, UUID> {

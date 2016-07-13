@@ -13,18 +13,10 @@ import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.layout.Layout;
-import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
-import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
-import com.googlecode.cqengine.query.Query;
-import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 
-import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
-
-import static com.googlecode.cqengine.query.QueryFactory.equal;
 
 public interface AbstractJournal extends Journal {
 

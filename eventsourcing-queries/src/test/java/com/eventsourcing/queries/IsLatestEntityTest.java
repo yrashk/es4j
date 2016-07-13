@@ -7,30 +7,32 @@
  */
 package com.eventsourcing.queries;
 
-import com.eventsourcing.*;
-import com.eventsourcing.annotations.Index;
+import com.eventsourcing.EntityHandle;
+import com.eventsourcing.EventStream;
+import com.eventsourcing.StandardCommand;
+import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import com.google.common.collect.Iterators;
 import com.googlecode.concurrenttrees.common.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.Query;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static com.eventsourcing.index.EntityQueryFactory.equal;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
-import static com.googlecode.cqengine.query.QueryFactory.equal;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -47,20 +49,11 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
     public static class TestEvent extends StandardEvent {
         private String test;
         private UUID reference;
-        @Index
-        public static SimpleAttribute<TestEvent, UUID> REFERENCE_ID = new
-                SimpleAttribute<TestEvent, UUID>("uuid") {
-            @Override public UUID getValue(TestEvent object, QueryOptions queryOptions) {
-                return object.reference();
-            }
-        };
+        @NonFinal
+        public static SimpleIndex<TestEvent, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
+        @NonFinal
         @Index({EQ, LT, GT})
-        public static SimpleAttribute<TestEvent, HybridTimestamp> TIMESTAMP = new
-                SimpleAttribute<TestEvent, HybridTimestamp>("timestamp") {
-                    @Override public HybridTimestamp getValue(TestEvent object, QueryOptions queryOptions) {
-                        return object.timestamp();
-                    }
-        };
+        public static SimpleIndex<TestEvent, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object.timestamp();
     }
 
     @Value

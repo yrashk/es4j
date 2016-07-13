@@ -13,24 +13,21 @@ import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.StandardRepository;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
-import org.javatuples.Pair;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
+import java.util.ArrayList;
+import java.util.List;
 
-import static com.googlecode.cqengine.query.QueryFactory.*;
-import static org.testng.Assert.*;
+import static com.eventsourcing.index.EntityQueryFactory.*;
+import static org.testng.Assert.assertTrue;
 
 public abstract class IndexEngineTest<T extends IndexEngine> {
 
@@ -86,20 +83,13 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
             this.anotherString = anotherString;
         }
 
-        @Getter(onMethod = @__(@com.eventsourcing.annotations.Index)) @Accessors(chain = true)
+        @Getter @Accessors(chain = true)
         private final String anotherString;
 
-        public static Attribute<TestEvent, String> ANOTHER_ATTR = Indexing.getAttribute(TestEvent.class, "anotherString");
+        public static SimpleIndex<TestEvent, String> ANOTHER_ATTR = (object, queryOptions) -> object.getAnotherString();
 
-        @com.eventsourcing.annotations.Index
-        public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
-            @Override
-            public String getValue(TestEvent object, QueryOptions queryOptions) {
-                return object.getString();
-            }
-        };
-
-
+        @Index
+        public static SimpleIndex<TestEvent, String> ATTR = (object, queryOptions) -> object.getString();
     }
 
     @Accessors(fluent = true)
@@ -125,7 +115,7 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
         indexEngine
-                .getIndexOnAttribute(TestEvent.ATTR, IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
+                .getIndexOnAttribute(TestEvent.ATTR.getAttribute(), IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
         IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
         List<Event> events = new ArrayList<>();
         TestCommand command = TestCommand.builder().string("test").timestamp(timestamp).build();
@@ -148,33 +138,4 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         assertTrue(handle.getOptional().isPresent());
     }
 
-    @Test
-    @SneakyThrows
-    public void discovery() {
-        Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> attrs = IndexEngine
-                .getIndexingAttributes(TestEvent.class);
-
-        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes  = StreamSupport
-                .stream(Spliterators.spliteratorUnknownSize(attrs.iterator(), Spliterator.IMMUTABLE), false)
-                .collect(Collectors.toList());
-
-        assertEquals(attributes.size(), 2);
-    }
-
-    @Test
-    @SneakyThrows
-    public void getterIndex() {
-        assertNotNull(TestEvent.ANOTHER_ATTR);
-        TestEvent event = TestEvent.builder().anotherString("test").build();
-        EntityHandle<TestEvent> handle = new EntityHandle<TestEvent>() {
-            @Override public Optional<TestEvent> getOptional() {
-                return Optional.of(event);
-            }
-
-            @Override public UUID uuid() {
-                return event.uuid();
-            }
-        };
-        assertEquals(TestEvent.ANOTHER_ATTR.getValues(handle, noQueryOptions()), Collections.singletonList("test"));
-    }
 }

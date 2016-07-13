@@ -11,8 +11,6 @@ import com.eventsourcing.*;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.LayoutName;
-import com.eventsourcing.LockProvider;
-import com.eventsourcing.Repository;
 import com.google.common.collect.Lists;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.Builder;
@@ -25,8 +23,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.googlecode.cqengine.query.QueryFactory.equal;
-import static org.testng.Assert.*;
+import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class LayoutMigrationTest extends RepositoryTest {
 

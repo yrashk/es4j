@@ -10,30 +10,34 @@ package com.eventsourcing.repository;
 import boguspackage.BogusCommand;
 import boguspackage.BogusEvent;
 import com.eventsourcing.*;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.index.Index;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.google.common.collect.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.experimental.Accessors;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.Assert;
-import org.testng.annotations.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Test;
 
 import java.time.temporal.ChronoUnit;
-import java.time.temporal.TemporalUnit;
 import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
@@ -41,8 +45,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.googlecode.cqengine.query.QueryFactory.*;
+import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 
 public abstract class RepositoryTest<T extends Repository> {
@@ -102,13 +106,8 @@ public abstract class RepositoryTest<T extends Repository> {
         @Getter
         private final String string;
 
-        @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC})
-        public static SimpleAttribute<TestEvent, String> ATTR = new SimpleAttribute<TestEvent, String>() {
-            @Override
-            public String getValue(TestEvent object, QueryOptions queryOptions) {
-                return object.string();
-            }
-        };
+        @Index({EQ, SC})
+        public static SimpleIndex<TestEvent, String> ATTR = (object, queryOptions) -> object.string();
 
         @Builder
         public TestEvent(HybridTimestamp timestamp, String string) {
@@ -140,14 +139,8 @@ public abstract class RepositoryTest<T extends Repository> {
             return "hello, world";
         }
 
-        @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC})
-        public static SimpleAttribute<RepositoryTestCommand, String> ATTR = new
-                SimpleAttribute<RepositoryTestCommand, String>("index") {
-            @Override
-            public String getValue(RepositoryTestCommand object, QueryOptions queryOptions) {
-                return object.value;
-            }
-        };
+        @Index({EQ, SC})
+        public static SimpleIndex<RepositoryTestCommand, String> ATTR = (object, queryOptions) -> object.getValue();
 
     }
 
@@ -526,13 +519,8 @@ public abstract class RepositoryTest<T extends Repository> {
         @Getter
         private final Optional<String> optional;
 
-        @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.UNIQUE})
-        public static SimpleAttribute<TestOptionalEvent, UUID> ATTR = new SimpleAttribute<TestOptionalEvent, UUID>() {
-            @Override
-            public UUID getValue(TestOptionalEvent object, QueryOptions queryOptions) {
-                return object.uuid();
-            }
-        };
+        @Index({EQ, UNIQUE})
+        public static SimpleIndex<TestOptionalEvent, UUID> ATTR = (object, queryOptions) -> object.uuid();
 
         @Builder
         public TestOptionalEvent(Optional<String> optional) {
@@ -557,13 +545,8 @@ public abstract class RepositoryTest<T extends Repository> {
             return EventStream.of(TestOptionalEvent.builder().optional(optional).build());
         }
 
-        @Index({IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.UNIQUE})
-        public static SimpleAttribute<TestOptionalCommand, UUID> ATTR = new SimpleAttribute<TestOptionalCommand, UUID>() {
-            @Override
-            public UUID getValue(TestOptionalCommand object, QueryOptions queryOptions) {
-                return object.uuid();
-            }
-        };
+        @Index({EQ, UNIQUE})
+        public static SimpleIndex<TestOptionalCommand, UUID> ATTR = (object, queryOptions) -> object.uuid();
 
     }
 

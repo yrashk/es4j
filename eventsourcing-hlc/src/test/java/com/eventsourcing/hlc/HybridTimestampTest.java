@@ -7,13 +7,11 @@
  */
 package com.eventsourcing.hlc;
 
+import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.ObjectSerializer;
-import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.layout.binary.ObjectBinaryDeserializer;
-import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
-import com.eventsourcing.layout.binary.ObjectBinarySerializer;
+import com.eventsourcing.layout.binary.BinarySerialization;
 import com.google.common.util.concurrent.AbstractService;
 import lombok.SneakyThrows;
 import org.apache.commons.net.ntp.TimeStamp;

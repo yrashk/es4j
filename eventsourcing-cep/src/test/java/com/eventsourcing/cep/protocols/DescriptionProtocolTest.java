@@ -7,10 +7,12 @@
  */
 package com.eventsourcing.cep.protocols;
 
-import com.eventsourcing.*;
+import com.eventsourcing.EventStream;
+import com.eventsourcing.Model;
+import com.eventsourcing.Repository;
+import com.eventsourcing.StandardCommand;
 import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.Repository;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.queries.ModelCollectionQuery;
 import lombok.Builder;

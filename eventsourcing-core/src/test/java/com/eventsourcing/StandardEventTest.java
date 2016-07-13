@@ -12,7 +12,8 @@ import lombok.SneakyThrows;
 import lombok.Value;
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class StandardEventTest {
 

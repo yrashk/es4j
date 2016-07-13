@@ -9,27 +9,26 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.Repository;
 import com.eventsourcing.Journal;
+import com.eventsourcing.Repository;
 import com.google.common.base.Joiner;
 import com.google.common.util.concurrent.Service;
-import com.googlecode.concurrenttrees.common.Iterables;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.SneakyThrows;
 import lombok.Value;
-import org.javatuples.Pair;
 
-import java.beans.Introspector;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+
+import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
 public interface IndexEngine extends Service {
 
@@ -102,76 +101,96 @@ public interface IndexEngine extends Service {
     <T extends Entity> IndexedCollection<EntityHandle<T>> getIndexedCollection(Class<T> klass);
 
     /**
-     * Returns all declared ({@link com.eventsourcing.annotations.Index} indices for a class
+     * Returns all declared ({@link com.eventsourcing.index.Index}) indices for a class
      *
-     * @param klass
+     * @param entityClass
      * @return
      * @throws IndexNotSupported
      * @throws IllegalAccessException
      */
-    default Iterable<Index> getIndices(Class<?> klass) throws IndexNotSupported, IllegalAccessException {
+    default Iterable<Index> getIndices(Class<?> entityClass) throws IndexNotSupported, IllegalAccessException {
         List<Index> indices = new ArrayList<>();
-        for (Pair<com.eventsourcing.annotations.Index, Attribute> attr : getIndexingAttributes(klass)) {
-            indices.add(this.getIndexOnAttribute(attr.getValue1(), attr.getValue0().value()));
+        Class<?>[] classes = new Class[]{entityClass};
+        if (entityClass.isAnnotationPresent(Indices.class)) {
+            classes = entityClass.getAnnotation(Indices.class).value();
+        }
+        for (Class<?> klass : classes) {
+            for (Field field : klass.getDeclaredFields()) {
+                if (Modifier.isStatic(field.getModifiers()) && Modifier.isPublic(field.getModifiers()) &&
+                        EntityIndex.class.isAssignableFrom(field.getType())) {
+                    if (Modifier.isFinal(field.getModifiers())) {
+                        throw new IllegalArgumentException("Index attribute " + field + " can't be declared final");
+                    }
+
+                    com.eventsourcing.index.Index annotation = field
+                            .getAnnotation(com.eventsourcing.index.Index.class);
+                    IndexFeature[] features = annotation == null ? new IndexFeature[]{EQ} : annotation.value();
+                    EntityIndex index = ((EntityIndex) field.get(null));
+                    ParameterizedType type = (ParameterizedType) field.getGenericType();
+                    Class<Entity> objectType = (Class<Entity>) type.getActualTypeArguments()[0];
+                    Class<Object> attributeType = (Class<Object>) type.getActualTypeArguments()[1];
+                    Class<EntityHandle<Entity>> entityType = (Class<EntityHandle<Entity>>) field.getType()
+                                                                                                .getInterfaces()[0];
+                    Attribute attribute;
+
+                    if (SimpleIndex.class.isAssignableFrom(field.getType())) {
+                        attribute = new EntitySimpleAttribute(objectType, entityType, attributeType, field, index);
+                        field.set(null, new SimpleIndex() {
+                            @Override public Attribute getAttribute() {
+                                return attribute;
+                            }
+
+                            @Override public Object getValue(Entity object, QueryOptions queryOptions) {
+                                return ((SimpleIndex) index).getValue(object, queryOptions);
+                            }
+                        });
+                    } else {
+                        attribute = new MultiValueEntityAttribute(objectType, entityType, attributeType, field, index);
+                        field.set(null, new MultiValueIndex() {
+                            @Override public Attribute getAttribute() {
+                                return attribute;
+                            }
+
+                            @Override public Iterable getValues(Entity object, QueryOptions queryOptions) {
+                                return index.getValues(object, queryOptions);
+                            }
+                        });
+                    }
+                    indices.add(this.getIndexOnAttribute(attribute, features));
+                }
+            }
         }
         return indices;
     }
 
-    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexingAttributes(Class<?> klass)
-            throws IllegalAccessException {
-        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
-        attributes.addAll(Iterables.toList(getIndexableAttributes(klass)));
-        attributes.addAll(Iterables.toList(getIndexableGetters(klass)));
-        return attributes;
-    }
 
-    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexableAttributes(Class<?> klass)
-            throws IllegalAccessException {
-        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
-        for (Field field : klass.getDeclaredFields()) {
-            if (Modifier.isStatic(field.getModifiers()) &&
-                    Modifier.isPublic(field.getModifiers())) {
-                com.eventsourcing.annotations.Index annotation = field
-                        .getAnnotation(com.eventsourcing.annotations.Index.class);
-                if (annotation != null) {
-                    attributes.add(Pair.with(annotation, (Attribute) field.get(null)));
-                }
-            }
+    class EntitySimpleAttribute extends SimpleAttribute<Entity, Object> {
+        private final EntityIndex index;
+
+        public EntitySimpleAttribute(Class<Entity> objectType, Class<EntityHandle<Entity>> entityType,
+                                     Class<Object> attributeType,
+                                     Field field, EntityIndex index) {
+            super(objectType, entityType, attributeType, field.getName());
+            this.index = index;
         }
-        return attributes;
-    }
 
-    static Iterable<Pair<com.eventsourcing.annotations.Index, Attribute>> getIndexableGetters(Class<?> klass)
-            throws IllegalAccessException {
-        List<Pair<com.eventsourcing.annotations.Index, Attribute>> attributes = new ArrayList<>();
-        for (Method method : klass.getDeclaredMethods()) {
-            com.eventsourcing.annotations.Index annotation = method
-                    .getAnnotation(com.eventsourcing.annotations.Index.class);
-            if (annotation != null &&
-                    Modifier.isPublic(method.getModifiers()) &&
-                    method.getParameterCount() == 0) {
-                SimpleAttribute attribute = getAttribute(method);
-                attributes.add(Pair.with(annotation, attribute));
-            }
+        @Override public Object getValue(Entity object, QueryOptions queryOptions) {
+            return ((SimpleIndex) index).getValue(object, queryOptions);
         }
-        return attributes;
     }
 
-    @SuppressWarnings("unchecked")
-    static <O extends Entity, A> SimpleAttribute<O, A> getAttribute(Method method) {
-        String name = Introspector.decapitalize(method.getName().replaceFirst("^(get|is)", ""));
-        return new SimpleAttribute<O, A>((Class<O>) method.getDeclaringClass(),
-                                         // this is used to pass type information, the value is not important
-                                         (Class<EntityHandle<O>>) method.getDeclaringClass(),
-                                         (Class<A>)method.getReturnType(),
-                                         name) {
+    class MultiValueEntityAttribute extends MultiValueAttribute {
+        private final EntityIndex index;
 
-            @SneakyThrows
-            @Override public Object getValue(Entity object, QueryOptions queryOptions) {
-                return method.invoke(object);
-            }
-        };
+        public MultiValueEntityAttribute(Class<Entity> objectType, Class<EntityHandle<Entity>> entityType,
+                                         Class<Object> attributeType,
+                                         Field field, EntityIndex index) {
+            super(objectType, entityType, attributeType, field.getName());
+            this.index = index;
+        }
+
+        @Override public Iterable<Object> getValues(Entity object, QueryOptions queryOptions) {
+            return index.getValues(object, queryOptions);
+        }
     }
-
-
 }

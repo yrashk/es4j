@@ -10,6 +10,7 @@ package com.eventsourcing.repository;
 import com.eventsourcing.*;
 import com.eventsourcing.events.CommandTerminatedExceptionally;
 import com.eventsourcing.events.EventCausalityEstablished;
+import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
@@ -90,7 +91,7 @@ public class StandardRepository extends AbstractService implements Repository, R
         addEventSetProvider(() -> {
             List<Class<? extends Event>> classes = Arrays
                     .asList(CommandTerminatedExceptionally.class, EventCausalityEstablished.class,
-                            EntityLayoutIntroduced.class);
+                            EntityLayoutIntroduced.class, JavaExceptionOccurred.class);
             return new HashSet<>(classes);
         });
 

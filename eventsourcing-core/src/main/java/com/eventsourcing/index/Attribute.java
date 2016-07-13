@@ -15,6 +15,7 @@ import java.lang.reflect.Type;
 
 public interface Attribute<O extends Entity, A>
         extends com.googlecode.cqengine.attribute.Attribute<EntityHandle<O>, A> {
+
     Class<O> getEffectiveObjectType();
 
     static <O> Class<O> readGenericObjectType(Class<?> attributeClass, String attributeName) {

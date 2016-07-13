@@ -8,14 +8,14 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import foodsourcing.Picture;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
 import java.util.UUID;
 
@@ -29,18 +29,12 @@ public class PictureChanged extends StandardEvent implements Picture {
     private String contentType;
     private byte[] picture;
 
-    @Index
-    public static SimpleAttribute<PictureChanged, UUID> REFERENCE_ID = new SimpleAttribute<PictureChanged, UUID>("referenceId") {
-        @Override public UUID getValue(PictureChanged object, QueryOptions queryOptions) {
-            return object.reference();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<PictureChanged, UUID> REFERENCE_ID =
+            (pictureChanged, queryOptions) -> pictureChanged.reference();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<PictureChanged, HybridTimestamp> TIMESTAMP =
-            new SimpleAttribute<PictureChanged, HybridTimestamp>("timestamp") {
-                @Override public HybridTimestamp getValue(PictureChanged object, QueryOptions queryOptions) {
-                    return object.timestamp();
-                }
-            };
+    public static SimpleIndex<PictureChanged, HybridTimestamp> TIMESTAMP =
+            (pictureChanged, queryOptions) -> pictureChanged.timestamp();
 }

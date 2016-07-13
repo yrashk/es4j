@@ -5,10 +5,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing;
+package com.eventsourcing.index;
 
-import java.util.Set;
-
-public interface EventSetProvider {
-    Set<Class<? extends Event>> getEvents();
+/**
+ * This annotation designates which classes should be scanned for
+ * entity's indices. By default, this annotation is not necessary
+ * and the entity's own class will be scanned.
+ */
+public @interface Indices {
+    Class<?>[] value();
 }

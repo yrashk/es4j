@@ -8,10 +8,9 @@
 package boguspackage;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -25,12 +24,7 @@ public class BogusEvent extends StandardEvent {
     private final String string;
 
     @Index({EQ, SC})
-    public static SimpleAttribute<BogusEvent, String> ATTR = new SimpleAttribute<BogusEvent, String>() {
-        @Override
-        public String getValue(BogusEvent object, QueryOptions queryOptions) {
-            return object.string();
-        }
-    };
+    public static SimpleIndex<BogusEvent, String> ATTR = (object, queryOptions) -> object.string();
 
     @Builder
     public BogusEvent(HybridTimestamp timestamp, String string) {

@@ -11,15 +11,16 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Model;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
+import com.eventsourcing.index.EntityIndex;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.EngineThresholds;
 import com.googlecode.cqengine.resultset.ResultSet;
 
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.googlecode.cqengine.query.QueryFactory.*;
+import static com.eventsourcing.index.EntityQueryFactory.*;
 
 /**
  * Provides a query for retrieving the latest entry, associated with a model. For example,
@@ -32,7 +33,7 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
 public interface LatestAssociatedEntryQuery extends Model {
 
     /**
-     * Invokes {@link #latestAssociatedEntity(Class, Attribute, Attribute, Query[])} with no additional queries
+     * Invokes {@link #latestAssociatedEntity(Class, EntityIndex, EntityIndex, Query[])} with no additional queries
      *
      * @param klass Entity class
      * @param keyAttribute Entity attribute that references model's ID
@@ -41,15 +42,15 @@ public interface LatestAssociatedEntryQuery extends Model {
      * @return Non-empty {@link Optional} if the entity is found, an empty one otherwise.
      */
     default <T extends Entity> Optional<T> latestAssociatedEntity(Class<T> klass,
-                                                                  Attribute<T, UUID> keyAttribute,
-                                                                  Attribute<T, HybridTimestamp> timestampAttribute) {
+                                                                  EntityIndex<T, UUID> keyAttribute,
+                                                                  EntityIndex<T, HybridTimestamp> timestampAttribute) {
         @SuppressWarnings("unchecked")
         Optional<T> last = latestAssociatedEntity(klass, keyAttribute, timestampAttribute, (Query<EntityHandle<T>>[]) new Query[]{});
         return last;
     }
 
     /**
-     * Invokes {@link #latestAssociatedEntity(Class, Attribute, Attribute, Query[])} with one additional query
+     * Invokes {@link #latestAssociatedEntity(Class, EntityIndex, EntityIndex, Query[])} with one additional query
      * @param klass Entity class
      * @param keyAttribute Entity attribute that references model's ID
      * @param timestampAttribute Entity attribute that holds the timestamp
@@ -58,8 +59,8 @@ public interface LatestAssociatedEntryQuery extends Model {
      * @return Non-empty {@link Optional} if the entity is found, an empty one otherwise.
      */
     default <T extends Entity> Optional<T> latestAssociatedEntity(Class<T> klass,
-                                                                  Attribute<T, UUID> keyAttribute,
-                                                                  Attribute<T, HybridTimestamp> timestampAttribute,
+                                                                  EntityIndex<T, UUID> keyAttribute,
+                                                                  EntityIndex<T, HybridTimestamp> timestampAttribute,
                                                                   Query<EntityHandle<T>> additionalQuery
     ) {
         @SuppressWarnings("unchecked")
@@ -91,7 +92,7 @@ public interface LatestAssociatedEntryQuery extends Model {
      */
     default <T extends Entity> Optional<T>
     latestAssociatedEntity(Class<T> klass,
-                           Attribute<T, UUID> keyAttribute, Attribute<T, HybridTimestamp> timestampAttribute,
+                           EntityIndex<T, UUID> keyAttribute, EntityIndex<T, HybridTimestamp> timestampAttribute,
                            Query<EntityHandle<T>> ...additionalQueries) {
         Query<EntityHandle<T>> query = equal(keyAttribute, getId());
         for (Query<EntityHandle<T>> q : additionalQueries) {
@@ -101,10 +102,11 @@ public interface LatestAssociatedEntryQuery extends Model {
                 .query(klass, query,
                        queryOptions(orderBy(descending(timestampAttribute)),
                                     applyThresholds(threshold(EngineThresholds.INDEX_ORDERING_SELECTIVITY, 0.5))))) {
-            if (resultSet.isEmpty()) {
+            Iterator<EntityHandle<T>> iterator = resultSet.iterator();
+            if (!iterator.hasNext()) {
                 return Optional.empty();
             } else {
-                return Optional.of(resultSet.iterator().next().get());
+                return Optional.of(iterator.next().get());
             }
         }
     }

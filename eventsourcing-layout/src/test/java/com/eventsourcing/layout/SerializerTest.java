@@ -8,7 +8,9 @@
 package com.eventsourcing.layout;
 
 import com.eventsourcing.layout.binary.BinarySerialization;
-import lombok.*;
+import lombok.Builder;
+import lombok.SneakyThrows;
+import lombok.Value;
 import lombok.experimental.Accessors;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;

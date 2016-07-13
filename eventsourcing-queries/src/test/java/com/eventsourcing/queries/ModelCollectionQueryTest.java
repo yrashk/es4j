@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.and;
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.or;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 public class ModelCollectionQueryTest {
 

@@ -8,14 +8,11 @@
 package com.eventsourcing.migrations.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.Indexing;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutName;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
@@ -26,9 +23,9 @@ import java.util.UUID;
 @LayoutName("rfc.eventsourcing.com/spec:8/EMT/#EntityLayoutReplaced")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:8/EMT/", revision = "July 22, 2016")
 public class EntityLayoutReplaced extends StandardEvent {
-    @Getter(onMethod = @_(@Index))
+    @Getter
     private final byte[] fingerprint;
-    @Getter(onMethod = @_(@Index))
+    @Getter
     private final UUID replacement;
 
     @Builder
@@ -39,10 +36,8 @@ public class EntityLayoutReplaced extends StandardEvent {
         this.replacement = replacement;
     }
 
-    public static Attribute<EntityLayoutReplaced, byte[]> FINGERPRINT = Indexing.getAttribute
-            (EntityLayoutReplaced.class, "fingerprint");
+    public static SimpleIndex<EntityLayoutReplaced, byte[]> FINGERPRINT = (object, queryOptions) -> object.fingerprint();
 
-    public static Attribute<EntityLayoutReplaced, UUID> REPLACEMENT = Indexing.getAttribute
-            (EntityLayoutReplaced.class, "replacement");
+    public static SimpleIndex<EntityLayoutReplaced, UUID> REPLACEMENT = (object, queryOptions) -> object.replacement();
 
 }

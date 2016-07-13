@@ -11,8 +11,6 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.Collections;
 
 /**

@@ -9,13 +9,12 @@ package com.eventsourcing.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
-import com.eventsourcing.Repository;
 import com.eventsourcing.Journal;
+import com.eventsourcing.Repository;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.MultiValueAttribute;
-import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.compound.CompoundIndex;
 import com.googlecode.cqengine.index.hash.HashIndex;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
@@ -36,7 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component(property = {"type=MemoryIndexEngine"})
 public class MemoryIndexEngine extends CQIndexEngine implements IndexEngine {

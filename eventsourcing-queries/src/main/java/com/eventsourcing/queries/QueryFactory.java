@@ -10,13 +10,14 @@ package com.eventsourcing.queries;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.index.EntityIndex;
 import com.eventsourcing.index.EntityQueryFactory;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.Query;
 
 import java.util.function.Function;
 
-public class QueryFactory implements EntityQueryFactory {
+public class QueryFactory {
     /**
      * @see LatestAssociatedEntryQuery
      * @param collection collection to query against
@@ -28,8 +29,8 @@ public class QueryFactory implements EntityQueryFactory {
     public static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final IndexedCollection<EntityHandle<O>> collection,
                    final Query<EntityHandle<O>> query,
-                   final com.googlecode.cqengine.attribute.Attribute<EntityHandle<O>, HybridTimestamp> timestampAttribute) {
-        return new IsLatestEntity<>(collection, query, timestampAttribute);
+                   final EntityIndex<O, HybridTimestamp> timestampAttribute) {
+        return new IsLatestEntity<>(collection, query, timestampAttribute.getAttribute());
     }
 
     /**
@@ -43,7 +44,7 @@ public class QueryFactory implements EntityQueryFactory {
     public static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final IndexedCollection<EntityHandle<O>> collection,
                    final Function<EntityHandle<O>, Query<EntityHandle<O>>> query,
-                   final com.googlecode.cqengine.attribute.Attribute<EntityHandle<O>, HybridTimestamp> timestampAttribute) {
-        return new IsLatestEntity<>(collection, query, timestampAttribute);
+                   final EntityIndex<O, HybridTimestamp> timestampAttribute) {
+        return new IsLatestEntity<>(collection, query, timestampAttribute.getAttribute());
     }
 }

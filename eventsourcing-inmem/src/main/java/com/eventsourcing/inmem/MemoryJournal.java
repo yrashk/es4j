@@ -13,7 +13,6 @@ import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.eventsourcing.repository.AbstractJournal;
-import com.eventsourcing.JournalEntityHandle;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
@@ -23,7 +22,10 @@ import lombok.Setter;
 import org.osgi.service.component.annotations.Component;
 
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

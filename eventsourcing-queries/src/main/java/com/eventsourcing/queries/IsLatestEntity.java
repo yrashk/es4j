@@ -9,6 +9,7 @@ package com.eventsourcing.queries;
 
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.index.EntityIndex;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
@@ -25,7 +26,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
-import static com.googlecode.cqengine.query.QueryFactory.*;
+import static com.googlecode.cqengine.query.QueryFactory.and;
+import static com.googlecode.cqengine.query.QueryFactory.greaterThan;
 
 
 /**
@@ -39,8 +41,8 @@ import static com.googlecode.cqengine.query.QueryFactory.*;
  *                    NameChanged.TIMESTAMP)
  * </code>
  *
- * @see QueryFactory#isLatestEntity(IndexedCollection, Function, Attribute)
- * @see QueryFactory#isLatestEntity(IndexedCollection, Query, Attribute)
+ * @see QueryFactory#isLatestEntity(IndexedCollection, Function, EntityIndex)
+ * @see QueryFactory#isLatestEntity(IndexedCollection, Query, EntityIndex)
  *
  * @param <O>
  */

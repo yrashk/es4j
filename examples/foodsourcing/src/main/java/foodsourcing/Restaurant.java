@@ -32,7 +32,7 @@ import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.cep.protocols.DeletedProtocol.notDeleted;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
-import static com.googlecode.cqengine.query.QueryFactory.*;
+import static com.eventsourcing.index.EntityQueryFactory.*;
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.*;
 
 public class Restaurant implements Model, NameProtocol, AddressProtocol {
@@ -164,8 +164,8 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
 
     public Collection<MenuItem> menu() {
         ModelCollectionQuery<MenuItem> query = and(MenuItem.belongsToRestaurant(this),
-                                                 notDeleted(MenuItemAdded.class, MenuItemAdded.ID,
-                                                            MenuItem::lookup));
+                                                  notDeleted(MenuItemAdded.class, MenuItemAdded.ID,
+                                                             MenuItem::lookup));
         return MenuItem.query(getRepository(), query);
     }
 }

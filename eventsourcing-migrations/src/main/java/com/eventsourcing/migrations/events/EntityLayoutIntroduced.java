@@ -8,13 +8,11 @@
 package com.eventsourcing.migrations.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.LayoutName;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -48,11 +46,5 @@ public class EntityLayoutIntroduced extends StandardEvent {
     }
 
     @Index({EQ, UNIQUE})
-    public static Attribute<EntityLayoutIntroduced, byte[]> FINGERPRINT =
-            new SimpleAttribute<EntityLayoutIntroduced, byte[]>("fingerprint") {
-        @Override
-        public byte[] getValue(EntityLayoutIntroduced entityLayoutIntroduced, QueryOptions queryOptions) {
-            return entityLayoutIntroduced.fingerprint();
-        }
-    };
+    public static SimpleIndex<EntityLayoutIntroduced, byte[]> FINGERPRINT = (object, queryOptions) -> object.fingerprint();
 }
