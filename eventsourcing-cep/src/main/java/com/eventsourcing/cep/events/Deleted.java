@@ -8,14 +8,12 @@
 package com.eventsourcing.cep.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.Indexing;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.experimental.Accessors;
@@ -24,6 +22,10 @@ import org.unprotocols.coss.RFC;
 
 import java.util.UUID;
 
+import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.GT;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
+
 /**
  * This event signifies deletion of a referenced instance.
  */
@@ -31,26 +33,16 @@ import java.util.UUID;
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 @LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#Deleted")
 public class Deleted extends StandardEvent {
-    @Getter(onMethod = @__(@Index))
+    @Getter
     final UUID reference;
 
     @Index
-    public static SimpleAttribute<Deleted, UUID> ID = new SimpleAttribute<Deleted, UUID>
-            ("id") {
-        @Override public UUID getValue(Deleted deleted, QueryOptions queryOptions) {
-            return deleted.uuid();
-        }
-    };
+    public static SimpleIndex<Deleted, UUID> ID = (object, queryOptions) -> object.uuid();
 
-    public static Attribute<Deleted, UUID> REFERENCE_ID = Indexing.getAttribute(Deleted.class, "reference");
+    public static SimpleIndex<Deleted, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
 
-    @Index
-    public static SimpleAttribute<Deleted, HybridTimestamp> TIMESTAMP = new SimpleAttribute<Deleted, HybridTimestamp>
-            ("timestamp") {
-        @Override public HybridTimestamp getValue(Deleted deleted, QueryOptions queryOptions) {
-            return deleted.timestamp();
-        }
-    };
+    @Index({EQ, LT, GT})
+    public static SimpleIndex<Deleted, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object.timestamp();
 
     @LayoutConstructor
     public Deleted(UUID reference) {

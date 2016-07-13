@@ -7,7 +7,10 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.SneakyThrows;
+import lombok.Value;
 import org.testng.annotations.Test;
 
 import java.lang.reflect.Parameter;

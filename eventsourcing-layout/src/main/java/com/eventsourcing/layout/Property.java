@@ -8,11 +8,12 @@
 package com.eventsourcing.layout;
 
 import com.fasterxml.classmate.ResolvedType;
-import lombok.*;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 /**

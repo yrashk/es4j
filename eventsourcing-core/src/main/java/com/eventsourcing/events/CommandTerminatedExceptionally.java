@@ -8,11 +8,8 @@
 package com.eventsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutName;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.experimental.Accessors;
 
 import java.util.UUID;
@@ -21,11 +18,5 @@ import java.util.UUID;
 @LayoutName("rfc.eventsourcing.com/spec:9/RIG/#CommandTerminatedExceptionally")
 public class CommandTerminatedExceptionally extends StandardEvent {
 
-    @Index
-    public static Attribute<CommandTerminatedExceptionally, UUID> ID = new
-            SimpleAttribute<CommandTerminatedExceptionally, UUID>("id") {
-        @Override public UUID getValue(CommandTerminatedExceptionally object, QueryOptions queryOptions) {
-            return object.uuid();
-        }
-    };
+    public static SimpleIndex<CommandTerminatedExceptionally, UUID> ID = (object, queryOptions) -> object.uuid();
 }

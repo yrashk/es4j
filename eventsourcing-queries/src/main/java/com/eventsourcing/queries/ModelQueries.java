@@ -11,16 +11,13 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Model;
 import com.eventsourcing.Repository;
-import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
-import com.googlecode.cqengine.IndexedCollection;
-import com.googlecode.cqengine.query.Query;
+import com.eventsourcing.index.EntityIndex;
 import com.googlecode.cqengine.resultset.ResultSet;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static com.eventsourcing.index.EntityQueryFactory.equal;
 
 /**
  * Combines all standard queries into one:
@@ -41,7 +38,7 @@ public interface ModelQueries extends Model, LatestAssociatedEntryQuery {
      * @return Non-empty {@link Optional} if the entity is found, empty otherwise
      */
     static <T extends Entity> Optional<T>
-            lookup(Repository repository, Class<T> klass, Attribute<T, UUID> keyAttribute, UUID id) {
+            lookup(Repository repository, Class<T> klass, EntityIndex<T, UUID> keyAttribute, UUID id) {
         try (ResultSet<EntityHandle<T>> resultSet = repository.query(klass, equal(keyAttribute, id))) {
             if (resultSet.isEmpty()) {
                 return Optional.empty();

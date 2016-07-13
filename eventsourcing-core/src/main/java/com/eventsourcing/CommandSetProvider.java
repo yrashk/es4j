@@ -7,8 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.Command;
-
 import java.util.Set;
 
 public interface CommandSetProvider {

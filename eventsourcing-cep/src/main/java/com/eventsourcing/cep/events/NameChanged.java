@@ -8,15 +8,13 @@
 package com.eventsourcing.cep.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.layout.LayoutName;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
@@ -50,27 +48,10 @@ public class NameChanged extends StandardEvent {
         this.name = name;
     }
 
-    @Index
-    public static SimpleAttribute<NameChanged, UUID> REFERENCE_ID = new SimpleAttribute<NameChanged, UUID>
-            ("reference_id") {
-        @Override public UUID getValue(NameChanged nameChanged, QueryOptions queryOptions) {
-            return nameChanged.reference();
-        }
-    };
+    public static SimpleIndex<NameChanged, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
 
-    @Index({EQ})
-    public static SimpleAttribute<NameChanged, String> NAME = new SimpleAttribute<NameChanged, String>
-            ("name") {
-        @Override public String getValue(NameChanged nameChanged, QueryOptions queryOptions) {
-            return nameChanged.name();
-        }
-    };
+    public static SimpleIndex<NameChanged, String> NAME = (object, queryOptions) -> object.name();
 
     @Index({LT, GT, EQ})
-    public static SimpleAttribute<NameChanged, HybridTimestamp> TIMESTAMP = new SimpleAttribute<NameChanged, HybridTimestamp>
-            ("timestamp") {
-        @Override public HybridTimestamp getValue(NameChanged nameChanged, QueryOptions queryOptions) {
-            return nameChanged.timestamp();
-        }
-    };
+    public static SimpleIndex<NameChanged, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object.timestamp();
 }

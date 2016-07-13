@@ -7,7 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.Lock;
 import com.google.common.util.concurrent.Service;
 
 import java.util.function.Supplier;

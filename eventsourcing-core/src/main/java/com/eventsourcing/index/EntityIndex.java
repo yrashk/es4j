@@ -7,13 +7,10 @@
  */
 package com.eventsourcing.index;
 
-import org.testng.annotations.Test;
+import com.eventsourcing.Entity;
+import com.googlecode.cqengine.query.option.QueryOptions;
 
-public class IndexingTest {
-
-    @Test(expectedExceptions = RuntimeException.class)
-    public void wrongReference() {
-        Indexing.getAttribute(getClass(), "someProperty");
-    }
-
+public interface EntityIndex<O extends Entity, A> {
+    Attribute<O, A> getAttribute();
+    Iterable<A> getValues(O object, QueryOptions queryOptions);
 }

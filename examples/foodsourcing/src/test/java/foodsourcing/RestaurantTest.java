@@ -7,32 +7,30 @@
  */
 package foodsourcing;
 
-import com.google.common.collect.Iterables;
+import com.eventsourcing.cep.events.Deleted;
 import com.google.common.io.ByteStreams;
 import foodsourcing.commands.*;
 import foodsourcing.events.RestaurantRegistered;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import java.io.InputStreamReader;
 import java.math.BigDecimal;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.and;
 import static foodsourcing.Restaurant.openAt;
 import static foodsourcing.Restaurant.within10km;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class RestaurantTest extends TestWithRepository {
 
     public RestaurantTest() {
-        super(RegisterRestaurant.class.getPackage(), RestaurantRegistered.class.getPackage());
+        super(RegisterRestaurant.class.getPackage(),
+              RestaurantRegistered.class.getPackage(),
+              Deleted.class.getPackage()
+              );
     }
 
     @Test

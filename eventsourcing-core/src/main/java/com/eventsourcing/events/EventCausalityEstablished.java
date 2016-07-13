@@ -8,29 +8,24 @@
 package com.eventsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.Indexing;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutName;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.experimental.Accessors;
 import org.unprotocols.coss.RFC;
 import org.unprotocols.coss.Raw;
 
 import java.util.UUID;
 
-import static com.eventsourcing.index.IndexEngine.IndexFeature.UNIQUE;
-
 @Accessors(fluent = true)
 @LayoutName("rfc.eventsourcing.com/spec:9/RIG/#EventCausalityEstablished")
 @Raw @RFC(url = "http://rfc.eventsourcing.com/spec:9/RIG/", revision = "July 22, 2016")
 public class EventCausalityEstablished extends StandardEvent {
-    @Getter(onMethod = @_(@Index))
+    @Getter
     private final UUID event;
-    @Getter(onMethod = @_(@Index))
+    @Getter
     private final UUID command;
 
     @Builder
@@ -40,9 +35,7 @@ public class EventCausalityEstablished extends StandardEvent {
         this.command = command;
     }
 
-    public static Attribute<EventCausalityEstablished, UUID> EVENT = Indexing.getAttribute
-            (EventCausalityEstablished.class, "event");
+    public static SimpleIndex<EventCausalityEstablished, UUID> EVENT = (object, queryOptions) -> object.event();
 
-    public static Attribute<EventCausalityEstablished, UUID> COMMAND = Indexing.getAttribute
-            (EventCausalityEstablished.class, "command");
+    public static SimpleIndex<EventCausalityEstablished, UUID> COMMAND = (object, queryOptions) -> object.command();
 }

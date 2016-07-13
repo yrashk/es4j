@@ -19,6 +19,7 @@ public abstract class AbstractAttribute<O extends Entity, A>
 
     public AbstractAttribute() {
         super();
+        calcHashCode();
     }
 
     public AbstractAttribute(String attributeName) {
@@ -34,6 +35,7 @@ public abstract class AbstractAttribute<O extends Entity, A>
     public AbstractAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String attributeName) {
         super(handleType, attributeType, attributeName);
         this.objectType = objectType;
+        cachedHashCode = calcHashCode();
     }
 
     @Override public Class<O> getEffectiveObjectType() {
@@ -52,7 +54,7 @@ public abstract class AbstractAttribute<O extends Entity, A>
         if (!that.canEqual(this)) return false;
         if (!getAttributeName().equals(that.getAttributeName())) return false;
         if (!getAttributeType().equals(that.getAttributeType())) return false;
-        if (!objectType.equals(that.objectType)) return false;
+        if (!getEffectiveObjectType().equals(that.getEffectiveObjectType())) return false;
 
         return true;
     }
@@ -67,11 +69,17 @@ public abstract class AbstractAttribute<O extends Entity, A>
     }
 
     int calcHashCode() {
-        int result = objectType.hashCode();
+        int result = getEffectiveObjectType().hashCode();
         result = 31 * result + getAttributeType().hashCode();
         result = 31 * result + getAttributeName().hashCode();
         return result;
     }
 
-
+    @Override public String toString() {
+        return "Attribute{" +
+                "objectType=" + getEffectiveObjectType() +
+                ", attributeType=" + getAttributeType() +
+                ", attributeName='" + getAttributeName() + '\'' +
+                '}';
+    }
 }

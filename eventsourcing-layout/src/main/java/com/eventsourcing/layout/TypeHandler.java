@@ -9,7 +9,6 @@ package com.eventsourcing.layout;
 
 import com.eventsourcing.layout.types.*;
 import com.fasterxml.classmate.ResolvedType;
-import com.fasterxml.classmate.TypeResolver;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

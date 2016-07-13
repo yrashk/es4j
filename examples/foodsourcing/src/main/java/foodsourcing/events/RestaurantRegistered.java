@@ -8,19 +8,13 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.SimpleIndex;
 
 import java.util.UUID;
 
 public class RestaurantRegistered extends StandardEvent {
 
-    @Index
-    public static SimpleAttribute<RestaurantRegistered, UUID> ID = new SimpleAttribute<RestaurantRegistered, UUID>("id") {
-        @Override public UUID getValue(RestaurantRegistered object, QueryOptions queryOptions) {
-            return object.uuid();
-        }
-    };
+    public static SimpleIndex<RestaurantRegistered, UUID> ID =
+            (restaurantRegistered, queryOptions) -> restaurantRegistered.uuid();
 
 }

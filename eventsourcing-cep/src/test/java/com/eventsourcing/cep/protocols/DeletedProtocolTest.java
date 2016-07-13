@@ -8,13 +8,11 @@
 package com.eventsourcing.cep.protocols;
 
 import com.eventsourcing.*;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.cep.events.Undeleted;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
+import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.queries.ModelCollectionQuery;
-import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
@@ -25,9 +23,7 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class DeletedProtocolTest extends RepositoryUsingTest {
 
@@ -47,14 +43,7 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
         }
     }
     public static class Created extends StandardEvent {
-        @Index
-        public static SimpleAttribute<Created, UUID> ID = new SimpleAttribute<Created, UUID>
-                ("id") {
-            @Override public UUID getValue(Created object, QueryOptions queryOptions) {
-                return object.uuid();
-            }
-        };
-
+        public static SimpleIndex<Created, UUID> ID = (object, queryOptions) -> object.uuid();
     }
 
     @Accessors(fluent = true)

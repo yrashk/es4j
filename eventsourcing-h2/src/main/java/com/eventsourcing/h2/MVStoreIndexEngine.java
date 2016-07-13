@@ -7,13 +7,13 @@
  */
 package com.eventsourcing.h2;
 
+import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
 import com.eventsourcing.h2.index.HashIndex;
 import com.eventsourcing.h2.index.UniqueIndex;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.Journal;
 import org.h2.mvstore.MVStore;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.annotations.Activate;

@@ -8,7 +8,6 @@
 package boguspackage;
 
 import com.eventsourcing.EventStream;
-import com.eventsourcing.Repository;
 import com.eventsourcing.StandardCommand;
 import com.eventsourcing.hlc.HybridTimestamp;
 import lombok.Builder;

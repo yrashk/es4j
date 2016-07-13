@@ -9,9 +9,6 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.CascadingIndexEngine;
-import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.repository.JournalTest;
 import lombok.Builder;

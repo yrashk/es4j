@@ -8,6 +8,7 @@
 package foodsourcing;
 
 import com.eventsourcing.*;
+import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.CascadingIndexEngine;
 import com.eventsourcing.index.IndexEngine;
@@ -15,7 +16,6 @@ import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.postgresql.PostgreSQLIndexEngine;
 import com.eventsourcing.postgresql.PostgreSQLJournal;
-import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.repository.StandardRepository;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
@@ -28,8 +28,9 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public abstract class TestWithRepository {
 

@@ -7,8 +7,6 @@
  */
 package com.eventsourcing;
 
-import com.eventsourcing.Lock;
-import com.eventsourcing.LockProvider;
 import com.google.common.util.concurrent.AbstractService;
 import org.osgi.service.component.annotations.Component;
 

@@ -10,11 +10,10 @@ package com.eventsourcing.cep.protocols;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.Protocol;
 import com.eventsourcing.Repository;
-import com.eventsourcing.cep.events.NameChanged;
+import com.eventsourcing.cep.events.DescriptionChanged;
 import com.eventsourcing.queries.ModelCollectionQuery;
 import com.eventsourcing.queries.ModelLoader;
 import com.eventsourcing.queries.ModelQueries;
-import com.eventsourcing.cep.events.DescriptionChanged;
 import com.googlecode.cqengine.resultset.ResultSet;
 import org.unprotocols.coss.Draft;
 import org.unprotocols.coss.RFC;
@@ -23,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static com.eventsourcing.index.EntityQueryFactory.equal;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface DescriptionProtocol extends Protocol, ModelQueries {

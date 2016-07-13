@@ -7,8 +7,6 @@
  */
 package com.eventsourcing.layout;
 
-import lombok.SneakyThrows;
-
 import java.util.HashMap;
 
 public abstract class Serialization {

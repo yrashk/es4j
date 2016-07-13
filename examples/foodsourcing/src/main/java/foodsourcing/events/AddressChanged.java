@@ -8,21 +8,19 @@
 package foodsourcing.events;
 
 import com.eventsourcing.StandardEvent;
-import com.eventsourcing.annotations.Index;
 import com.eventsourcing.hlc.HybridTimestamp;
-import com.eventsourcing.index.SimpleAttribute;
-import com.googlecode.cqengine.query.option.QueryOptions;
+import com.eventsourcing.index.Index;
+import com.eventsourcing.index.SimpleIndex;
 import foodsourcing.Address;
 import foodsourcing.utils.GeoLocation;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
 import java.util.UUID;
 
-import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
-import static com.eventsourcing.index.IndexEngine.IndexFeature.GT;
-import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
+import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 
 @Value
 @Accessors(fluent = true)
@@ -39,60 +37,36 @@ public class AddressChanged extends StandardEvent {
         return geoLocation.boundingCoordinates(distance, EARTH_RADIUS_KM);
     }
 
-    @Index
-    public static SimpleAttribute<AddressChanged, UUID> ID = new SimpleAttribute<AddressChanged, UUID>("id") {
-        @Override public UUID getValue(AddressChanged object, QueryOptions queryOptions) {
-            return object.uuid();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<AddressChanged, UUID> ID = (addressChanged, queryOptions) -> addressChanged.uuid();
 
-    @Index
-    public static SimpleAttribute<AddressChanged, UUID> REFERENCE_ID = new SimpleAttribute<AddressChanged, UUID>("referenceId") {
-        @Override public UUID getValue(AddressChanged object, QueryOptions queryOptions) {
-            return object.reference();
-        }
-    };
+    @NonFinal
+    public static SimpleIndex<AddressChanged, UUID> REFERENCE_ID = (addressChanged, queryOptions) -> addressChanged
+            .reference();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<AddressChanged, HybridTimestamp> TIMESTAMP =
-            new SimpleAttribute<AddressChanged, HybridTimestamp>("timestamp") {
-        @Override public HybridTimestamp getValue(AddressChanged object, QueryOptions queryOptions) {
-            return object.timestamp();
-        }
-    };
+    public static SimpleIndex<AddressChanged, HybridTimestamp> TIMESTAMP =
+            (addressChanged, queryOptions) -> addressChanged.timestamp();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<AddressChanged, Double> BOUNDING_BOX_10K_LAT_START =
-            new SimpleAttribute<AddressChanged, Double>
-            ("boundingBox10K_lat") {
-        @Override public Double getValue(AddressChanged object, QueryOptions queryOptions) {
-            return object.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees();
-        }
-    };
+    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_START =
+            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<AddressChanged, Double> BOUNDING_BOX_10K_LONG_START =
-            new SimpleAttribute<AddressChanged, Double>("boundingBox10K_long") {
-        @Override public Double getValue(AddressChanged object, QueryOptions queryOptions) {
-            return object.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees();
-        }
-    };
+    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_START =
+            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<AddressChanged, Double> BOUNDING_BOX_10K_LAT_END =
-            new SimpleAttribute<AddressChanged, Double>
-                    ("boundingBox10K_lat_end") {
-                @Override public Double getValue(AddressChanged object, QueryOptions queryOptions) {
-                    return object.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees();
-                }
-            };
+    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_END =
+            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees();
 
+    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleAttribute<AddressChanged, Double> BOUNDING_BOX_10K_LONG_END =
-            new SimpleAttribute<AddressChanged, Double>("boundingBox10K_long_end") {
-                @Override public Double getValue(AddressChanged object, QueryOptions queryOptions) {
-                    return object.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees();
-                }
-            };
+    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_END =
+            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees();
 
 }

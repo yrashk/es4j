@@ -9,6 +9,7 @@ package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.ResolvedEntityHandle;
 import com.eventsourcing.index.AbstractAttributeIndex;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.KeyObjectStore;
@@ -18,7 +19,6 @@ import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
-import com.eventsourcing.ResolvedEntityHandle;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.index.unique.UniqueIndex;

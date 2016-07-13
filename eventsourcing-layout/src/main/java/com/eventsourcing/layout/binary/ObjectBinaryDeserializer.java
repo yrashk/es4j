@@ -10,16 +10,10 @@ package com.eventsourcing.layout.binary;
 import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.types.ObjectTypeHandler;
 import lombok.SneakyThrows;
-import lombok.Value;
 
 import java.nio.ByteBuffer;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Layout deserializer

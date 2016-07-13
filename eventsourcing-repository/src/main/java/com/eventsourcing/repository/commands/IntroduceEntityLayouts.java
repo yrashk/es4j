@@ -15,7 +15,6 @@ import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 
-import java.util.Base64;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -23,7 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static com.eventsourcing.index.EntityQueryFactory.equal;
 
 public class IntroduceEntityLayouts extends StandardCommand<Lock, Void> {
 

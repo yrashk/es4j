@@ -9,7 +9,5 @@ package com.eventsourcing.layout;
 
 import com.eventsourcing.layout.types.ObjectTypeHandler;
 
-import java.nio.ByteBuffer;
-
 public interface ObjectDeserializer<T> extends Deserializer<T, ObjectTypeHandler>  {
 }

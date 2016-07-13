@@ -12,8 +12,6 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.migrations.events.EntityLayoutReplaced;
-import com.eventsourcing.LockProvider;
-import com.eventsourcing.Repository;
 import com.googlecode.cqengine.resultset.ResultSet;
 import lombok.SneakyThrows;
 
@@ -23,7 +21,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.googlecode.cqengine.query.QueryFactory.equal;
+import static com.eventsourcing.index.EntityQueryFactory.equal;
 
 public class LayoutMigration<A extends Event, B extends Event> {
 
