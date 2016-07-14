@@ -32,13 +32,10 @@ public class RepositoryUsingTest {
 
     @BeforeMethod
     public void setUp() throws Exception {
-        timeProvider = new NTPServerTimeProvider(new String[]{"localhost"});
-        repository = new StandardRepository();
-        repository.setPhysicalTimeProvider(timeProvider);
-        repository.setJournal(new MemoryJournal());
-        repository.setIndexEngine(new MemoryIndexEngine());
-        lockProvider = new LocalLockProvider();
-        repository.setLockProvider(lockProvider);
+        repository =
+        StandardRepository.builder()
+                          .journal(new MemoryJournal())
+                          .indexEngine(new MemoryIndexEngine()).build();
         repository.startAsync().awaitRunning();
         // Add commands/events after the startup, to simulate production better
         repository.addCommandSetProvider(new PackageCommandSetProvider(packages));
