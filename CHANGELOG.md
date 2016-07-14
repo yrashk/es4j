@@ -10,6 +10,8 @@ the interface ([#114](https://github.com/eventsourcing/es4j/pull/114))
 for immutable entities ([#83](https://github.com/eventsourcing/es4j/pull/83), [#87](https://github.com/eventsourcing/es4j/pull/87))
 * [Layout] `new Layout<>(klass)` has been replaced with `Layout.forClass(klass)` ([#83](https://github.com/eventsourcing/es4j/pull/83))
 * [Core] `Command<Result>` signature has been changed to `Command<State,Result>`, `Command#events` return type has changed to `EventStream` to hold the state and `Command#onCompletion` has been renamed to `#result` ([#77](https://github.com/eventsourcing/es4j/pull/77), [#84](https://github.com/eventsourcing/es4j/pull/84))
+* [Core] New index definition syntax via `SimpleIndex` and `MultiValue` index
+([#133](https://github.com/eventsourcing/es4j/pull/133))
 * [Core] Most of repository implementation related code was moved to `com.eventsourcing.repository` ([#64](https://github.com/eventsourcing/es4j/pull/64))
 * [Core] `new StandardRepository()` now will use localhost NTP server ([#76](https://github.com/eventsourcing/es4j/pull/66), [#66](https://github.com/eventsourcing/es4j/pull/76))
 * [Core] Renamed `MemoryLockProvider` to `LocalLockProvider` ([#69](https://github.com/eventsourcing/es4j/pull/69), [#70](https://github.com/eventsourcing/es4j/pull/70))
@@ -32,12 +34,12 @@ HybridTimestamp ([#112](https://github.com/eventsourcing/es4j/pull/112))
 
 **Features**
 
-* [Core] Added a simplified attribute indexing definition API ([#57](https://github.com/eventsourcing/es4j/pull/57))
 * [CEP] Migrated es4j-cep into the project to maintain version parity
 ([#60](https://github.com/eventsourcing/es4j/pull/60))
 * [Migrations] Implemented [8/EMT](http://rfc.eventsourcing.com/spec:8/EMT) and `LayoutMigration` to standardize migrations ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] `EventCausalityEstablished` event-command causality indexing has been implemented ([#69](https://github.com/eventsourcing/es4j/pull/69))
 * [Core] Better support for Kotlin in `Repository` ([#72](https://github.com/eventsourcing/es4j/pull/72))
+* [Queries] Composable model collection queries ([#123](https://github.com/eventsourcing/es4j/pull/123))
 * [Queries] `LatestAssociatedEntryQuery` query has been added ([#115](https://github.com/eventsourcing/es4j/pull/115))
 * [Queries] `IsLatestEntity` query has been added ([#117](https://github.com/eventsourcing/es4j/pull/117))
 * [Queries] `ModelQueries.lookup` helper for looking up an entity by ID
@@ -55,6 +57,10 @@ has been added ([#116](https://github.com/eventsourcing/es4j/pull/116))
 `EntityLayoutIntroduced` ([#91](https://github.com/eventsourcing/es4j/pull/91))
 * [Repository] `AbstractRepository` now adheres to the exception reporting
 specified in [9/RIG](http://rfc.eventsourcing.com/spec:9/RIG) ([#102](https://github.com/eventsourcing/es4j/pull/102))
+
+**Upgrades**
+
+* cqengine 2.7.0 ([#135](https://github.com/eventsourcing/es4j/pull/135))
 
 **Misc**
 
