@@ -2,12 +2,14 @@
 
 * Getting Started
   * [Installation](getting_started/install.md)
+  * [Overview](getting_started/overview.md)
+  * [Layout](getting_started/layout.md)
+  * [Command](getting_started/command.md)
+  * [Event](getting_started/event.md)
+  * [Indexing](getting_started/indexing.md)
+  * [Publishing](getting_started/publishing.md)
 * Core Concepts
-  * [Layout](core_concepts/layout.md)
   * [Entity](core_concepts/entity.md)
-  * [Command](core_concepts/command.md)
-  * [Event](core_concepts/event.md)
-  * [Indexing](core_concepts/indexing.md)
-  * [Repository](core_concepts/repository.md)
   * [Domain Model](core_concepts/domain_model.md)
   * [Domain Protocol](core_concepts/domain_protocol.md)
+  * [Late Domain Binding](core_concepts/late_domain_binding.md)

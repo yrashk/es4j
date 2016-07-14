@@ -10,7 +10,7 @@ module.exports = {
     // Documentation for GitBook is stored under "docs"
     root: './docs',
     title: 'Eventsourcing for Java Documentation',
-    plugins: ["versions","es4j-doc","include"],
+    plugins: ["versions","es4j-doc","include","local-plantuml"],
     pluginsConfig: {
         versions: {
             type: "branches"
