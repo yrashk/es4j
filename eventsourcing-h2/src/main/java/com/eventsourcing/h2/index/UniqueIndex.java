@@ -18,6 +18,7 @@ import com.google.common.hash.Hashing;
 import com.google.common.primitives.Bytes;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.CloseableIterator;
+import com.googlecode.cqengine.persistence.support.ObjectSet;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -208,9 +209,11 @@ public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIn
     }
 
     @Override
-    public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
-        for (EntityHandle<O> object : objects) {
-            addObject(queryOptions, object);
+    public boolean addAll(ObjectSet<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        try (CloseableIterator<EntityHandle<O>> iterator = objects.iterator()) {
+            while (iterator.hasNext()) {
+                addObject(queryOptions, iterator.next());
+            }
         }
         return true;
     }
@@ -244,11 +247,14 @@ public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIn
     }
 
     @Override
-    public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
-        for (EntityHandle<O> object : objects) {
-            for (A value : attribute.getValues(object, queryOptions)) {
-                Entry entry = encodeEntry(object.get(), value);
-                map.remove(entry.getKey());
+    public boolean removeAll(ObjectSet<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        try (CloseableIterator<EntityHandle<O>> iterator = objects.iterator()) {
+            while (iterator.hasNext()) {
+                EntityHandle<O> object = iterator.next();
+                for (A value : attribute.getValues(object, queryOptions)) {
+                    Entry entry = encodeEntry(object.get(), value);
+                    map.remove(entry.getKey());
+                }
             }
         }
         return true;

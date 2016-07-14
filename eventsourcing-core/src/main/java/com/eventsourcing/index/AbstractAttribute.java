@@ -19,7 +19,7 @@ public abstract class AbstractAttribute<O extends Entity, A>
 
     public AbstractAttribute() {
         super();
-        calcHashCode();
+        calculateHashCode();
     }
 
     public AbstractAttribute(String attributeName) {
@@ -29,13 +29,13 @@ public abstract class AbstractAttribute<O extends Entity, A>
     public AbstractAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
         super(handleType, attributeType);
         this.objectType = objectType;
-        cachedHashCode = calcHashCode();
+        cachedHashCode = calculateHashCode();
     }
 
     public AbstractAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType, String attributeName) {
         super(handleType, attributeType, attributeName);
         this.objectType = objectType;
-        cachedHashCode = calcHashCode();
+        cachedHashCode = calculateHashCode();
     }
 
     @Override public Class<O> getEffectiveObjectType() {
@@ -68,7 +68,7 @@ public abstract class AbstractAttribute<O extends Entity, A>
         return cachedHashCode;
     }
 
-    int calcHashCode() {
+    protected int calculateHashCode() {
         int result = getEffectiveObjectType().hashCode();
         result = 31 * result + getAttributeType().hashCode();
         result = 31 * result + getAttributeName().hashCode();
