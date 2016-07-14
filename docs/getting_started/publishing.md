@@ -4,13 +4,10 @@ Repository is an entry point to most of end-user ES4J functionality.
 It puts all components (journalling, indexing, querying) together and allows to publish commands.
 
 ```java
-Repository repository = new StandardRepository();
-
-Journal journal = new MemoryJournal();
-repository.setJournal(journal);
-
-IndexEngine indexEngine = new MemoryIndexEngine();
-repository.setIndexEngine(indexEngine);
+Repository repository = StandardRepository.builder()
+                        .journal(new MemoryJournal())
+                        .indexEngine(new MemoryIndexEngine()).
+                        build();
 
 // ES4J should find commands and events in this
 // hierarchy of packages:

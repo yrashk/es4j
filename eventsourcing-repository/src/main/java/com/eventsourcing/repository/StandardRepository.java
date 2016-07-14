@@ -22,6 +22,7 @@ import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
 import com.googlecode.cqengine.index.Index;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -42,6 +43,17 @@ public class StandardRepository extends AbstractService implements Repository, R
     public StandardRepository() {
         setPhysicalTimeProvider(new NTPServerTimeProvider(new String[]{"localhost"}));
         setLockProvider(new LocalLockProvider());
+    }
+
+    @Builder
+    @SneakyThrows
+    public StandardRepository(Journal journal, PhysicalTimeProvider physicalTimeProvider,
+                              IndexEngine indexEngine, LockProvider lockProvider) {
+        setPhysicalTimeProvider(physicalTimeProvider == null ?
+                                        new NTPServerTimeProvider(new String[]{"localhost"}) : physicalTimeProvider);
+        setLockProvider(lockProvider == null ? new LocalLockProvider() : lockProvider);
+        setJournal(journal);
+        setIndexEngine(indexEngine);
     }
 
     @Getter
