@@ -1,7 +1,7 @@
-# Repository
+# Publishing
 
 Repository is an entry point to most of end-user ES4J functionality.
-It puts all components (journalling, indexing, querying) together.
+It puts all components (journalling, indexing, querying) together and allows to publish commands.
 
 ```java
 Repository repository = new StandardRepository();
@@ -20,8 +20,15 @@ repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{getClas
 repository.startAsync().awaitRunning();
 ```
 
+StandardRepository also supports OSGi glue all components together.
+
 Now we're ready to publish the command:
 
 ```java
-User result = repository.publish(new CreateUser("foo@bar.com")).get();
+Address restaurantAddress = new Address("559 W Pender St, Vancouver, BC",
+                                        "Canada", "Vancouver",
+                                        "V6B 1V5", 49.2837512, -123.1134196);
+Restaurant restaurant = repository.publish(new RegisterRestaurant("Kyzock",
+                                         restaurantAddress,
+                                         new OpeningHours(11, 30, 19, 00))).get();
 ```
