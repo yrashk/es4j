@@ -132,7 +132,15 @@ public class StandardRepository extends AbstractService implements Repository, R
             if (!indicesConfiguredFor.contains(klass.getName())) {
                 Iterable<Index> indices = indexEngine.getIndices(klass);
                 for (Index i : indices) {
-                    indexEngine.getIndexedCollection(klass).addIndex(i);
+                    try {
+                        indexEngine.getIndexedCollection(klass).addIndex(i);
+                    } catch (IllegalStateException e) {
+                        if (e.getMessage().contains("has already been added")) {
+                            // ignore the re-addition of the index
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
                 indicesConfiguredFor.add(klass.getName());
             }
