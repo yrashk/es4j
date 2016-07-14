@@ -22,6 +22,7 @@ import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.support.*;
 import com.googlecode.cqengine.index.unique.UniqueIndex;
+import com.googlecode.cqengine.persistence.support.ObjectSet;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -184,8 +185,10 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         return this;
     }
 
-    @Override public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
-        return addAll(objects.iterator(), queryOptions);
+    @Override public boolean addAll(ObjectSet<EntityHandle<O>> objectSet, QueryOptions queryOptions) {
+        try (CloseableIterator<EntityHandle<O>> iterator = objectSet.iterator()) {
+            return addAll(iterator, queryOptions);
+        }
     }
 
     @SneakyThrows
@@ -208,10 +211,6 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
                         s.addBatch();
                     }
                 }
-                if (iterator instanceof CloseableIterable) {
-                    ((CloseableIterator<EntityHandle<O>>)iterator).close();
-                }
-
                 try {
                     s.executeBatch();
                 } catch (BatchUpdateException e) {
@@ -239,15 +238,16 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
     }
 
     @SneakyThrows
-    @Override public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+    @Override public boolean removeAll(ObjectSet<EntityHandle<O>> objects, QueryOptions queryOptions) {
         try(Connection connection = getDataSource().getConnection()) {
             String insert = "DELETE FROM " + getTableName() + " WHERE object = ?::UUID";
             try (PreparedStatement s = connection.prepareStatement(insert)) {
-                Iterator<EntityHandle<O>> iterator = objects.iterator();
-                while (iterator.hasNext()) {
-                    EntityHandle<O> object = iterator.next();
-                    s.setString(1, object.uuid().toString());
-                    s.addBatch();
+                try (CloseableIterator<EntityHandle<O>> iterator = objects.iterator()) {
+                    while (iterator.hasNext()) {
+                        EntityHandle<O> object = iterator.next();
+                        s.setString(1, object.uuid().toString());
+                        s.addBatch();
+                    }
                 }
                 s.executeBatch();
             }

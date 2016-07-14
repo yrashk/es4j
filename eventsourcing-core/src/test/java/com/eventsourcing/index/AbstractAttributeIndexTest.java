@@ -14,6 +14,7 @@ import com.eventsourcing.models.Car;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.googlecode.cqengine.index.Index;
+import com.googlecode.cqengine.persistence.support.ObjectSet;
 import com.googlecode.cqengine.persistence.support.ObjectStore;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -61,12 +62,12 @@ public class AbstractAttributeIndexTest {
         }
 
         @Override
-        public boolean addAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        public boolean addAll(ObjectSet<EntityHandle<O>> objects, QueryOptions queryOptions) {
             return false;
         }
 
         @Override
-        public boolean removeAll(Collection<EntityHandle<O>> objects, QueryOptions queryOptions) {
+        public boolean removeAll(ObjectSet<EntityHandle<O>> objects, QueryOptions queryOptions) {
             return false;
         }
 
