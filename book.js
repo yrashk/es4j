@@ -13,7 +13,20 @@ module.exports = {
     plugins: ["versions","es4j-doc","include","local-plantuml"],
     pluginsConfig: {
         versions: {
-            type: "branches"
+            type: "branches",
+            gitbookConfigURL: "https://raw.githubusercontent.com/eventsourcing/es4j/master/book.js",
+            options: [
+                {
+                    value: "https://es4j.eventsourcing.com/docs/master",
+                    text: "master",
+                    selected: true
+                },
+                {
+                    value: "https://es4j.eventsourcing.com/docs/0.4.0",
+                    text: "Version 0.4.0"
+                }
+            ]
+
         }
     },
     variables: {

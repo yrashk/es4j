@@ -1,5 +1,5 @@
-WIP
-===
+0.4.0
+=====
 
 **Backwards-incompatible changes**
 
@@ -68,7 +68,7 @@ specified in [9/RIG](http://rfc.eventsourcing.com/spec:9/RIG) ([#102](https://gi
 
 
 0.3.2
-===
+=====
 
 **Features**
 

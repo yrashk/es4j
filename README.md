@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/eventsourcing/es4j.svg?branch=master)](https://travis-ci.org/eventsourcing/es4j)
-[ ![Download](https://api.bintray.com/packages/eventsourcing/maven/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven/eventsourcing-core/_latestVersion)
+[![Maven Central](https://img.shields.io/maven-central/v/com.eventsourcing/eventsourcing-core.svg?maxAge=2592000)]()
 [ ![Download](https://api.bintray.com/packages/eventsourcing/maven-snapshots/eventsourcing-core/images/download.svg) ](https://bintray.com/eventsourcing/maven-snapshots/eventsourcing-core/_latestVersion)
 [![Join the chat at https://gitter.im/eventsourcing/eventsourcing](https://badges.gitter.im/eventsourcing/eventsourcing.svg)](https://gitter.im/eventsourcing/eventsourcing?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -43,11 +43,11 @@ You can find our current slide deck at https://eventsourcing.com/presentation
 
 # Downloading and installing
 
-To start using ES4J, please follow the [installation instructions](http://es4j-doc.eventsourcing.com/getting_started/install.html).
+To start using ES4J, please follow the [installation instructions](https://es4j.eventsourcing.com/docs/master/getting_started/install.html).
 
 # Documentation
 
-Documentation can be found at [es4j-doc.eventsourcing.com](http://es4j-doc.eventsourcing.com)
+Documentation can be found at [es4j.eventsourcing.com](https://es4j.eventsourcing.com/docs/master)
 
 We strive to specify the building blocks behind Eventsourcing and its ecosystem as succinct specifications, you can find the current list of them at [rfc.eventsourcing.com](http://rfc.eventsourcing.com)
 

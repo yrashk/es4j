@@ -7,6 +7,8 @@ buildscript {
         classpath 'biz.aQute.bnd:biz.aQute.bnd.gradle:3.1.0'
         classpath 'com.netflix.nebula:gradle-aggregate-javadocs-plugin:2.2.+'
         classpath 'com.github.nwillc:vplugin:1.+'
+        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3"
+        classpath 'com.bmuschko:gradle-nexus-plugin:2.3.1'
     }
 }
 
@@ -20,6 +22,7 @@ plugins {
 
 apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
 apply plugin: 'nebula-aggregate-javadocs'
+apply plugin: 'io.codearte.nexus-staging'
 
 if (hasProperty("snapshot") && gitVersion().toString().contentEquals("unspecified")) {
     throw new GradleException('snapshot version `unspecified');
@@ -48,13 +51,7 @@ allprojects {
     }
 
     repositories {
-        jcenter()
-        maven {
-            url  "http://dl.bintray.com/eventsourcing/maven"
-        }
-        maven {
-            url  "http://dl.bintray.com/unprotocols/maven"
-        }
+        mavenCentral()
     }
 
 }
@@ -69,6 +66,7 @@ subprojects {
     apply plugin: 'com.jfrog.bintray'
     apply plugin: 'maven'
     apply plugin: 'maven-publish'
+    apply plugin: 'com.bmuschko.nexus'
 
     jar {
         manifest {
@@ -92,7 +90,7 @@ subprojects {
 
     javadoc.dependsOn(delombok)
 
-    task sourceJar(type: Jar) {
+    task sourcesJar(type: Jar) {
         group "Build"
         description "An archive of the source code"
         classifier "sources"
@@ -106,11 +104,11 @@ subprojects {
         from javadoc
     }
 
-    jar.finalizedBy sourceJar
+    jar.finalizedBy sourcesJar
     jar.finalizedBy javadocJar
 
     artifacts {
-        sourceJar
+        sourcesJar
         javadocJar
     }
 
@@ -118,7 +116,7 @@ subprojects {
         publications {
             MyPublication(MavenPublication) {
                 from components.java
-                artifact sourceJar
+                artifact sourcesJar
                 artifact javadocJar
                 groupId 'com.eventsourcing'
                 artifactId project.name
@@ -150,7 +148,7 @@ subprojects {
         compile 'org.slf4j:slf4j-simple:1.7.21'
 
         // Unit testing
-        testCompile 'org.testng:testng:6.9.12'
+        testCompile 'org.testng:testng:6.9.10'
 
         // Remove boilerplate
         compile 'org.projectlombok:lombok:1.16.8'
@@ -177,6 +175,49 @@ subprojects {
           showStackTraces true
 
       }
+    }
+
+    extraArchive {
+        javadoc false
+        sources false
+    }
+
+    modifyPom {
+        project {
+            name project.name
+            description 'Event capture and querying framework for Java'
+            url 'https://eventsourcing.com'
+            inceptionYear '2016'
+
+            scm {
+                url 'https://github.com/eventsourcing/es4j'
+                connection 'scm:git:git://github.com/eventsourcing/es4j.git'
+                developerConnection 'scm:git:git@github.com:eventsourcing/es4j.git'
+            }
+
+            licenses {
+                license {
+                    name 'Mozilla Public License, v. 2.0'
+                    url 'http://mozilla.org/MPL/2.0/'
+                    distribution 'repo'
+                }
+            }
+
+            developers {
+                developer {
+                    id 'yrashk'
+                    name 'Yurii Rashkovskii'
+                    email 'yrashk@gmail.com'
+                }
+            }
+
+            contributors {
+                contributor {
+                    name 'Benjamin Gudehus'
+                    email 'hastebrot@gmail.com'
+                }
+            }
+        }
     }
 }
 
@@ -210,8 +251,3 @@ dependencies {
     testCompile 'com.zaxxer:HikariCP:2.4.7'
 
 }
-
-subprojects.forEach {
-    afterReleaseBuild.dependsOn it.tasks.findByName("bintrayUpload")
-}
-
