@@ -10,15 +10,24 @@ package com.eventsourcing.postgresql.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.index.UniqueIndexTest;
-import com.eventsourcing.postgresql.PostgreSQLTest;
 import org.testng.annotations.Test;
+
+import javax.sql.DataSource;
+
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
 public class PostgreSQLUniqueEqualityIndexTest extends UniqueIndexTest<EqualityIndex> {
 
+
+    private DataSource dataSource;
+
     @Override
     public <A, O extends Entity> EqualityIndex onAttribute(Attribute<O, A> attribute) {
-        return EqualityIndex.onAttribute(PostgreSQLTest.dataSource, attribute, true);
+        if (dataSource == null) {
+            this.dataSource = createDataSource();
+        }
+        return EqualityIndex.onAttribute(dataSource, attribute, true);
     }
 
 }

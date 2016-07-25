@@ -8,29 +8,39 @@
 package com.eventsourcing.postgresql;
 
 import com.impossibl.postgres.jdbc.PGDataSource;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
+import lombok.SneakyThrows;
+import ru.yandex.qatools.embed.postgresql.PostgresExecutable;
+import ru.yandex.qatools.embed.postgresql.PostgresProcess;
+import ru.yandex.qatools.embed.postgresql.PostgresStarter;
+import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
 
 import javax.sql.DataSource;
 
-public class PostgreSQLTest {
-    public static final DataSource dataSource;
+public abstract class PostgreSQLTest {
 
-    static {
+    @SneakyThrows
+    public static DataSource createDataSource() {
+        PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getDefaultInstance();
+        final PostgresConfig pgConfig = PostgresConfig.defaultWithDbName("eventsourcing",
+                                                                         "eventsourcing", "eventsourcing");
+        PostgresExecutable exec = runtime.prepare(pgConfig);
+        PostgresProcess process = exec.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override public void run() {
+                process.stop();
+            }
+        });
+
         PGDataSource ds = new PGDataSource();
-        ds.setHost("localhost");
-        ds.setDatabase("eventsourcing");
-        ds.setUser("eventsourcing");
-        ds.setPassword("eventsourcing");
-        ds.setPort(System.getenv("PGPORT") == null ? 5432 : Integer.valueOf(System.getenv("PGPORT")));
+        ds.setHost(pgConfig.net().host());
+        ds.setDatabase(pgConfig.storage().dbName());
+        ds.setUser(pgConfig.credentials().username());
+        ds.setPassword(pgConfig.credentials().password());
+        ds.setPort(pgConfig.net().port());
         ds.setHousekeeper(false);
 
-        HikariConfig config = new HikariConfig();
-        config.setMaximumPoolSize(50);
-        config.setDataSource(ds);
-        config.setLeakDetectionThreshold(3000);
-        config.setConnectionInitSql("SET log_statement = 'all'");
-
-        dataSource = new HikariDataSource(config);
+        return ds;
     }
+
 }

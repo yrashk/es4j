@@ -13,14 +13,21 @@ import com.eventsourcing.index.EqualityIndexTest;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
+import javax.sql.DataSource;
+
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
 public class PostgreSQLEqualityIndexTest extends EqualityIndexTest<EqualityIndex> {
 
+    private DataSource dataSource;
+
     @Override
     @SneakyThrows
     public <A, O extends Entity> EqualityIndex onAttribute(Attribute<O, A> attribute) {
+        if (dataSource == null) {
+            this.dataSource = createDataSource();
+        }
         return EqualityIndex.onAttribute(dataSource, attribute, false);
     }
 }
