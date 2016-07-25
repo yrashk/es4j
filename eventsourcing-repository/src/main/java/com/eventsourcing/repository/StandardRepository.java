@@ -21,6 +21,7 @@ import com.google.common.collect.Iterables;
 import com.google.common.util.concurrent.AbstractService;
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
+import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.Index;
 import lombok.Builder;
 import lombok.Getter;
@@ -32,6 +33,7 @@ import org.osgi.service.component.annotations.*;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 
 @Component(configurationPolicy = ConfigurationPolicy.REQUIRE,
@@ -144,14 +146,12 @@ public class StandardRepository extends AbstractService implements Repository, R
             if (!indicesConfiguredFor.contains(klass.getName())) {
                 Iterable<Index> indices = indexEngine.getIndices(klass);
                 for (Index i : indices) {
-                    try {
-                        indexEngine.getIndexedCollection(klass).addIndex(i);
-                    } catch (IllegalStateException e) {
-                        if (e.getMessage().contains("has already been added")) {
-                            // ignore the re-addition of the index
-                        } else {
-                            throw e;
-                        }
+                    IndexedCollection<? extends EntityHandle<? extends Entity>> collection =
+                            indexEngine.getIndexedCollection(klass);
+                    boolean hasIndex = StreamSupport.stream(collection.getIndexes().spliterator(), false)
+                                             .anyMatch(index -> index.equals(i));
+                    if (!hasIndex) {
+                        collection.addIndex(i);
                     }
                 }
                 indicesConfiguredFor.add(klass.getName());
