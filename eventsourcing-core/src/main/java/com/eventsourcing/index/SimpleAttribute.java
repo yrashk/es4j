@@ -10,6 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Getter;
 
 import java.util.Collections;
 
@@ -20,23 +21,47 @@ import java.util.Collections;
  * @param <O>
  * @param <A>
  */
-public abstract class SimpleAttribute<O extends Entity, A> extends AbstractAttribute<O, A> {
+public abstract class SimpleAttribute<O extends Entity, A>
+        extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A>
+        implements Attribute<O, A> {
+
+    private Class<O> objectType;
+    private int cachedHashCode;
+
+    @Override
+    public int hashCode() {
+        return cachedHashCode;
+    }
+
+    @Override public Class<O> getEffectiveObjectType() {
+        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
+    }
 
     public SimpleAttribute() {
         super();
+        cachedHashCode = calculateHashCode();
     }
 
     public SimpleAttribute(String attributeName) {
         super(attributeName);
+        cachedHashCode = calculateHashCode();
     }
 
     public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
-        super(objectType, handleType, attributeType);
+        super(handleType, attributeType);
+        this.objectType = objectType;
+        cachedHashCode = calculateHashCode();
     }
 
     public SimpleAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType,
                            String attributeName) {
-        super(objectType, handleType, attributeType, attributeName);
+        super(handleType, attributeType, attributeName);
+        this.objectType = objectType;
+        cachedHashCode = calculateHashCode();
+    }
+
+    @Override public boolean equals(Object o) {
+        return isEqual(o);
     }
 
     /**
@@ -55,5 +80,13 @@ public abstract class SimpleAttribute<O extends Entity, A> extends AbstractAttri
 
     @Override public boolean canEqual(Object other) {
         return other instanceof SimpleAttribute;
+    }
+
+    @Override public String toString() {
+        return "SimpleAttribute{" +
+                "objectType=" + getEffectiveObjectType() +
+                ", attributeType=" + getAttributeType() +
+                ", attributeName='" + getAttributeName() + '\'' +
+                '}';
     }
 }

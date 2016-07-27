@@ -11,23 +11,47 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
-public abstract class MultiValueAttribute<O extends Entity, A> extends AbstractAttribute<O, A> {
+public abstract class MultiValueAttribute<O extends Entity, A>
+        extends com.googlecode.cqengine.attribute.MultiValueAttribute<EntityHandle<O>, A>
+        implements Attribute<O, A> {
+
+    private Class<O> objectType;
+    private int cachedHashCode;
+
+    @Override
+    public int hashCode() {
+        return cachedHashCode;
+    }
+
+    @Override public Class<O> getEffectiveObjectType() {
+        return objectType == null ? Attribute.readGenericObjectType(getClass(), getAttributeName()) : objectType;
+    }
 
     public MultiValueAttribute() {
         super();
+        cachedHashCode = calculateHashCode();
     }
 
     public MultiValueAttribute(String attributeName) {
         super(attributeName);
+        cachedHashCode = calculateHashCode();
     }
 
     public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType) {
-        super(objectType, handleType, attributeType);
+        super(handleType, attributeType);
+        this.objectType = objectType;
+        cachedHashCode = calculateHashCode();
     }
 
     public MultiValueAttribute(Class<O> objectType, Class<EntityHandle<O>> handleType, Class<A> attributeType,
                                String attributeName) {
-        super(objectType, handleType, attributeType, attributeName);
+        super(handleType, attributeType, attributeName);
+        this.objectType = objectType;
+        cachedHashCode = calculateHashCode();
+    }
+
+    @Override public boolean equals(Object o) {
+        return isEqual(o);
     }
 
     @Override
@@ -39,5 +63,13 @@ public abstract class MultiValueAttribute<O extends Entity, A> extends AbstractA
 
     @Override public boolean canEqual(Object other) {
         return other instanceof MultiValueAttribute;
+    }
+
+    @Override public String toString() {
+        return "MultiValueAttribute{" +
+                "objectType=" + getEffectiveObjectType() +
+                ", attributeType=" + getAttributeType() +
+                ", attributeName='" + getAttributeName() + '\'' +
+                '}';
     }
 }

@@ -18,6 +18,35 @@ public interface Attribute<O extends Entity, A>
 
     Class<O> getEffectiveObjectType();
 
+    default int calculateHashCode() {
+        int result = getEffectiveObjectType().hashCode();
+        result = 31 * result + getAttributeType().hashCode();
+        result = 31 * result + getAttributeName().hashCode();
+        return result;
+    }
+
+
+    default boolean isEqual(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Attribute)) return false;
+
+        Attribute that = (Attribute) o;
+
+        // TODO: reinstate this cachedHashCode comparison once EqualsVerifier supports cached hash code "shortcut":
+        //if (cachedHashCode != that.cachedHashCode) return false;
+        if (!that.canEqual(this)) return false;
+        if (!getAttributeName().equals(that.getAttributeName())) return false;
+        if (!getAttributeType().equals(that.getAttributeType())) return false;
+        if (!getEffectiveObjectType().equals(that.getEffectiveObjectType())) return false;
+
+        return true;
+    }
+
+    default boolean canEqual(Object other) {
+        return other instanceof Attribute;
+    }
+
+
     static <O> Class<O> readGenericObjectType(Class<?> attributeClass, String attributeName) {
         try {
             ParameterizedType superclass = (ParameterizedType) attributeClass.getGenericSuperclass();
