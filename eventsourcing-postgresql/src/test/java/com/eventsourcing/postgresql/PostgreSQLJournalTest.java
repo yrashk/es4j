@@ -19,12 +19,9 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
 import java.util.*;
 
-import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 import static org.apache.commons.lang3.ArrayUtils.toObject;
 import static org.testng.Assert.*;
 
@@ -34,19 +31,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
     @SneakyThrows
     static PostgreSQLJournal createJournal() {
-        recreateSchema();
-        return new PostgreSQLJournal(dataSource);
-    }
-
-    static void recreateSchema() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement s = connection.prepareStatement("DROP SCHEMA IF EXISTS public CASCADE")) {
-                s.executeUpdate();
-            }
-            try (PreparedStatement s = connection.prepareStatement("CREATE SCHEMA public")) {
-                s.executeUpdate();
-            }
-        }
+        return new PostgreSQLJournal(createDataSource());
     }
 
     public PostgreSQLJournalTest() {

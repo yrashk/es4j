@@ -9,9 +9,11 @@ package com.eventsourcing.postgresql;
 
 import com.eventsourcing.LockProviderTest;
 
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
+
 public class PostgreSQLLockProviderTest extends LockProviderTest<PostgreSQLLockProvider> {
 
     public PostgreSQLLockProviderTest() {
-        super(new PostgreSQLLockProvider(PostgreSQLTest.dataSource));
+        super(new PostgreSQLLockProvider(createDataSource()));
     }
 }

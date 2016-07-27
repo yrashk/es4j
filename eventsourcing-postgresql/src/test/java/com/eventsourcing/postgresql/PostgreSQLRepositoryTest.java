@@ -17,14 +17,14 @@ import com.eventsourcing.repository.StandardRepository;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import javax.sql.DataSource;
 
-import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
 public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
+
+    private DataSource dataSource;
 
     public PostgreSQLRepositoryTest() throws Exception {
         super(new StandardRepository());
@@ -32,25 +32,19 @@ public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
 
     @SneakyThrows
     @Override protected Journal createJournal() {
-        recreateSchema();
+        if (dataSource == null) {
+            dataSource = createDataSource();
+        }
         return new PostgreSQLJournal(dataSource);
     }
 
     @SneakyThrows
     @Override protected IndexEngine createIndexEngine() {
-        recreateSchema();
+        if (dataSource == null) {
+            dataSource = createDataSource();
+        }
         return new CascadingIndexEngine(new PostgreSQLIndexEngine(dataSource), new MemoryIndexEngine());
     }
 
-    private void recreateSchema() throws SQLException {
-        try (Connection connection = dataSource.getConnection()) {
-            try (PreparedStatement s = connection.prepareStatement("DROP SCHEMA IF EXISTS public CASCADE")) {
-                s.executeUpdate();
-            }
-            try (PreparedStatement s = connection.prepareStatement("CREATE SCHEMA public")) {
-                s.executeUpdate();
-            }
-        }
-    }
 
 }

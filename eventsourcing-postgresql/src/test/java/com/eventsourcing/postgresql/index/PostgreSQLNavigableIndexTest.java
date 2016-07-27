@@ -15,20 +15,30 @@ import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.quantizer.Quantizer;
 import org.testng.annotations.Test;
 
-import static com.eventsourcing.postgresql.PostgreSQLTest.dataSource;
+import javax.sql.DataSource;
+
+import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
 public class PostgreSQLNavigableIndexTest extends NavigableIndexTest<NavigableIndex> {
 
 
+    private DataSource dataSource;
+
     @Override
     public <A extends Comparable<A>, O extends Entity> NavigableIndex onAttribute(Attribute<O, A> attribute) {
+        if (dataSource == null) {
+            this.dataSource = createDataSource();
+        }
         return NavigableIndex.onAttribute(dataSource, attribute);
     }
 
     @Override
     public <A extends Comparable<A>, O extends Entity> Index<EntityHandle<O>>
     withQuantizerOnAttribute(Quantizer<A> quantizer, com.eventsourcing.index.Attribute<O, A> attribute) {
+        if (dataSource == null) {
+            this.dataSource = createDataSource();
+        }
         return NavigableIndex.withQuantizerOnAttribute(dataSource, quantizer, attribute);
     }
 
