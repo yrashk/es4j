@@ -13,7 +13,7 @@ dependencies {
     compile 'com.lmax:disruptor:3.3.4'
 
     // Indexing
-    compile 'com.googlecode.cqengine:cqengine:2.7.0'
+    compile 'com.googlecode.cqengine:cqengine:2.7.1'
 
 
     testCompile project(':eventsourcing-inmem')
