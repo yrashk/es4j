@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.cep.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
@@ -37,12 +38,12 @@ public class Deleted extends StandardEvent {
     final UUID reference;
 
     @Index
-    public static SimpleIndex<Deleted, UUID> ID = (object, queryOptions) -> object.uuid();
+    public static SimpleIndex<Deleted, UUID> ID = StandardEntity::uuid;
 
-    public static SimpleIndex<Deleted, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
+    public static SimpleIndex<Deleted, UUID> REFERENCE_ID = Deleted::reference;
 
     @Index({EQ, LT, GT})
-    public static SimpleIndex<Deleted, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object.timestamp();
+    public static SimpleIndex<Deleted, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
 
     @LayoutConstructor
     public Deleted(UUID reference) {

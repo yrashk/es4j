@@ -107,7 +107,7 @@ public abstract class RepositoryTest<T extends Repository> {
         private final String string;
 
         @Index({EQ, SC})
-        public static SimpleIndex<TestEvent, String> ATTR = (object, queryOptions) -> object.string();
+        public static SimpleIndex<TestEvent, String> ATTR = TestEvent::string;
 
         @Builder
         public TestEvent(HybridTimestamp timestamp, String string) {
@@ -140,7 +140,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, SC})
-        public static SimpleIndex<RepositoryTestCommand, String> ATTR = (object, queryOptions) -> object.getValue();
+        public static SimpleIndex<RepositoryTestCommand, String> ATTR = RepositoryTestCommand::getValue;
 
     }
 
@@ -308,6 +308,65 @@ public abstract class RepositoryTest<T extends Repository> {
 
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
         assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());
+
+    }
+
+    @Accessors(fluent = true) @ToString
+    public static class TestEventWithQueryOptions extends StandardEvent {
+        @Getter
+        private final String string;
+
+        @Index({EQ, SC})
+        public static SimpleIndex<TestEventWithQueryOptions, String> ATTR =
+                SimpleIndex.withQueryOptions((object, queryOptions) -> {
+                    if (queryOptions.get(TestEventWithQueryOptions.class) != null) {
+                        return "QueryOptions";
+                    } else {
+                        return object.string();
+                    }
+                });
+
+
+        @Builder
+        public TestEventWithQueryOptions(String string) {
+            this.string = string;
+        }
+    }
+
+
+    @ToString
+    public static class TestEventWithQueryOptionsCommand extends StandardCommand<Void, String> {
+
+        @Getter
+        private final String value;
+
+        @Builder
+        public TestEventWithQueryOptionsCommand(HybridTimestamp timestamp, String value) {
+            super(timestamp);
+            this.value = value == null ? "test" : value;
+        }
+
+
+        @Override
+        public EventStream<Void> events() {
+            return EventStream.of(TestEventWithQueryOptions.builder().string(value).build());
+        }
+
+        @Override
+        public String result() {
+            return "hello, world";
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void queryOptionsInIndices() {
+        IndexedCollection<EntityHandle<TestEventWithQueryOptions>> coll =
+                indexEngine.getIndexedCollection(TestEventWithQueryOptions.class);
+        coll.clear();
+
+        repository.publish(TestEventWithQueryOptionsCommand.builder().build()).get();
+        assertTrue(coll.retrieve(equal(TestEventWithQueryOptions.ATTR, "test")).isNotEmpty());
 
     }
 
@@ -520,7 +579,7 @@ public abstract class RepositoryTest<T extends Repository> {
         private final Optional<String> optional;
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalEvent, UUID> ATTR = (object, queryOptions) -> object.uuid();
+        public static SimpleIndex<TestOptionalEvent, UUID> ATTR = StandardEntity::uuid;
 
         @Builder
         public TestOptionalEvent(Optional<String> optional) {
@@ -546,7 +605,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalCommand, UUID> ATTR = (object, queryOptions) -> object.uuid();
+        public static SimpleIndex<TestOptionalCommand, UUID> ATTR = StandardEntity::uuid;
 
     }
 

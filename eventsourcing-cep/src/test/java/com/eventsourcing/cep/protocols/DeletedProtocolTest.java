@@ -43,7 +43,7 @@ public class DeletedProtocolTest extends RepositoryUsingTest {
         }
     }
     public static class Created extends StandardEvent {
-        public static SimpleIndex<Created, UUID> ID = (object, queryOptions) -> object.uuid();
+        public static SimpleIndex<Created, UUID> ID = StandardEntity::uuid;
     }
 
     @Accessors(fluent = true)

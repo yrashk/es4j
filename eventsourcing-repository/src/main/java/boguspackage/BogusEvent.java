@@ -24,7 +24,7 @@ public class BogusEvent extends StandardEvent {
     private final String string;
 
     @Index({EQ, SC})
-    public static SimpleIndex<BogusEvent, String> ATTR = (object, queryOptions) -> object.string();
+    public static SimpleIndex<BogusEvent, String> ATTR = BogusEvent::string;
 
     @Builder
     public BogusEvent(HybridTimestamp timestamp, String string) {

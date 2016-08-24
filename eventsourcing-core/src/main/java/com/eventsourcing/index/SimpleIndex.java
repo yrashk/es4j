@@ -11,15 +11,58 @@ import com.eventsourcing.Entity;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
 import java.util.Collections;
+import java.util.function.BiFunction;
 
 /**
- * Designates a simple (single value) index
+ * Designates a simple (single value) index using a functional interface.
+ *
+ * Typically, a definition will look like this:
+ *
+ * <pre>
+ * <code>
+ * public static SimpleIndex&lt;TestEvent, UUID&gt; REFERENCE_ID = TestEvent::reference;
+ * </code>
+ * </pre>
+ *
+ * However, there are cases when accessing {@link QueryOptions} is necessary. This can be achieved
+ * using {@link SimpleIndex#withQueryOptions(BiFunction)}:
+ *
+ * <pre>
+ * <code>
+ * public static SimpleIndex&lt;TestEvent, UUID&gt; REFERENCE_ID =
+ *    SimpleIndex.withQueryOptions((object, queryOptions) -&gt; ...);
+ * </code>
+ * </pre>
+ *
  * @param <O> entity type
  * @param <A> attribute type
  */
 @FunctionalInterface
 public interface SimpleIndex<O extends Entity, A> extends EntityIndex<O, A> {
-    A getValue(O object, QueryOptions queryOptions);
+    default A getValue(O object, QueryOptions queryOptions) {
+        return getValue(object);
+    }
+    A getValue(O object);
+
+    /**
+     * Creates a SimpleIndex with a function that can access {@link QueryOptions}
+     *
+     * @param function
+     * @param <O>
+     * @param <A>
+     * @return
+     */
+    static <O extends Entity, A> SimpleIndex<O, A> withQueryOptions(BiFunction<O, QueryOptions, A> function) {
+        return new SimpleIndex<O, A>() {
+            @Override public A getValue(O object, QueryOptions queryOptions) {
+                return function.apply(object, queryOptions);
+            }
+
+            @Override public A getValue(O object) {
+                return function.apply(object, EntityQueryFactory.noQueryOptions());
+            }
+        };
+    }
 
     default Iterable<A> getValues(O object, QueryOptions queryOptions) {
         return Collections.singletonList(getValue(object, queryOptions));

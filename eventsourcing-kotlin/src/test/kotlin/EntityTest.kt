@@ -17,7 +17,7 @@ import kotlin.test.assertTrue
 @UseClassAnalyzer(KotlinClassAnalyzer::class)
 class TestEntity(val x: String) : StandardEvent() {
     companion object {
-        @JvmField var X = SimpleIndex { o: TestEntity, queryOptions -> o.x }
+        @JvmField var X = SimpleIndex { o: TestEntity -> o.x }
     }
 }
 
