@@ -7,6 +7,7 @@
  */
 package foodsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
@@ -38,35 +39,33 @@ public class AddressChanged extends StandardEvent {
     }
 
     @NonFinal
-    public static SimpleIndex<AddressChanged, UUID> ID = (addressChanged, queryOptions) -> addressChanged.uuid();
+    public static SimpleIndex<AddressChanged, UUID> ID = StandardEntity::uuid;
 
     @NonFinal
-    public static SimpleIndex<AddressChanged, UUID> REFERENCE_ID = (addressChanged, queryOptions) -> addressChanged
-            .reference();
+    public static SimpleIndex<AddressChanged, UUID> REFERENCE_ID = AddressChanged::reference;
 
     @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, HybridTimestamp> TIMESTAMP =
-            (addressChanged, queryOptions) -> addressChanged.timestamp();
+    public static SimpleIndex<AddressChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
 
     @NonFinal
     @Index({EQ, LT, GT})
     public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_START =
-            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees();
+            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees();
 
     @NonFinal
     @Index({EQ, LT, GT})
     public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_START =
-            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees();
+            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees();
 
     @NonFinal
     @Index({EQ, LT, GT})
     public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_END =
-            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees();
+            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees();
 
     @NonFinal
     @Index({EQ, LT, GT})
     public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_END =
-            (addressChanged, queryOptions) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees();
+            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees();
 
 }

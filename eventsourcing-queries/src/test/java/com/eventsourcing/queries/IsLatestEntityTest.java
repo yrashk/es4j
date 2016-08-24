@@ -7,10 +7,7 @@
  */
 package com.eventsourcing.queries;
 
-import com.eventsourcing.EntityHandle;
-import com.eventsourcing.EventStream;
-import com.eventsourcing.StandardCommand;
-import com.eventsourcing.StandardEvent;
+import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
 import com.eventsourcing.index.SimpleIndex;
@@ -50,10 +47,11 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
         private String test;
         private UUID reference;
         @NonFinal
-        public static SimpleIndex<TestEvent, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
+        public static SimpleIndex<TestEvent, UUID> REFERENCE_ID = TestEvent::reference;
+
         @NonFinal
         @Index({EQ, LT, GT})
-        public static SimpleIndex<TestEvent, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object.timestamp();
+        public static SimpleIndex<TestEvent, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
     }
 
     @Value

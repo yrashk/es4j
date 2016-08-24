@@ -9,6 +9,7 @@ package com.eventsourcing.queries;
 
 import com.eventsourcing.EventStream;
 import com.eventsourcing.StandardCommand;
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleAttribute;
 import com.eventsourcing.index.SimpleIndex;
@@ -29,7 +30,7 @@ public class ModelQueriesTest extends RepositoryUsingTest {
     }
 
     public static class TestEvent extends StandardEvent {
-        public static SimpleIndex<TestEvent, UUID> ID = (object, queryOptions) -> object.uuid();
+        public static SimpleIndex<TestEvent, UUID> ID = StandardEntity::uuid;
     }
 
     public static class TestCommand extends StandardCommand<TestEvent, UUID> {

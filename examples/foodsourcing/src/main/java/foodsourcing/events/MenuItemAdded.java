@@ -7,6 +7,7 @@
  */
 package foodsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleIndex;
 import lombok.EqualsAndHashCode;
@@ -24,8 +25,8 @@ public class MenuItemAdded extends StandardEvent {
     private UUID reference;
 
     @NonFinal
-    public static SimpleIndex<MenuItemAdded, UUID> ID = (menuItemAdded, queryOptions) -> menuItemAdded.uuid();
+    public static SimpleIndex<MenuItemAdded, UUID> ID = StandardEntity::uuid;
 
     @NonFinal
-    public static SimpleIndex<MenuItemAdded, UUID> REFERENCE_ID = (menuItemAdded, queryOptions) -> menuItemAdded.reference();
+    public static SimpleIndex<MenuItemAdded, UUID> REFERENCE_ID = MenuItemAdded::reference;
 }

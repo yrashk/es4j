@@ -7,6 +7,7 @@
  */
 package foodsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
@@ -30,11 +31,9 @@ public class PictureChanged extends StandardEvent implements Picture {
     private byte[] picture;
 
     @NonFinal
-    public static SimpleIndex<PictureChanged, UUID> REFERENCE_ID =
-            (pictureChanged, queryOptions) -> pictureChanged.reference();
+    public static SimpleIndex<PictureChanged, UUID> REFERENCE_ID = PictureChanged::reference;
 
     @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleIndex<PictureChanged, HybridTimestamp> TIMESTAMP =
-            (pictureChanged, queryOptions) -> pictureChanged.timestamp();
+    public static SimpleIndex<PictureChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
 }

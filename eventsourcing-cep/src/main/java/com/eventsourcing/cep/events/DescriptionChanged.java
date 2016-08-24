@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.cep.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
@@ -48,11 +49,10 @@ public class DescriptionChanged extends StandardEvent {
         this.description = description;
     }
 
-    public static SimpleIndex<DescriptionChanged, UUID> REFERENCE_ID = (object, queryOptions) -> object.reference();
+    public static SimpleIndex<DescriptionChanged, UUID> REFERENCE_ID = DescriptionChanged::reference;
 
-    public static SimpleIndex<DescriptionChanged, String> DESCRIPTION = (object, queryOptions) -> object.description();
+    public static SimpleIndex<DescriptionChanged, String> DESCRIPTION = DescriptionChanged::description;
 
     @Index({LT, GT, EQ})
-    public static SimpleIndex<DescriptionChanged, HybridTimestamp> TIMESTAMP = (object, queryOptions) -> object
-            .timestamp();
+    public static SimpleIndex<DescriptionChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
 }

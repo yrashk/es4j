@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleIndex;
 import lombok.Getter;
@@ -69,6 +70,6 @@ public class JavaExceptionOccurred extends StandardEvent {
                 map(StackTraceElement::new).collect(Collectors.toList());
     }
 
-    public static SimpleIndex<JavaExceptionOccurred, UUID> ID = (object, queryOptions) -> object.uuid();
+    public static SimpleIndex<JavaExceptionOccurred, UUID> ID = StandardEntity::uuid;
 
 }

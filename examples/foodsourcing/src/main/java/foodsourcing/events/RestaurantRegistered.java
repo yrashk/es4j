@@ -7,6 +7,7 @@
  */
 package foodsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleIndex;
 
@@ -14,7 +15,6 @@ import java.util.UUID;
 
 public class RestaurantRegistered extends StandardEvent {
 
-    public static SimpleIndex<RestaurantRegistered, UUID> ID =
-            (restaurantRegistered, queryOptions) -> restaurantRegistered.uuid();
+    public static SimpleIndex<RestaurantRegistered, UUID> ID = StandardEntity::uuid;
 
 }

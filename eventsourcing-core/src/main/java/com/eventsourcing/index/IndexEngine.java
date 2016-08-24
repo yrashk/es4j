@@ -140,6 +140,10 @@ public interface IndexEngine extends Service {
                                 return attribute;
                             }
 
+                            @Override public Object getValue(Entity object) {
+                                return ((SimpleIndex) index).getValue(object);
+                            }
+
                             @Override public Object getValue(Entity object, QueryOptions queryOptions) {
                                 return ((SimpleIndex) index).getValue(object, queryOptions);
                             }
@@ -149,6 +153,10 @@ public interface IndexEngine extends Service {
                         field.set(null, new MultiValueIndex() {
                             @Override public Attribute getAttribute() {
                                 return attribute;
+                            }
+
+                            @Override public Iterable getValues(Entity object) {
+                                return ((MultiValueIndex)index).getValues(object);
                             }
 
                             @Override public Iterable getValues(Entity object, QueryOptions queryOptions) {

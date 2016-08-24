@@ -7,6 +7,7 @@
  */
 package com.eventsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.index.SimpleIndex;
 import com.eventsourcing.layout.LayoutName;
@@ -18,5 +19,5 @@ import java.util.UUID;
 @LayoutName("rfc.eventsourcing.com/spec:9/RIG/#CommandTerminatedExceptionally")
 public class CommandTerminatedExceptionally extends StandardEvent {
 
-    public static SimpleIndex<CommandTerminatedExceptionally, UUID> ID = (object, queryOptions) -> object.uuid();
+    public static SimpleIndex<CommandTerminatedExceptionally, UUID> ID = StandardEntity::uuid;
 }

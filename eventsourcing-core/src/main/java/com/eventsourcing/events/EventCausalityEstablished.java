@@ -35,7 +35,7 @@ public class EventCausalityEstablished extends StandardEvent {
         this.command = command;
     }
 
-    public static SimpleIndex<EventCausalityEstablished, UUID> EVENT = (object, queryOptions) -> object.event();
+    public static SimpleIndex<EventCausalityEstablished, UUID> EVENT = EventCausalityEstablished::event;
 
-    public static SimpleIndex<EventCausalityEstablished, UUID> COMMAND = (object, queryOptions) -> object.command();
+    public static SimpleIndex<EventCausalityEstablished, UUID> COMMAND = EventCausalityEstablished::command;
 }

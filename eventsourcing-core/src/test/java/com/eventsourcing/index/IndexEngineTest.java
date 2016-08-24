@@ -86,10 +86,10 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         @Getter @Accessors(chain = true)
         private final String anotherString;
 
-        public static SimpleIndex<TestEvent, String> ANOTHER_ATTR = (object, queryOptions) -> object.getAnotherString();
+        public static SimpleIndex<TestEvent, String> ANOTHER_ATTR = TestEvent::getAnotherString;
 
         @Index
-        public static SimpleIndex<TestEvent, String> ATTR = (object, queryOptions) -> object.getString();
+        public static SimpleIndex<TestEvent, String> ATTR = TestEvent::getString;
     }
 
     @Accessors(fluent = true)

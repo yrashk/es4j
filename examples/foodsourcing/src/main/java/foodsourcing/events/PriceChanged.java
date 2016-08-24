@@ -7,6 +7,7 @@
  */
 package foodsourcing.events;
 
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.StandardEvent;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Index;
@@ -29,12 +30,10 @@ public class PriceChanged extends StandardEvent {
     private BigDecimal price;
 
     @NonFinal
-    public static SimpleIndex<PriceChanged, UUID> REFERENCE_ID =
-            (priceChanged, queryOptions) -> priceChanged.reference();
+    public static SimpleIndex<PriceChanged, UUID> REFERENCE_ID = PriceChanged::reference;
 
     @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleIndex<PriceChanged, HybridTimestamp> TIMESTAMP =
-            (priceChanged, queryOptions) -> priceChanged.timestamp();
+    public static SimpleIndex<PriceChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
 
 }
