@@ -1,0 +1,56 @@
+/**
+ * Copyright (c) 2016, All Contributors (see CONTRIBUTORS file)
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+package foodsourcing;
+import com.eventsourcing.Repository;
+import foodsourcing.events.*
+import foodsourcing.commands.RequestRestaurantOrderConfirmation
+import java.math.BigDecimal
+import foodsourcing.commands.CapturePayment
+import foodsourcing.commands.ConfirmOrder;
+dialect "mvel"
+dialect "java"
+
+rule "New order placed"
+when
+  repository : Repository()
+  orderPlaced : OrderPlaced($id : uuid)
+then
+  System.out.println("Order " + $id + " placed, requesting restaurant's confirmation");
+  repository.publish(new RequestRestaurantOrderConfirmation($id));
+end
+
+rule "Restaurant confirmed order"
+when
+  repository : Repository()
+  RestaurantConfirmedOrder($id: order, menuItemsNotAvailable.empty)
+  orderPlaced : OrderPlaced(uuid == $id)
+then
+  BigDecimal price = Order.lookup(repository, $id).get().price();
+  System.out.println("Order " + $id + " confirmed by restaurant, charging " + price);
+  repository.publish(new CapturePayment($id, price));
+end
+
+rule "Order payment captured"
+when
+  repository : Repository()
+  orderPlaced : OrderPlaced($id: uuid)
+  PaymentCaptured(reference == $id)
+then
+  System.out.println("Payment for " + $id + " captured, confirming...");
+  repository.publish(new ConfirmOrder($id));
+end
+
+rule "Order confirmed"
+when
+  repository : Repository()
+  orderPlaced : OrderPlaced($id: uuid)
+  OrderConfirmed(reference == $id)
+then
+  System.out.println("Order " + $id + " confirmed");
+  delete(orderPlaced);
+end

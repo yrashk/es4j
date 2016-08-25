@@ -8,6 +8,10 @@ apply plugin: 'idea'
 repositories {
     mavenLocal()
     mavenCentral()
+    maven {
+        name 'jboss'
+        url 'http://repository.jboss.org/nexus/content/groups/public-jboss'
+    }
 }
 
 idea {
@@ -30,6 +34,7 @@ idea {
 license {
     header project.file('../../LICENSE-HEADER')
     exclude "**/GeoLocation.java"
+    mapping "drl", 'JAVADOC_STYLE'
 }
 
 Properties props = new Properties()
@@ -46,6 +51,10 @@ dependencies {
     compile "com.eventsourcing:eventsourcing-queries:${eventsourcingVersion}"
     compile "com.eventsourcing:eventsourcing-inmem:${eventsourcingVersion}"
     compile "com.eventsourcing:eventsourcing-postgresql:${eventsourcingVersion}"
+
+    // Drools
+    compile 'org.kie:kie-api:6.4.0.Final'
+    compile 'org.drools:drools-compiler:6.4.0.Final'
 
     // Google Maps
     compile 'com.google.maps:google-maps-services:0.1.15'
