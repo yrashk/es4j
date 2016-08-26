@@ -41,7 +41,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     private final MVStore store;
 
     /**
-     * Map record structure:
+     * Map journal structure:
      * <p>
      * <table>
      * <tr>
@@ -59,7 +59,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
      */
     private final MVMap<byte[], Boolean> map;
     /**
-     * Map record structure:
+     * Map journal structure:
      * <p>
      * <table>
      * <tr>
@@ -76,7 +76,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
      */
     private final MVMap<byte[], byte[]> attrHashMap;
     /**
-     * Map record structure:
+     * Map journal structure:
      * <p>
      * <table>
      * <tr>

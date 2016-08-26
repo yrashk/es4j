@@ -158,7 +158,7 @@ public interface Repository extends Service {
      * @param <C>     Result class
      * @return {@link CompletableFuture} with command's result
      */
-    <T extends Command<?, C>, C> CompletableFuture<C> publish(T command);
+    <T extends Command<S, C>, S, C> CompletableFuture<C> publish(T command);
 
     /**
      * Shortcut method for accessing index retrieval (see {@link #query(Class, Query, QueryOptions)} with

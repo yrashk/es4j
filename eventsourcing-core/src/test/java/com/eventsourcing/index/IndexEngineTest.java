@@ -109,33 +109,5 @@ public abstract class IndexEngineTest<T extends IndexEngine> {
         }
     }
 
-    @Test
-    @SneakyThrows
-    public void test() {
-        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
-        indexEngine
-                .getIndexOnAttribute(TestEvent.ATTR.getAttribute(), IndexEngine.IndexFeature.EQ, IndexEngine.IndexFeature.SC);
-        IndexedCollection<EntityHandle<TestEvent>> coll = indexEngine.getIndexedCollection(TestEvent.class);
-        List<Event> events = new ArrayList<>();
-        TestCommand command = TestCommand.builder().string("test").timestamp(timestamp).build();
-        journal.journal(command, new Journal.Listener() {
-            @Override
-            public void onEvent(Event event) {
-                events.add(event);
-            }
-        });
-        TestEvent event = (TestEvent) events.get(0);
-        coll.add(new JournalEntityHandle<>(journal, event.uuid()));
-
-        EntityHandle<TestEvent> handle = coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult();
-        assertTrue(handle.getOptional().isPresent());
-
-        handle = coll.retrieve(contains(TestEvent.ATTR, "es")).uniqueResult();
-        assertTrue(handle.getOptional().isPresent());
-
-        handle = coll.retrieve(not(contains(TestEvent.ATTR, "se"))).uniqueResult();
-        assertTrue(handle.getOptional().isPresent());
-    }
 
 }

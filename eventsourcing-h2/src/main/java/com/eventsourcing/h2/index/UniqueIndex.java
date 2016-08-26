@@ -41,7 +41,7 @@ public class UniqueIndex<A, O extends Entity> extends AbstractHashingAttributeIn
     private final MVStore store;
 
     /**
-     * Map record structure:
+     * Map journal structure:
      * <p>
      * <table>
      * <tr>

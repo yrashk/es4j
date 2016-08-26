@@ -42,6 +42,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -638,6 +640,58 @@ public abstract class RepositoryTest<T extends Repository> {
                 .query(EventCausalityEstablished.class, equal(EventCausalityEstablished.COMMAND, command.uuid()))) {
             assertEquals(resultSet.size(), 1);
         }
+    }
+
+    public static class LongRunningCommandEvents extends StandardCommand<Void, Void> {
+        final CompletableFuture<Void> future = new CompletableFuture<>();
+
+        @Override public EventStream<Void> events() throws Exception {
+            future.get();
+            return EventStream.empty();
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void longRunningCommandEventsShouldNotBlock() {
+        LongRunningCommandEvents command = new LongRunningCommandEvents();
+        repository.publish(command);
+        repository.publish(RepositoryTestCommand.builder().value("1").build()).get(5_000, TimeUnit.MILLISECONDS);
+        command.future.complete(null);
+    }
+
+    public static class LongRunningCommandEventStreamGeneration extends StandardCommand<Void, Void> {
+        final CompletableFuture<Void> future = new CompletableFuture<>();
+
+        @Override public EventStream<Void> events() throws Exception {
+            return EventStream.of(Stream.of(1).map(i -> {
+                try {
+                    future.get();
+                } catch (InterruptedException | ExecutionException e) {
+                    e.printStackTrace();
+                }
+                return TestEvent.builder().build();}));
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void longRunningCommandEventStreamGenerationShouldNotBlock() {
+        LongRunningCommandEventStreamGeneration command = new LongRunningCommandEventStreamGeneration();
+        repository.publish(command);
+        repository.publish(RepositoryTestCommand.builder().value("1").build()).get(5_000, TimeUnit.MILLISECONDS);
+        command.future.complete(null);
+    }
+
+    @Test
+    @SneakyThrows
+    public void longRunningCommandEventStreamGenerationSameCommandShouldNotBlock() {
+        LongRunningCommandEventStreamGeneration cmd1 = new LongRunningCommandEventStreamGeneration();
+        repository.publish(cmd1);
+        LongRunningCommandEventStreamGeneration cmd2 = new LongRunningCommandEventStreamGeneration();
+        cmd2.future.complete(null);
+        repository.publish(cmd2).get(5_000, TimeUnit.MILLISECONDS);
+        cmd1.future.complete(null);
     }
 
 }

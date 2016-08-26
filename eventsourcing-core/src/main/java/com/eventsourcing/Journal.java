@@ -7,12 +7,16 @@
  */
 package com.eventsourcing;
 
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.index.support.CloseableIterator;
+import lombok.SneakyThrows;
 
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 /**
  * Journal is the storage of all events and commands registered
@@ -38,45 +42,6 @@ public interface Journal extends Service {
      * @return
      */
     Repository getRepository();
-
-    /**
-     * Journal <code>command</code> in repository <code>repository</code>,
-     * with a default (no-op) listener ({@link #DEFAULT_LISTENER})
-     * <p>
-     * See more details at {@link #journal(Command, Listener)}
-     *
-     * @param command
-     * @return number of events processed
-     */
-    default long journal(Command<?, ?> command) throws Exception {
-        return journal(command, DEFAULT_LISTENER);
-    }
-
-    /**
-     * Journal <code>command</code> in repository <code>repository</code>,
-     * with a custom listener.
-     * <p>
-     * Journal implementation should not make events visible to any other
-     * readers until all events and the command have been persisted.
-     *
-     * @param command
-     * @param listener
-     * @return number of events processed
-     */
-    default long journal(Command<?, ?> command, Listener listener) throws Exception {
-        return journal(command, listener, new LocalLockProvider());
-    }
-
-    /**
-     * Journal <code>command</code> in repository <code>repository</code>,
-     * with a custom listener and a lock provider.
-     *
-     * @param command
-     * @param listener
-     * @param lockProvider
-     * @return number of events processed
-     */
-    long journal(Command<?, ?> command, Listener listener, LockProvider lockProvider) throws Exception;
 
     /**
      * Retrieves a command or event by UUID
@@ -131,38 +96,35 @@ public interface Journal extends Service {
     <T extends Entity> boolean isEmpty(Class<T> klass);
 
     /**
-     * Journalling listener. Useful for observing progress.
+     * Record command within a transaction
+     * @param tx
+     * @param command
+     * @param <S>
+     * @param <T>
+     * @return
      */
-    interface Listener {
+    <S, T> Command<S, T> journal(Transaction tx, Command<S, T> command);
 
-        /**
-         * Called when command event generation produces a state
-         * @param state
-         */
-        default void onCommandStateReceived(Object state) {}
+    /**
+     * Record event within a transaction
+     * @param tx
+     * @param event
+     * @return
+     */
+    Event journal(Transaction tx, Event event);
 
-        /**
-         * Called when a new event is received from the stream and
-         * persisted into the journal. Note that at this point the event
-         * should not be available until the entire journalling operation has
-         * been completed and {@link #onCommit(Command)} has been called.
-         *
-         * @param event
-         */
-        default void onEvent(Event event) {}
+    /**
+     * Starts a transaction
+     * @return
+     */
+    Transaction beginTransaction();
 
-        /**
-         * Called when all events and the command were persisted into the journal.
-         * At this point, all records have been committed and are visible to all
-         * other readers.
-         */
-        default void onCommit(Command command) {}
-
-        /**
-         * Called when there was an exception during event generation
-         *
-         * @param throwable
-         */
-        default void onAbort(Throwable throwable) {}
+    /**
+     * An interface abstracting journal's transaction
+     */
+    interface Transaction {
+        void commit();
+        void rollback();
     }
+
 }

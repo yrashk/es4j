@@ -12,7 +12,6 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.repository.AbstractJournal;
 import com.google.common.collect.Iterators;
 import com.google.common.io.BaseEncoding;
 import com.google.common.primitives.Bytes;
@@ -43,7 +42,7 @@ import java.util.function.Function;
         service = Journal.class,
         property = {"filename=journal.db", "type=MVStoreJournal", "jmx.objectname=com.eventsourcing:type=journal,name=MVStoreJournal"})
 @Slf4j
-public class MVStoreJournal extends AbstractService implements Journal, AbstractJournal {
+public class MVStoreJournal extends AbstractService implements Journal {
     @Getter @Setter
     private Repository repository;
 
@@ -153,7 +152,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         return layoutsByHash.get(encoded);
     }
 
-    static class Transaction implements AbstractJournal.Transaction {
+    static class Transaction implements Journal.Transaction {
         @Getter
         final TransactionStore.Transaction tx;
 
@@ -178,11 +177,11 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
         }
     }
 
-    @Override public AbstractJournal.Transaction beginTransaction() {
+    @Override public Transaction beginTransaction() {
         return new Transaction(transactionStore.begin());
     }
 
-    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public <S, T> Command<S, T> journal(Journal.Transaction tx, Command<S, T> command) {
         TransactionStore.Transaction tx0 = ((Transaction) tx).getTx();
         TransactionMap<UUID, ByteBuffer> txCommandPayloads = tx0.openMap("commandPayloads", new ObjectDataType(),
                                                                         new ByteBufferDataType());
@@ -210,7 +209,7 @@ public class MVStoreJournal extends AbstractService implements Journal, Abstract
     }
 
     @SneakyThrows
-    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event journal(Journal.Transaction tx, Event event) {
         Transaction tx0 = ((Transaction) tx);
         Layout layout = getLayout(event.getClass());
 

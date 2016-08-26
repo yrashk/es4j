@@ -68,7 +68,10 @@ public abstract class JournalBenchmark {
     @BenchmarkMode(Mode.All)
     @SneakyThrows
     public void basicPublish() throws ExecutionException, InterruptedException {
-        journal.journal(TestCommand.builder().timestamp(timestamp).build());
+        TestCommand cmd = TestCommand.builder().timestamp(timestamp).build();
+        Journal.Transaction tx = journal.beginTransaction();
+        journal.journal(tx, cmd);
+        tx.commit();
     }
 
 
