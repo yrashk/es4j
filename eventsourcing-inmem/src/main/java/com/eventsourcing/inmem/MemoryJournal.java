@@ -12,7 +12,6 @@ import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.repository.AbstractJournal;
 import com.eventsourcing.utils.CloseableWrappingIterator;
 import com.google.common.collect.Iterators;
 import com.google.common.util.concurrent.AbstractService;
@@ -32,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Memory-based {@link Journal} implementation. Not meant to be used in production.
  */
 @Component(property = {"type=MemoryJournal"}, service = Journal.class)
-public class MemoryJournal extends AbstractService implements Journal, AbstractJournal {
+public class MemoryJournal extends AbstractService implements Journal {
 
     private static final Serialization serialization = BinarySerialization.getInstance();
 
@@ -55,7 +54,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         notifyStopped();
     }
 
-    static class Transaction implements AbstractJournal.Transaction {
+    static class Transaction implements Journal.Transaction {
         private final Map<UUID, Event> events = new HashMap<>();
         @Setter
         private Command command;
@@ -72,7 +71,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         }
     }
 
-    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public <S, T> Command<S, T> journal(Journal.Transaction tx, Command<S, T> command) {
         ObjectSerializer<Command> serializer = serialization.getSerializer(command.getClass());
         ObjectDeserializer<Command> deserializer = serialization.getDeserializer(command.getClass());
 
@@ -86,7 +85,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         return command1;
     }
 
-    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event journal(Journal.Transaction tx, Event event) {
         ObjectSerializer<Event> serializer = serialization.getSerializer(event.getClass());
         ObjectDeserializer<Event> deserializer = serialization.getDeserializer(event.getClass());
 
@@ -100,12 +99,12 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
         return event1;
     }
 
-    @Override public AbstractJournal.Transaction beginTransaction() {
+    @Override public Journal.Transaction beginTransaction() {
         return new Transaction(this);
     }
 
     @Override @SuppressWarnings("unchecked")
-    public synchronized <T extends Entity> Optional<T> get(UUID uuid) {
+    public <T extends Entity> Optional<T> get(UUID uuid) {
         if (commands.containsKey(uuid)) {
             return Optional.of((T) commands.get(uuid));
         }
@@ -116,7 +115,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
     }
 
     @Override
-    public synchronized <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
+    public <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(commands.values().stream()
                                                        .filter(command -> klass.isAssignableFrom(command.getClass()))
                                                        .map(command -> (EntityHandle<T>) new JournalEntityHandle<T>(
@@ -124,7 +123,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
     }
 
     @Override
-    public synchronized <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
+    public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
         return new CloseableWrappingIterator<>(events.values().stream()
                                                      .filter(event -> klass.isAssignableFrom(event.getClass()))
                                                      .map(event -> (EntityHandle<T>) new JournalEntityHandle<T>(this,
@@ -133,7 +132,7 @@ public class MemoryJournal extends AbstractService implements Journal, AbstractJ
     }
 
     @Override
-    public synchronized void clear() {
+    public void clear() {
         events.clear();
         commands.clear();
     }

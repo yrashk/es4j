@@ -24,13 +24,12 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 public abstract class JournalTest<T extends Journal> {
@@ -89,17 +88,19 @@ public abstract class JournalTest<T extends Journal> {
     public static class TestCommand extends StandardCommand<Void, Void> {
         @Getter
         private final boolean events;
+        private TestEvent event;
 
         @Builder
         public TestCommand(HybridTimestamp timestamp, boolean events) {
             super(timestamp);
             this.events = events;
+            event = TestEvent.builder().build();
         }
 
         @Override
         public EventStream<Void> events(Repository repository) throws Exception {
             if (events) {
-                return EventStream.of(TestEvent.builder().build());
+                return EventStream.of(event);
             } else {
                 return super.events(repository);
             }
@@ -122,84 +123,27 @@ public abstract class JournalTest<T extends Journal> {
 
     @Test
     @SneakyThrows
-    public void journalCounting() {
-        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
-        assertEquals(journal.journal(TestCommand.builder().events(true).timestamp(timestamp).build()), 1);
-        timestamp.update();
-        assertEquals(journal.journal(TestCommand.builder().events(false).timestamp(timestamp).build()), 0);
-    }
-
-    @Test
-    @SneakyThrows
-    public void journalListener() {
-        AtomicInteger onEvent = new AtomicInteger(0);
-        AtomicBoolean onCommit = new AtomicBoolean(false);
-        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
-
-        assertEquals(1,
-                     journal.journal(TestCommand.builder().events(true).timestamp(timestamp).build(), new Journal.Listener() {
-                         @Override
-                         public void onEvent(Event event) {
-                             onEvent.incrementAndGet();
-                         }
-
-                         @Override
-                         public void onCommit(Command command) {
-                             onCommit.set(true);
-                         }
-                     }));
-
-        assertEquals(onEvent.get(), 2);
-        assertTrue(onCommit.get());
-    }
-
-    @Test
-    @SneakyThrows
-    public void journalListenerAbort() {
-        AtomicBoolean onAbort = new AtomicBoolean(false);
-        HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
-
-        try {
-            assertEquals(1, journal.journal(ExceptionalTestCommand.builder().timestamp(timestamp).build(),
-                                            new Journal.Listener() {
-                                                @Override
-                                                public void onAbort(Throwable throwable) {
-                                                    onAbort.set(true);
-                                                }
-                                            }));
-        } catch (Exception e) {
-            assertTrue(e instanceof IllegalStateException);
-        }
-
-        assertTrue(onAbort.get());
-    }
-
-    @Test
-    @SneakyThrows
     public void journalRetrieving() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        List<Event> events = new ArrayList<>();
         TestCommand command = TestCommand.builder().events(true).build();
-        journal.journal(command.timestamp(timestamp), new Journal.Listener() {
-            @Override
-            public void onEvent(Event event) {
-                events.add(event);
-            }
-        });
-        assertEquals(events.size(), 2);
+        command.timestamp(timestamp);
+        Journal.Transaction tx = journal.beginTransaction();
+        journal.journal(tx, command);
+        journal.journal(tx, command.event);
+
+        assertFalse(journal.get(command.uuid()).isPresent());
+        assertFalse(journal.get(command.event.uuid()).isPresent());
+
+        tx.commit();
 
         Optional<Entity> entity = journal.get(command.uuid());
         assertTrue(entity.isPresent());
         assertEquals(command.uuid(), entity.get().uuid());
 
-        Event event = events.get(0);
-        Optional<Entity> eventEntity = journal.get(event.uuid());
+        Optional<Entity> eventEntity = journal.get(command.event.uuid());
         assertTrue(eventEntity.isPresent());
-        assertEquals(event.uuid(), eventEntity.get().uuid());
+        assertEquals(command.event.uuid(), eventEntity.get().uuid());
     }
 
     @Test
@@ -207,22 +151,19 @@ public abstract class JournalTest<T extends Journal> {
     public void journalIterating() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        List<Event> events = new ArrayList<>();
+
         TestCommand command1 = TestCommand.builder().events(true).build();
         TestCommand command2 = TestCommand.builder().events(true).build();
-        journal.journal(command1.timestamp(timestamp), new Journal.Listener() {
-            @Override
-            public void onEvent(Event event) {
-                events.add(event);
-            }
-        });
 
-        journal.journal(command2.timestamp(timestamp), new Journal.Listener() {
-            @Override
-            public void onEvent(Event event) {
-                events.add(event);
-            }
-        });
+        Journal.Transaction tx = journal.beginTransaction();
+        journal.journal(tx, command1);
+        journal.journal(tx, command1.event);
+        tx.commit();
+
+        tx = journal.beginTransaction();
+        journal.journal(tx, command2);
+        journal.journal(tx, command2.event);
+        tx.commit();
 
         CloseableIterator<EntityHandle<TestCommand>> commandIterator = journal.commandIterator(TestCommand.class);
 
@@ -236,17 +177,13 @@ public abstract class JournalTest<T extends Journal> {
         assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command1.uuid())));
         assertTrue(commands.stream().anyMatch(c -> c.uuid().equals(command2.uuid())));
 
-        assertEquals(events.size(), 4);
-
         CloseableIterator<EntityHandle<TestEvent>> eventIterator = journal.eventIterator(TestEvent.class);
         List<UUID> iteratedEvents = StreamSupport
                 .stream(Spliterators.spliteratorUnknownSize(eventIterator, Spliterator.IMMUTABLE), false)
                 .map(EntityHandle::uuid)
                 .collect(Collectors.toList());
         eventIterator.close();
-        assertTrue(iteratedEvents.containsAll(events.stream().filter(e -> e instanceof TestEvent)
-                                                    .map(Event::uuid)
-                                                    .collect(Collectors.toList())));
+        assertTrue(iteratedEvents.containsAll(Arrays.asList(command1.event.uuid(), command2.event.uuid())));
     }
 
 }

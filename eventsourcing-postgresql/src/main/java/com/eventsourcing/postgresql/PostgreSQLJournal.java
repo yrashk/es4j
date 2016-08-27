@@ -12,7 +12,6 @@ import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.Property;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.layout.binary.BinarySerialization;
-import com.eventsourcing.repository.AbstractJournal;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
 import com.google.common.io.CharStreams;
@@ -44,7 +43,7 @@ import java.util.stream.Collectors;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.*;
 
 @Component(property = "type=PostgreSQLJournal", service = Journal.class)
-public class PostgreSQLJournal extends AbstractService implements Journal, AbstractJournal {
+public class PostgreSQLJournal extends AbstractService implements Journal {
 
     @Reference
     protected DataSourceProvider dataSourceProvider;
@@ -74,7 +73,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
     }
 
     @Value
-    static class Transaction implements AbstractJournal.Transaction {
+    static class Transaction implements Journal.Transaction {
         private final Connection connection;
         private final Savepoint savepoint;
 
@@ -101,11 +100,11 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         }
     }
 
-    @Override public AbstractJournal.Transaction beginTransaction() {
+    @Override public Journal.Transaction beginTransaction() {
         return new Transaction(dataSource);
     }
 
-    @Override public Command record(AbstractJournal.Transaction tx, Command<?, ?> command) {
+    @Override public <S, T> Command<S, T> journal(Journal.Transaction tx, Command<S, T> command) {
         Layout layout = getLayout(command.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         insertFunctions.get(encoded).apply(command, ((Transaction)tx).getConnection());
@@ -117,7 +116,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal, Abstr
         return command1;
     }
 
-    @Override public Event record(AbstractJournal.Transaction tx, Event event) {
+    @Override public Event journal(Journal.Transaction tx, Event event) {
         Layout layout = getLayout(event.getClass());
         String encoded = BaseEncoding.base16().encode(layout.getHash());
         InsertFunction insert = insertFunctions.get(encoded);

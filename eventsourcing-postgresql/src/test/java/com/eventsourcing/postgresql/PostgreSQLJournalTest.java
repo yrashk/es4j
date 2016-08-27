@@ -224,16 +224,13 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
     public void serializationNull() {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        final SerializationEvent[] serializationEvent = new SerializationEvent[1];
 
-        journal.journal(SerializationCommand.builder().build().timestamp(timestamp), new Journal.Listener() {
-            @Override public void onCommandStateReceived(Object state) {
-                serializationEvent[0] = (SerializationEvent) state;
-            }
-        });
+        Journal.Transaction tx = journal.beginTransaction();
+        SerializationEvent event = SerializationEvent.builder().test(TestClass.builder().build()).build();
+        event = (SerializationEvent) journal.journal(tx, event);
+        tx.rollback();
 
-        Optional<SerializationEvent> event = journal.get(serializationEvent[0].uuid());
-        TestClass test = event.get().getTest();
+        TestClass test = event.getTest();
 
         assertEquals(test.pByte, 0);
         assertEquals(test.oByte, Byte.valueOf((byte) 0));
@@ -357,15 +354,12 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
     private TestClass serializationResult(TestClass t) {
         HybridTimestamp timestamp = new HybridTimestamp(timeProvider);
         timestamp.update();
-        final SerializationEvent[] serializationEvent = new SerializationEvent[1];
 
-        journal.journal(new SerializationCommand(t).timestamp(timestamp), new Journal.Listener() {
-            @Override public void onCommandStateReceived(Object state) {
-                serializationEvent[0] = (SerializationEvent) state;
-            }
-        });
+        Journal.Transaction tx = journal.beginTransaction();
+        SerializationEvent event = SerializationEvent.builder().test(t).build();
+        event = (SerializationEvent) journal.journal(tx, event);
+        tx.rollback();
 
-        Optional<SerializationEvent> event = journal.get(serializationEvent[0].uuid());
-        return event.get().getTest();
+        return event.getTest();
     }
 }
