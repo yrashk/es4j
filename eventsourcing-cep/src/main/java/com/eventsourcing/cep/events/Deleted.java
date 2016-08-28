@@ -32,7 +32,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
  */
 @Accessors(fluent = true)
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
-@LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#Deleted")
+@LayoutName("rfc.eventsourcing.com/spec:3/CEP/#Deleted")
 public class Deleted extends StandardEvent {
     @Getter
     final UUID reference;

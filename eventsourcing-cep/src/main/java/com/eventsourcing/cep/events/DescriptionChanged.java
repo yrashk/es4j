@@ -29,7 +29,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
  */
 @Accessors(fluent = true)
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
-@LayoutName("http://rfc.eventsourcing.com/spec:3/CEP/#DescriptionChanged")
+@LayoutName("rfc.eventsourcing.com/spec:3/CEP/#DescriptionChanged")
 public class DescriptionChanged extends StandardEvent {
     @Getter
     final UUID reference;
