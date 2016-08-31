@@ -1,3 +1,24 @@
+WIP
+===
+
+**Backwards-incompatible changes**
+
+* Index definition syntax is simplified for most of cases (when query
+  options are not necessary) ([#144](https://github.com/eventsourcing/es4j/pull/144))
+
+**Bugfixes**
+
+* Command#events can no longer block publishing commands through the repository ([#147](https://github.com/eventsourcing/es4j/pull/147))
+* RFC 3/CEP event layout names were incorrect ([#148](https://github.com/eventsourcing/es4j/pull/148))
+
+**Upgrades**
+
+* cqengine 2.7.1 ([#143](https://github.com/eventsourcing/es4j/pull/143))
+
+**Misc**
+
+* A process manager implementation example is provided ([#146](https://github.com/eventsourcing/es4j/pull/146))
+
 0.4.0
 =====
 
