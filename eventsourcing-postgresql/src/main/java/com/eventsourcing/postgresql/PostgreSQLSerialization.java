@@ -489,18 +489,19 @@ public class PostgreSQLSerialization {
         }
         if (typeHandler instanceof ListTypeHandler) {
             Array array = resultSet.getArray(i.getAndIncrement());
-            ResultSet arrayResultSet = array.getResultSet();
-            List list = new ArrayList();
-            TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
-            while (arrayResultSet.next()) {
-                Object value = getValue(arrayResultSet, new AtomicInteger(2), handler);
-                if (value instanceof PGStruct) {
-                    list.add(instantiateObject(((ObjectTypeHandler)handler).getLayout(), (PGStruct) value));
-                } else {
-                    list.add(value);
+            try (ResultSet arrayResultSet = array.getResultSet()) {
+                List list = new ArrayList();
+                TypeHandler handler = ((ListTypeHandler) typeHandler).getWrappedHandler();
+                while (arrayResultSet.next()) {
+                    Object value = getValue(arrayResultSet, new AtomicInteger(2), handler);
+                    if (value instanceof PGStruct) {
+                        list.add(instantiateObject(((ObjectTypeHandler) handler).getLayout(), (PGStruct) value));
+                    } else {
+                        list.add(value);
+                    }
                 }
+                return list;
             }
-            return list;
         }
         if (typeHandler instanceof LongTypeHandler) {
             return resultSet.getLong(i.getAndIncrement());
