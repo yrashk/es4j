@@ -1,5 +1,4 @@
-WIP
-===
+# 0.4.1
 
 **Backwards-incompatible changes**
 

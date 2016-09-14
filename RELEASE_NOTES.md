@@ -1,3 +1,12 @@
+0.4.1
+=====
+
+This release simplifies index definitions for most of scenarios, dropping the need to
+declare `queryOptions` attribute.
+
+Also, this release has improvemed support for long-running commands, they no longer
+block the repository. 
+
 0.4.0
 =====
 
