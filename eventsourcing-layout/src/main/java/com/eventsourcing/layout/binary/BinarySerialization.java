@@ -45,6 +45,8 @@ public class BinarySerialization extends Serialization {
         addSerializer(INTEGER_TYPE_HANDLER, new IntegerBinarySerializer());
         addDeserializer(LIST_TYPE_HANDLER, new ListBinaryDeserializer());
         addSerializer(LIST_TYPE_HANDLER, new ListBinarySerializer());
+        addDeserializer(MAP_TYPE_HANDLER, new MapBinaryDeserializer());
+        addSerializer(MAP_TYPE_HANDLER, new MapBinarySerializer());
         addDeserializer(LONG_TYPE_HANDLER, new LongBinaryDeserializer());
         addSerializer(LONG_TYPE_HANDLER, new LongBinarySerializer());
         addDeserializer(OBJECT_TYPE_HANDLER, new ObjectBinaryDeserializer<>());

@@ -196,6 +196,39 @@ public class PostgreSQLSerialization {
         if (typeHandler instanceof UUIDTypeHandler) {
             return "UUID";
         }
+        if (typeHandler instanceof MapTypeHandler) {
+            String keyType = getMappedType(connection, ((MapTypeHandler) typeHandler).getWrappedKeyHandler());
+            String valueType = getMappedType(connection, ((MapTypeHandler) typeHandler).getWrappedValueHandler());
+
+            String typname = ("map_v1_" + keyType + "_" + valueType).replaceAll("\\[\\]", "__");
+
+            boolean shouldCreateType;
+
+            try (PreparedStatement check = connection
+                    .prepareStatement("SELECT * FROM pg_catalog.pg_type WHERE lower(typname) = lower(?)")) {
+                check.setString(1, typname);
+
+                try (ResultSet resultSet = check.executeQuery()) {
+                    shouldCreateType = !resultSet.next();
+                }
+            }
+
+            if (shouldCreateType) {
+                String columns = "key " + keyType + ", value " + valueType;
+                String createType = "CREATE TYPE " + typname + " AS (" +
+                        columns +
+                        ")";
+                PreparedStatement s = connection.prepareStatement(createType);
+                s.execute();
+                s.close();
+                s = connection.prepareStatement("COMMENT ON TYPE " + typname + " IS 'Map[" + keyType + "][" + valueType + "]'");
+                s.execute();
+                s.close();
+                refreshTypes(connection);
+            }
+
+            return typname.toLowerCase() + "[]";
+        }
         throw new RuntimeException("Unsupported type handler " + typeHandler.getClass());
     }
 
@@ -228,6 +261,9 @@ public class PostgreSQLSerialization {
             return Types.INTEGER;
         }
         if (typeHandler instanceof ListTypeHandler) {
+            return Types.ARRAY;
+        }
+        if (typeHandler instanceof MapTypeHandler) {
             return Types.ARRAY;
         }
         if (typeHandler instanceof LongTypeHandler) {
@@ -295,6 +331,29 @@ public class PostgreSQLSerialization {
                 Object[] arr = val.stream().map(v -> prepareValue(connection, handler, v)).toArray();
                 return connection.createArrayOf(typeName, arr);
             }
+        } else if (typeHandler instanceof MapTypeHandler) {
+            if (value == null) {
+                value = new HashMap<>();
+            }
+            String typeName = getMappedType(connection, typeHandler).replaceAll("\\[\\]", "");
+            Object[] arr = ((Map)value).entrySet().stream()
+                                       .map(new Function() {
+                                           @SneakyThrows
+                                           @Override public Object apply(Object e) {
+                                               Map.Entry entry = (Map.Entry) e;
+                                               return connection.createStruct(typeName,
+                                                                              new Object[]{
+                                                                                      prepareValue(connection,
+                                                                                                   ((MapTypeHandler) typeHandler)
+                                                                                                           .getWrappedKeyHandler(),
+                                                                                                   entry.getKey()),
+                                                                                      prepareValue(connection,
+                                                                                                   ((MapTypeHandler) typeHandler)
+                                                                                                           .getWrappedValueHandler(),
+                                                                                                   entry.getValue())});
+                                           }
+                                       }).toArray();
+            return connection.createArrayOf(typeName, arr);
         } else if (typeHandler instanceof LongTypeHandler) {
             return value == null ? 0 : (Long) value;
         } else if (typeHandler instanceof ObjectTypeHandler) {
@@ -356,6 +415,9 @@ public class PostgreSQLSerialization {
         if (typeHandler instanceof ListTypeHandler) {
             s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
         } else
+        if (typeHandler instanceof MapTypeHandler) {
+            s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
+        } else
         if (typeHandler instanceof LongTypeHandler) {
             s.setLong(i, (Long) prepareValue(connection, typeHandler, value));
         } else
@@ -394,7 +456,7 @@ public class PostgreSQLSerialization {
         Map<Property<?>, Object> props = new HashMap<>();
         for (Property property : layout.getProperties()) {
             Object v = structIterator.next();
-            props.put(property, getPropertyValue(property, v));
+            props.put(property, getPropertyValue(property.getTypeHandler(), v));
         }
 
         @SuppressWarnings("unchecked")
@@ -403,35 +465,35 @@ public class PostgreSQLSerialization {
     }
 
     @SneakyThrows
-    private static Object getPropertyValue(Property property, Object v) {
-        if (property.getTypeHandler() instanceof OptionalTypeHandler) {
+    private static Object getPropertyValue(TypeHandler t, Object v) {
+        if (t instanceof OptionalTypeHandler) {
             return v == null ? Optional.empty() : Optional.of(v);
-        } else if (property.getTypeHandler() instanceof EnumTypeHandler) {
-            EnumTypeHandler typeHandler = (EnumTypeHandler) property.getTypeHandler();
+        } else if (t instanceof EnumTypeHandler) {
+            EnumTypeHandler typeHandler = (EnumTypeHandler) t;
             Class<? extends Enum> enumClass = typeHandler.getEnumClass();
             String[] enumNames = Arrays.stream(enumClass.getEnumConstants()).map(Enum::name).toArray(String[]::new);
             return Enum.valueOf(enumClass, enumNames[(int) v]);
-        } else if (v instanceof Short && property.getTypeHandler() instanceof ByteTypeHandler) {
+        } else if (v instanceof Short && t instanceof ByteTypeHandler) {
             return ((Short) v).byteValue();
         } else if (v instanceof Timestamp) {
             return new Date(((Timestamp) v).getTime());
-        } else if (v instanceof ByteBufInputStream && property.getTypeHandler() instanceof ByteArrayTypeHandler) {
+        } else if (v instanceof ByteBufInputStream && t instanceof ByteArrayTypeHandler) {
             int available = ((ByteBufInputStream) v).available();
             byte[] b = new byte[available];
             ((DataInput) v).readFully(b);
-            ByteArrayTypeHandler typeHandler = (ByteArrayTypeHandler) property.getTypeHandler();
+            ByteArrayTypeHandler typeHandler = (ByteArrayTypeHandler) t;
             boolean isPrimitive = typeHandler.isPrimitive();
             return isPrimitive ? b : typeHandler.toObject(b);
         } else if (v instanceof PGStruct) {
-            if (property.getTypeHandler() instanceof ObjectTypeHandler) {
-                return instantiateObject(((ObjectTypeHandler) property.getTypeHandler()).getLayout(),
+            if (t instanceof ObjectTypeHandler) {
+                return instantiateObject(((ObjectTypeHandler) t).getLayout(),
                                                       (PGStruct) v);
             }
-            if (property.getTypeHandler() instanceof ListTypeHandler) {
-                return getPropertyValue(property, ((PGStruct) v).getAttributes()[0]);
+            if (t instanceof ListTypeHandler) {
+                return getPropertyValue(t, ((PGStruct) v).getAttributes()[0]);
             }
-        } else if (property.getTypeHandler() instanceof ListTypeHandler && v.getClass().isArray()) {
-            ListTypeHandler typeHandler = (ListTypeHandler) property.getTypeHandler();
+        } else if (t instanceof ListTypeHandler && v.getClass().isArray()) {
+            ListTypeHandler typeHandler = (ListTypeHandler) t;
             TypeHandler wrappedHandler = typeHandler.getWrappedHandler();
             if (wrappedHandler instanceof ObjectTypeHandler &&
                     Struct.class.isAssignableFrom(v.getClass().getComponentType())) {
@@ -442,13 +504,32 @@ public class PostgreSQLSerialization {
                 }
                 return objects;
             } else {
-                return Arrays.asList(((Object[])v)).stream().map(i -> getPropertyValue(property, i))
-                        .collect(Collectors.toList());
+                return Arrays.stream(((Object[]) v)).map(i -> getPropertyValue(t, i))
+                             .collect(Collectors.toList());
             }
+        } else if (t instanceof MapTypeHandler && v.getClass().isArray()) {
+            MapTypeHandler typeHandler = (MapTypeHandler) t;
+            TypeHandler keyHandler = typeHandler.getWrappedKeyHandler();
+            TypeHandler valueHandler = typeHandler.getWrappedValueHandler();
+            Object[] arr = (Object[]) v;
+            return Arrays.stream(arr)
+                         .collect(Collectors.toMap(new Function<Object, Object>() {
+                             @SneakyThrows
+                             @Override public Object apply(Object i) {
+                                 return getPropertyValue(keyHandler, ((PGStruct) i).getAttributes()[0]);
+                               }
+                           },
+                           new Function<Object, Object>() {
+                               @SneakyThrows
+                               @Override public Object apply(Object i) {
+                                   return getPropertyValue(valueHandler,
+                                                           ((PGStruct) i).getAttributes()[1]);
+                               }
+                           }));
         } else {
             return v;
         }
-        throw new RuntimeException("unhandled property " + property.getName());
+    ;    throw new RuntimeException("unexpected error");
     }
 
     @SneakyThrows
