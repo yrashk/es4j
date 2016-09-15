@@ -357,8 +357,10 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
         Journal.Transaction tx = journal.beginTransaction();
         SerializationEvent event = SerializationEvent.builder().test(t).build();
-        event = (SerializationEvent) journal.journal(tx, event);
-        tx.rollback();
+        journal.journal(tx, event);
+        tx.commit();
+
+        event = (SerializationEvent) journal.get(event.uuid()).get();
 
         return event.getTest();
     }
