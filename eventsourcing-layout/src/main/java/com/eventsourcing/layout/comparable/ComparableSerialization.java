@@ -9,6 +9,8 @@ package com.eventsourcing.layout.comparable;
 
 import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.binary.BinarySerialization;
+import com.eventsourcing.layout.binary.MapBinaryDeserializer;
+import com.eventsourcing.layout.binary.MapBinarySerializer;
 import lombok.SneakyThrows;
 
 import static com.eventsourcing.layout.TypeHandler.*;
@@ -20,6 +22,7 @@ public class ComparableSerialization extends Serialization {
         addSerializer(BIG_DECIMAL_TYPE_HANDLER, new BigDecimalComparableSerializer());
         addSerializer(BYTE_ARRAY_TYPE_HANDLER, new ByteArrayComparableSerializer());
         addSerializer(LIST_TYPE_HANDLER, new ListComparableSerializer());
+        addSerializer(MAP_TYPE_HANDLER, new MapComparableSerializer());
         addSerializer(OPTIONAL_TYPE_HANDLER, new OptionalComparableSerializer());
         addSerializer(STRING_TYPE_HANDLER, new StringComparableSerializer());
     }

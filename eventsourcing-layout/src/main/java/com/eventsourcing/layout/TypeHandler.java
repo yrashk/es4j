@@ -14,10 +14,7 @@ import lombok.Getter;
 
 import java.lang.reflect.AnnotatedType;
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 /**
  * Interface for handling a supported type
@@ -36,6 +33,7 @@ public interface TypeHandler {
     FloatTypeHandler FLOAT_TYPE_HANDLER = new FloatTypeHandler();
     IntegerTypeHandler INTEGER_TYPE_HANDLER = new IntegerTypeHandler();
     ListTypeHandler LIST_TYPE_HANDLER = new ListTypeHandler();
+    MapTypeHandler MAP_TYPE_HANDLER = new MapTypeHandler();
     OptionalTypeHandler OPTIONAL_TYPE_HANDLER = new OptionalTypeHandler();
     ShortTypeHandler SHORT_TYPE_HANDLER = new ShortTypeHandler();
     LongTypeHandler LONG_TYPE_HANDLER = new LongTypeHandler();
@@ -129,6 +127,10 @@ public interface TypeHandler {
 
             if (type.isInstanceOf(List.class)) {
                 return new ListTypeHandler(annotatedType);
+            }
+
+            if (type.isInstanceOf(Map.class)) {
+                return new MapTypeHandler(annotatedType);
             }
 
             if (type.isInstanceOf(Optional.class)) {

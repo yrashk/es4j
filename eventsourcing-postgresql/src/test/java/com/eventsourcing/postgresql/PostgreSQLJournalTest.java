@@ -137,6 +137,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         private final List<List<String>> list;
 
         @Getter
+        private final Map<String, List<String>> map;
+
+        @Getter
         private final Optional<String> optional;
 
         @Getter
@@ -150,7 +153,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
                          Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
                          Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
                          E e, SomeValue value, SomeValue1 value1, List<List<String>> list,
-                         Optional<String> optional,
+                         Map<String, List<String>> map, Optional<String> optional,
                          BigDecimal bigDecimal, Date date) {
             this.pByte = pByte;
             this.oByte = oByte;
@@ -174,6 +177,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             this.value = value;
             this.value1 = value1;
             this.list = list;
+            this.map = map;
             this.optional = optional;
             this.bigDecimal = bigDecimal;
             this.date = date;
@@ -272,6 +276,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         assertNotNull(test.list);
         assertEquals(test.list.size(), 0);
 
+        assertNotNull(test.map);
+        assertEquals(test.map.size(), 0);
+
         assertNotNull(test.optional);
         assertFalse(test.optional.isPresent());
 
@@ -338,6 +345,13 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         l.add(l1);
         assertEquals(serializationResult(TestClass.builder().list(l).build()).list().get(0).get(0), "test");
 
+        Map<String, List<String>> map = new HashMap<>();
+        LinkedList<String> list = new LinkedList<>(Arrays.asList("Hello"));
+        map.put("test", list);
+        map.put("anothertest", list);
+        assertEquals(serializationResult(TestClass.builder().map(map).build()).map().get("test").get(0), "Hello");
+        assertEquals(serializationResult(TestClass.builder().map(map).build()).map().get("anothertest").get(0),
+                     "Hello");
 
         assertFalse(serializationResult(TestClass.builder().optional(Optional.empty()).build()).optional().isPresent());
         assertTrue(serializationResult(TestClass.builder().optional(Optional.of("test")).build()).optional().isPresent());

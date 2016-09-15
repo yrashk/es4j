@@ -72,6 +72,8 @@ public class SerializerTest {
 
         private final List<List<String>> list;
 
+        private final Map<String, List<String>> map;
+
         private final Optional<String> optional;
 
         private final BigDecimal bigDecimal;
@@ -81,7 +83,8 @@ public class SerializerTest {
         public TestClass(byte pByte, Byte oByte, byte[] pByteArr, Byte[] oByteArr, short pShort, Short oShort, int pInt,
                          Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
                          Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
-                         E e, SomeValue value, List<List<String>> list, Optional<String> optional, BigDecimal bigDecimal,
+                         E e, SomeValue value, List<List<String>> list, Map<String, List<String>> map,
+                         Optional<String> optional, BigDecimal bigDecimal,
                          Date date) {
             this.pByte = pByte;
             this.oByte = oByte;
@@ -104,6 +107,7 @@ public class SerializerTest {
             this.e = e;
             this.value = value;
             this.list = list;
+            this.map = map;
             this.optional = optional;
             this.bigDecimal = bigDecimal;
             this.date = date;
@@ -301,6 +305,21 @@ public class SerializerTest {
         TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getList().get(0).get(0), "Hello");
+    }
+
+    @Test
+    public void mapSerialization() {
+        Map<String, List<String>> map = new HashMap<>();
+        LinkedList<String> list = new LinkedList<>(Arrays.asList("Hello"));
+        map.put("test", list);
+        TestClass test = TestClass.builder().map(map).build();
+
+        ByteBuffer buffer = serializer.serialize(test);
+        buffer.rewind();
+
+        TestClass deserialized = deserializer.deserialize(buffer);
+
+        assertEquals(deserialized.getMap().get("test").get(0), "Hello");
     }
 
     @Test
