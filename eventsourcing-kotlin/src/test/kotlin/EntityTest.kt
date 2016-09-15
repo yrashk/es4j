@@ -7,6 +7,7 @@
  */
 
 import com.eventsourcing.StandardEvent
+import com.eventsourcing.index.JavaStaticFieldIndexLoader
 import com.eventsourcing.index.MemoryIndexEngine
 import com.eventsourcing.index.SimpleIndex
 import com.eventsourcing.kotlin.KotlinClassAnalyzer
@@ -24,7 +25,7 @@ class TestEntity(val x: String) : StandardEvent() {
 class EntityTest {
     @Test fun companionIndexDefinition() {
         val indexEngine = MemoryIndexEngine()
-        val indices = indexEngine.getIndices(TestEntity::class.java)
+        val indices = JavaStaticFieldIndexLoader().load(indexEngine, TestEntity::class.java)
         val iterator = indices.iterator()
         assertTrue { iterator.hasNext() }
     }
