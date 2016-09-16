@@ -72,8 +72,9 @@ to be improved.
 * java.lang.String
 * java.util.UUID
 * java.util.Date
-* Enum (Java enumerations)
-* List<?> (Java lists)
+* Enum (Enumeration)
+* List<?> (List)
+* Map<?, ?> (Associative array)
 * Optional<?>
 
 All other types will be handled through Layout.

@@ -69,6 +69,7 @@ public interface TypeHandler {
      * <li><code>java.util.Date</code></li>
      * <li><code>Enum</code></li>
      * <li><code>List&lt;?&gt;</code></li>
+     * <li><code>Map&lt;?,?&gt;</code></li>
      * <li><code>Optional&lt;?&gt;</code></li>
      * </ul>
      *
