@@ -15,6 +15,8 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
+import com.eventsourcing.index.IndexLoader;
+import com.eventsourcing.index.JavaStaticFieldIndexLoader;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.google.common.collect.Iterables;
@@ -45,6 +47,7 @@ public class StandardRepository extends AbstractService implements Repository, R
     public StandardRepository() {
         setPhysicalTimeProvider(new NTPServerTimeProvider(new String[]{"localhost"}));
         setLockProvider(new LocalLockProvider());
+        bindIndexLoader(new JavaStaticFieldIndexLoader());
     }
 
     @Builder
@@ -56,6 +59,7 @@ public class StandardRepository extends AbstractService implements Repository, R
         setLockProvider(lockProvider == null ? new LocalLockProvider() : lockProvider);
         setJournal(journal);
         setIndexEngine(indexEngine);
+        bindIndexLoader(new JavaStaticFieldIndexLoader());
     }
 
     @Getter
@@ -144,19 +148,21 @@ public class StandardRepository extends AbstractService implements Repository, R
     private boolean configureIndices(Class<? extends Entity> klass) {
         try {
             if (!indicesConfiguredFor.contains(klass.getName())) {
-                Iterable<Index> indices = indexEngine.getIndices(klass);
-                for (Index i : indices) {
-                    IndexedCollection<? extends EntityHandle<? extends Entity>> collection =
-                            indexEngine.getIndexedCollection(klass);
-                    boolean hasIndex = StreamSupport.stream(collection.getIndexes().spliterator(), false)
-                                             .anyMatch(index -> index.equals(i));
-                    if (!hasIndex) {
-                        collection.addIndex(i);
+                for (IndexLoader loader : indexLoaders) {
+                    Iterable<Index> indices = loader.load(indexEngine, klass);
+                    for (Index i : indices) {
+                        IndexedCollection<? extends EntityHandle<? extends Entity>> collection =
+                                indexEngine.getIndexedCollection(klass);
+                        boolean hasIndex = StreamSupport.stream(collection.getIndexes().spliterator(), false)
+                                                        .anyMatch(index -> index.equals(i));
+                        if (!hasIndex) {
+                            collection.addIndex(i);
+                        }
                     }
                 }
                 indicesConfiguredFor.add(klass.getName());
             }
-        } catch (IndexEngine.IndexNotSupported | IllegalAccessException e) {
+        } catch (IndexEngine.IndexNotSupported e) {
             notifyFailed(e);
             return true;
         }
@@ -254,6 +260,19 @@ public class StandardRepository extends AbstractService implements Repository, R
         final Set<Class<? extends Event>> providedEvents = provider.getEvents();
         events.removeAll(providedEvents);
     }
+
+    private final Set<IndexLoader> indexLoaders = new LinkedHashSet<>();
+
+    @Reference(cardinality = ReferenceCardinality.AT_LEAST_ONE)
+    public void bindIndexLoader(IndexLoader loader) {
+        indexLoaders.add(loader);
+    }
+
+    public void unbindIndexLoader(IndexLoader loader) {
+        indexLoaders.remove(loader);
+    }
+
+
 
     @Reference
     @Override
