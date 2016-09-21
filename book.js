@@ -22,6 +22,10 @@ module.exports = {
                     selected: true
                 },
                 {
+                    value: "https://es4j.eventsourcing.com/docs/0.4.2",
+                    text: "Version 0.4.2"
+                },
+                {
                     value: "https://es4j.eventsourcing.com/docs/0.4.1",
                     text: "Version 0.4.1"
                 },
