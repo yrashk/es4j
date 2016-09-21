@@ -1,3 +1,10 @@
+# 0.4.2
+
+**Features**
+
+* Map (associative array) type has been added ([#152](https://github.com/eventsourcing/es4j/pull/152))
+* Index discovery mechanism is no longer hardcoded ([#154](https://github.com/eventsourcing/es4j/pull/154))
+
 # 0.4.1
 
 **Backwards-incompatible changes**

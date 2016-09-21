@@ -1,3 +1,13 @@
+0.4.2
+=====
+
+Most notably, this release introduces an associative array type (Map).
+
+It also allows to supply custom index discovery and loading mechanisms.
+
+Previous version was erroneously shipped with OSGi dependencies for
+LMAX Disruptor (which is no longer a dependency), this has been fixed. 
+
 0.4.1
 =====
 
