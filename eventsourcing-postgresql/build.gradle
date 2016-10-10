@@ -3,7 +3,7 @@ dependencies {
     testCompile project(':eventsourcing-core').sourceSets.test.output
     testCompile project(':eventsourcing-repository').sourceSets.test.output
 
-    compile 'com.eventsourcing:pgjdbc-ng:0.7.0-89abc52'
+    compile 'com.eventsourcing:pgjdbc-ng:0.7.0-7d96678'
 
     // Embedded PostgreSQL for testing
     testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.15'
