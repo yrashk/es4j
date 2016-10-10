@@ -28,12 +28,12 @@ import java.time.DayOfWeek;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.cep.protocols.DeletedProtocol.notDeleted;
-import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static com.eventsourcing.index.EntityQueryFactory.*;
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.*;
+import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
+import static com.googlecode.cqengine.query.StreamFactory.streamOf;
 
 public class Restaurant implements Model, NameProtocol, AddressProtocol {
     @Getter
@@ -91,8 +91,7 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
                                    AddressChanged.TIMESTAMP);
             Query<EntityHandle<AddressChanged>> query = and(latestEntity, geoRestrictions, isRestaurant);
             ResultSet<EntityHandle<AddressChanged>> resultSet = repository.query(AddressChanged.class, query);
-            return StreamSupport
-                    .stream(resultSet.spliterator(), false)
+            return streamOf(resultSet)
                     .map(h -> new Restaurant(repository, h.get().reference()))
                     .onClose(resultSet::close);
         }
@@ -128,8 +127,7 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
             Query<EntityHandle<WorkingHoursChanged>> query = and(latestEntity, isRestaurant,lessThanOrEqualTo(WorkingHoursChanged.OPENING_AT, boundary),
                                                                  greaterThanOrEqualTo(WorkingHoursChanged.CLOSING_AT, boundary));
             ResultSet<EntityHandle<WorkingHoursChanged>> resultSet = repository.query(WorkingHoursChanged.class, query);
-            return StreamSupport
-                    .stream(resultSet.spliterator(), false)
+            return streamOf(resultSet)
                     .map(h -> new Restaurant(repository, h.get().reference()))
                     .onClose(resultSet::close);
         }
@@ -155,8 +153,7 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
                                                       WorkingHoursChanged.TIMESTAMP));
         try (ResultSet<EntityHandle<WorkingHoursChanged>> resultSet =
                      getRepository().query(WorkingHoursChanged.class, query)) {
-            return
-            StreamSupport.stream(resultSet.spliterator(), false)
+            return streamOf(resultSet)
                          .map(EntityHandle::get)
                          .collect(Collectors.toMap(e -> e.dayOfWeek().getValue(), WorkingHoursChanged::openDuring));
         }

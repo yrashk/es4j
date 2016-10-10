@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.googlecode.cqengine.query.StreamFactory.streamOf;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface DescriptionProtocol extends Protocol, ModelQueries {
@@ -48,9 +49,9 @@ public interface DescriptionProtocol extends Protocol, ModelQueries {
         @Override public Stream<T> getCollectionStream(Repository repository) {
             ResultSet<EntityHandle<DescriptionChanged>> resultSet = repository
                     .query(DescriptionChanged.class, equal(DescriptionChanged.DESCRIPTION, description));
-            return StreamSupport.stream(resultSet.spliterator(), false)
-                                .map(h -> loader.load(repository, h.get().reference()).get())
-                                .onClose(resultSet::close);
+            return streamOf(resultSet)
+                    .map(h -> loader.load(repository, h.get().reference()).get())
+                    .onClose(resultSet::close);
         }
     }
 

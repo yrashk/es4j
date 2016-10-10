@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.stream.StreamSupport;
 
 import static com.googlecode.cqengine.query.QueryFactory.*;
+import static com.googlecode.cqengine.query.StreamFactory.streamOf;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -128,8 +129,7 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
         ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
-        assertTrue(StreamSupport.stream(cars.spliterator(), false)
-                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
+        assertTrue(streamOf(cars).allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
 
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());
@@ -155,8 +155,7 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
         ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(attr, "Honda".getBytes()));
         assertTrue(cars.isNotEmpty());
-        assertTrue(StreamSupport.stream(cars.spliterator(), false)
-                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
+        assertTrue(streamOf(cars).allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
 
         cars.close();
         index.clear(noQueryOptions());
@@ -194,8 +193,7 @@ public abstract class EqualityIndexTest<HashIndex extends AttributeIndex> {
 
         ResultSet<EntityHandle<Car>> cars = collection.retrieve(equal(Car.MANUFACTURER, "Honda"));
         assertTrue(cars.isNotEmpty());
-        assertTrue(StreamSupport.stream(cars.spliterator(), false)
-                                .allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
+        assertTrue(streamOf(cars).allMatch(car -> car.get().getManufacturer().contentEquals("Honda")));
 
         cars.close();
         MANUFACTURER_INDEX.clear(noQueryOptions());

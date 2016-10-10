@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.googlecode.cqengine.query.StreamFactory.streamOf;
 
 public class MenuItem
         implements Model, NameProtocol, DescriptionProtocol, PriceProtocol, PictureProtocol,
@@ -66,8 +67,7 @@ public class MenuItem
         @Override public Stream<MenuItem> getCollectionStream(Repository repository) {
             ResultSet<EntityHandle<MenuItemAdded>> resultSet =
                     repository.query(MenuItemAdded.class, equal(MenuItemAdded.REFERENCE_ID, restaurantId));
-            return StreamSupport
-                    .stream(resultSet.spliterator(), false)
+            return streamOf(resultSet)
                     .map(h -> new MenuItem(repository, h.uuid()))
                     .onClose(resultSet::close);
         }
