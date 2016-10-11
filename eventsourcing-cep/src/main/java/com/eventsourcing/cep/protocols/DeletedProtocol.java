@@ -32,6 +32,7 @@ import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.index.EntityQueryFactory.*;
 import static com.eventsourcing.queries.QueryFactory.*;
+import static com.googlecode.cqengine.query.StreamFactory.*;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")
 public interface DeletedProtocol extends Protocol, ModelQueries {
@@ -62,9 +63,9 @@ public interface DeletedProtocol extends Protocol, ModelQueries {
                                                                     new DeletedQueryFunction(), Deleted.TIMESTAMP));
 
             ResultSet<EntityHandle<Deleted>> resultSet = repository.query(Deleted.class, query);
-            return StreamSupport.stream(resultSet.spliterator(), false)
-                                .map(h -> loader.load(repository, h.get().reference()).get())
-                                .onClose(resultSet::close);
+            return streamOf(resultSet)
+                    .map(h -> loader.load(repository, h.get().reference()).get())
+                    .onClose(resultSet::close);
         }
 
         private static class DeletedQueryFunction implements Function<EntityHandle<Deleted>, Query<EntityHandle<Deleted>>> {
@@ -99,9 +100,9 @@ public interface DeletedProtocol extends Protocol, ModelQueries {
                     .query(klass, not(existsIn(deletedCollection, idAttribute, Deleted.REFERENCE_ID,
                                                not(existsIn(undeletedCollection, Deleted.ID, Undeleted.DELETED_ID)))));
 
-            return StreamSupport.stream(resultSet.spliterator(), false)
-                                .map(h -> loader.load(repository, h.get().uuid()).get())
-                                .onClose(resultSet::close);
+            return streamOf(resultSet)
+                    .map(h -> loader.load(repository, h.get().uuid()).get())
+                    .onClose(resultSet::close);
         }
 
     }
