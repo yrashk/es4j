@@ -1,3 +1,19 @@
+# WIP
+
+**Backwards-incompatible changes**
+
+* OSGi BundleCommandSetProvider and BundleEventSetProvider are replaced with a
+  single, automatically installed OSGiEntitiesProvider that scans all bundles
+  ([#161](https://github.com/eventsourcing/es4j/pull/161))
+
+**Bugfixes**
+
+* A test package was leaked into the main source set ([#162](https://github.com/eventsourcing/es4j/pull/162))
+
+**Upgrades**
+
+* cqengine 2.8.0 ([#159](https://github.com/eventsourcing/es4j/pull/159))
+
 # 0.4.2
 
 **Features**
