@@ -9,6 +9,7 @@
 **Bugfixes**
 
 * A test package was leaked into the main source set ([#162](https://github.com/eventsourcing/es4j/pull/162))
+* Netty dependency for eventsourcing-postgresql was not OSGi compatible ([#158](https://github.com/eventsourcing/es4j/pull/158))
 
 **Upgrades**
 
