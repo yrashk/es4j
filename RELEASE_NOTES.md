@@ -1,3 +1,10 @@
+0.4.3
+=====
+
+This is a minor release, mostly addressing OSGi-compatibility issues. If you do
+use OSGi, bundle event/command set providers have been replaced with a
+single container-wide provider.
+
 0.4.2
 =====
 

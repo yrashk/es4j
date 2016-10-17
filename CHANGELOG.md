@@ -1,4 +1,4 @@
-# WIP
+# 0.4.3 
 
 **Backwards-incompatible changes**
 
