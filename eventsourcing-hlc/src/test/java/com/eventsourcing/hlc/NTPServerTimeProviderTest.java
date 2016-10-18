@@ -9,18 +9,21 @@ package com.eventsourcing.hlc;
 
 
 import com.google.common.util.concurrent.ServiceManager;
+import lombok.SneakyThrows;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -43,7 +46,7 @@ public class NTPServerTimeProviderTest {
     private NTPServerTimeProvider provider;
 
     @BeforeClass
-    public void setup() throws UnknownHostException, ExecutionException, InterruptedException {
+    public void setup() throws UnknownHostException, ExecutionException, InterruptedException, SocketException {
         provider = new NTPServerTimeProvider(new String[]{"localhost"}); // use localhost to avoid delays and usage caps
         serviceManager = new ServiceManager(Arrays.asList(provider));
         serviceManager.startAsync().awaitHealthy();
@@ -55,7 +58,7 @@ public class NTPServerTimeProviderTest {
     }
 
     @Test(successPercentage = 99, dataProvider = "delays")
-    public void secondsPassed(int delay) throws UnknownHostException, InterruptedException {
+    public void secondsPassed(int delay) throws UnknownHostException, InterruptedException, TimeoutException {
         TimeStamp ts1 = provider.getTimestamp();
         Thread.sleep(delay);
         TimeStamp ts2 = provider.getTimestamp();
@@ -65,6 +68,20 @@ public class NTPServerTimeProviderTest {
         // is pointless as there's a gap between sleeping and requesting the timestamp.
         assertEquals("Delay=" + delay + " time_diff=" + (ts2.getTime() - ts1.getTime()), seconds,
                      (ts2.getTime() - ts1.getTime()) / 1000);
+    }
+
+    @SneakyThrows
+    @Test(timeOut = 5000)
+    public void unavailableTimeServer() {
+        NTPServerTimeProvider timeProvider = new NTPServerTimeProvider(new String[]{"255.255.255.255"});
+        timeProvider.startAsync().awaitRunning();
+        try {
+            timeProvider.getTimestamp();
+            assertEquals("Should throw TimeoutException", true, false);
+        } catch (TimeoutException e) {
+            return;
+        }
+        timeProvider.stopAsync().awaitTerminated();
     }
 
 }

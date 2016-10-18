@@ -9,6 +9,7 @@ package com.eventsourcing.hlc;
 
 import com.google.common.util.concurrent.AbstractScheduledService;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.experimental.Accessors;
 import org.apache.commons.net.ntp.NTPUDPClient;
 import org.apache.commons.net.ntp.TimeStamp;
@@ -18,12 +19,14 @@ import org.osgi.service.component.annotations.Component;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -41,13 +44,14 @@ import java.util.stream.Collectors;
 public class NTPServerTimeProvider extends AbstractScheduledService implements PhysicalTimeProvider {
 
 
+    public static final int SO_TIMEOUT = 2000;
     private final ScheduledExecutorService scheduler =
             Executors.newScheduledThreadPool(1);
 
     private static final String[] DEFAULT_NTP_SERVERS =
             {"localhost", "0.pool.ntp.org", "1.pool.ntp.org", "2.pool.ntp.org", "3.pool.ntp.org"};
 
-    private final NTPUDPClient client;
+    private NTPUDPClient client;
     private List<InetAddress> servers;
 
     private TimeStamp timestamp;
@@ -61,9 +65,16 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
 
 
     @Activate
-    protected void activate(ComponentContext ctx) {
+    protected void activate(ComponentContext ctx) throws SocketException {
+        client = new NTPUDPClient();
         String serversList = (String) ctx.getProperties().get("ntp.servers");
         setServers(serversList.split(","));
+        setSocketTimeout();
+    }
+
+    private void setSocketTimeout() throws SocketException {
+        client.open();
+        client.setSoTimeout(SO_TIMEOUT);
     }
 
     /**
@@ -71,7 +82,7 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
      *
      * @throws UnknownHostException Throws UnknownHostException for the first unresolved host, if no hosts were resolvable
      */
-    public NTPServerTimeProvider() throws UnknownHostException {
+    public NTPServerTimeProvider() throws UnknownHostException, SocketException {
         this(DEFAULT_NTP_SERVERS);
     }
 
@@ -96,12 +107,13 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
      * @param ntpServers Array of custom NTP server addresses
      * @throws UnknownHostException Throws UnknownHostException for the first unresolved host, if no hosts were resolvable
      */
-    public NTPServerTimeProvider(String[] ntpServers) throws UnknownHostException {
+    public NTPServerTimeProvider(String[] ntpServers) throws UnknownHostException, SocketException {
         client = new NTPUDPClient();
         setServers(ntpServers);
         if (servers.isEmpty()) {
             throw new UnknownHostException(ntpServers[0]);
         }
+        setSocketTimeout();
     }
 
     protected void setServers(String[] ntpServers) {
@@ -125,7 +137,10 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
         }
     }
 
-    TimeStamp getTimestamp() {
+    TimeStamp getTimestamp() throws TimeoutException {
+        if (timestamp == null) {
+            throw new TimeoutException();
+        }
         TimeStamp ts = new TimeStamp(timestamp.ntpValue());
         long fraction = ts.getFraction();
         long seconds = ts.getSeconds();
@@ -143,7 +158,8 @@ public class NTPServerTimeProvider extends AbstractScheduledService implements P
 
 
     @Override
-    public long getPhysicalTime() {
+    @SneakyThrows
+    public long getPhysicalTime()  {
         return getTimestamp().ntpValue();
     }
 
