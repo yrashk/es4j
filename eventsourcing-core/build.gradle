@@ -13,5 +13,6 @@ dependencies {
     compile 'com.googlecode.cqengine:cqengine:2.8.0'
 
     testCompile project(':eventsourcing-inmem')
+    testCompile project(':eventsourcing-repository')
 
 }
