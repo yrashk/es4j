@@ -17,7 +17,7 @@ import java.util.stream.Stream;
  *
  * When an event or a command are being processed, repository will
  * use {@link EntitySubscriber#matches(Entity)} to determine whether
- * the entity is being subscribed to. Please not that it will store
+ * the entity is being subscribed to. Please note that it will store
  * entity UUID until the entire command is committed, so if your command
  * generates an extremely high number of events, you might experience
  * significant memory usage penalty.
