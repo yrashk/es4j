@@ -107,7 +107,7 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
         }
     }
 
-    class MultiValueEntityAttribute extends MultiValueAttribute {
+    class MultiValueEntityAttribute extends MultiValueAttribute<Entity, Object> {
         private final EntityIndex index;
 
         public MultiValueEntityAttribute(Class<Entity> objectType, Class<EntityHandle<Entity>> entityType,
