@@ -15,10 +15,7 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
-import com.eventsourcing.index.Index;
-import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
-import com.eventsourcing.index.SimpleIndex;
+import com.eventsourcing.index.*;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
@@ -38,9 +35,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -110,6 +105,13 @@ public abstract class RepositoryTest<T extends Repository> {
 
         @Index({EQ, SC})
         public static SimpleIndex<TestEvent, String> ATTR = TestEvent::string;
+
+        @Index
+        public static MultiValueIndex<TestEvent, String> ATTRS = TestEvent::strings;
+
+        public Collection<String> strings() {
+            return Arrays.asList(string);
+        }
 
         @Builder
         public TestEvent(HybridTimestamp timestamp, String string) {
@@ -307,6 +309,7 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
+        assertEquals(coll.retrieve(equal(TestEvent.ATTRS, "test")).uniqueResult().get().string(), "test");
 
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
         assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());
