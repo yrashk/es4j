@@ -83,7 +83,7 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
                 .computeIfAbsent(event.getClass(), klass -> new ConcurrentIndexedCollection<>());
         coll.add(new ResolvedEntityHandle<>(event));
         subscribers.stream()
-                      .filter(s -> s.matches(event))
+                      .filter(s -> s.matches(repository, event))
                       .forEach(s -> subscriptions.get(s).add(event.uuid()));
     }
 
@@ -208,13 +208,13 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
                 coll.add(new ResolvedEntityHandle<>(command_));
                 subscriptions.entrySet().stream()
                              .forEach(entry -> entry.getKey()
-                                                    .accept(entry.getValue()
+                                                    .accept(repository, entry.getValue()
                                                                  .stream()
                                                                  .map(uuid -> new JournalEntityHandle<>(journal,
                                                                                                         uuid))));
                 subscribers.stream()
-                           .filter(s -> s.matches(command_))
-                           .forEach(s -> s.accept(Stream.of(commandHandle)));
+                           .filter(s -> s.matches(repository, command_))
+                           .forEach(s -> s.accept(repository, Stream.of(commandHandle)));
 
                 synchronized (timestamp) {
                     timestamp.update(txTimestamp);
