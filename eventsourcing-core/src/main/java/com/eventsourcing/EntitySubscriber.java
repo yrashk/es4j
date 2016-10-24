@@ -40,11 +40,31 @@ public interface EntitySubscriber<T extends Entity> {
     }
 
     /**
+     * Defines a predicate for matching entities
+     * @param repository
+     * @param entity
+     * @return true if the entity should be returned
+     */
+    default boolean matches(Repository repository, T entity) {
+        return matches(entity);
+    }
+
+    /**
      * Used by {@link #accept(Stream)} to be invoked for every entity handle.
      * Does nothing by default.
      * @param entity
      */
     default void onEntity(EntityHandle<T> entity) {}
+
+    /**
+     * Used by {@link #accept(Stream)} to be invoked for every entity handle.
+     * Does nothing by default.
+     * @param repository
+     * @param entity
+     */
+    default void onEntity(Repository repository, EntityHandle<T> entity) {
+        onEntity(entity);
+    }
 
     /**
      * This method is invoked once the command is being committed and all relevant entities
@@ -55,4 +75,17 @@ public interface EntitySubscriber<T extends Entity> {
     default void accept(Stream<EntityHandle<T>> entityStream) {
         entityStream.forEach(this::onEntity);
     }
+
+    /**
+     * This method is invoked once the command is being committed and all relevant entities
+     * have been collected. It provides a default implementation that invokes {@link #onEntity(EntityHandle)}
+     * for every entity handle.
+     * @param repository;
+     * @param entityStream
+     */
+    default void accept(Repository repository,
+                        Stream<EntityHandle<T>> entityStream) {
+        entityStream.forEach(e -> onEntity(repository, e));
+    }
+
 }
