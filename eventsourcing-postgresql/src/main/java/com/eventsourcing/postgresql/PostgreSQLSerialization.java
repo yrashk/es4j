@@ -24,6 +24,7 @@ import lombok.SneakyThrows;
 
 import java.io.DataInput;
 import java.math.BigDecimal;
+import java.security.MessageDigest;
 import java.sql.*;
 import java.time.Instant;
 import java.util.*;
@@ -200,7 +201,30 @@ public class PostgreSQLSerialization {
             String keyType = getMappedType(connection, ((MapTypeHandler) typeHandler).getWrappedKeyHandler());
             String valueType = getMappedType(connection, ((MapTypeHandler) typeHandler).getWrappedValueHandler());
 
-            String typname = ("map_v1_" + keyType + "_" + valueType).replaceAll("\\[\\]", "__");
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            digest.update(keyType.getBytes());
+            digest.update(valueType.getBytes());
+            String encodedHash = BaseEncoding.base16().encode(digest.digest());
+
+            String typname = "map_v2_" + encodedHash;
+
+            // Upgrade v1 to v2. Luckily the actual type hasn't changed,
+            // just the naming.
+            String v1typname = ("map_v1_" + keyType + "_" + valueType).replaceAll("\\[\\]", "__");
+            try (PreparedStatement check = connection
+                    .prepareStatement("SELECT lower(typname) FROM pg_catalog.pg_type WHERE lower(typname) = lower(?)" +
+                                              "::name")) {
+                check.setString(1, v1typname);
+                try (ResultSet resultSet = check.executeQuery()) {
+                    if (resultSet.next()) {
+                        try (PreparedStatement s = connection
+                                .prepareStatement("ALTER TABLE " + resultSet.getString(1) + " RENAME TO " + typname)) {
+                            s.executeUpdate();
+                        }
+                    }
+                }
+            }
+            //
 
             boolean shouldCreateType;
 
