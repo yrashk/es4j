@@ -12,6 +12,7 @@ import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.Getter;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 
 /**
@@ -23,7 +24,7 @@ import java.util.Collections;
  */
 public abstract class SimpleAttribute<O extends Entity, A>
         extends com.googlecode.cqengine.attribute.SimpleAttribute<EntityHandle<O>, A>
-        implements Attribute<O, A> {
+        implements Attribute<O, A>, ReflectableAttribute<A> {
 
     private Class<O> objectType;
     private int cachedHashCode;

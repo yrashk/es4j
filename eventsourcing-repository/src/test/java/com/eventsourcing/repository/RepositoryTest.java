@@ -106,10 +106,12 @@ public abstract class RepositoryTest<T extends Repository> {
         @Index({EQ, SC})
         public static SimpleIndex<TestEvent, String> ATTR = TestEvent::string;
 
+        public static SimpleIndex<TestEvent, List<String>> ATTRL = TestEvent::strings;
+
         @Index
         public static MultiValueIndex<TestEvent, String> ATTRS = TestEvent::strings;
 
-        public Collection<String> strings() {
+        public List<String> strings() {
             return Arrays.asList(string);
         }
 
@@ -310,6 +312,9 @@ public abstract class RepositoryTest<T extends Repository> {
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
         assertEquals(coll.retrieve(equal(TestEvent.ATTRS, "test")).uniqueResult().get().string(), "test");
+        assertEquals(coll.retrieve(equal(TestEvent.ATTRL, Arrays.asList("test"))).uniqueResult().get().string(),
+                     "test");
+        assertTrue(coll.retrieve(equal(TestEvent.ATTRL, Arrays.asList("test1"))).isEmpty());
 
         assertTrue(coll1.retrieve(equal(RepositoryTestCommand.ATTR, "test")).isNotEmpty());
         assertTrue(coll1.retrieve(contains(RepositoryTestCommand.ATTR, "es")).isNotEmpty());

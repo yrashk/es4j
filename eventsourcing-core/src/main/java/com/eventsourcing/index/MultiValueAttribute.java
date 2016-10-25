@@ -11,9 +11,11 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
+import java.lang.reflect.Type;
+
 public abstract class MultiValueAttribute<O extends Entity, A>
         extends com.googlecode.cqengine.attribute.MultiValueAttribute<EntityHandle<O>, A>
-        implements Attribute<O, A> {
+        implements Attribute<O, A>, ReflectableAttribute<A> {
 
     private Class<O> objectType;
     private int cachedHashCode;

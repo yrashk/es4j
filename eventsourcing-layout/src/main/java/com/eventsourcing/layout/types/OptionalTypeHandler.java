@@ -13,9 +13,7 @@ import com.fasterxml.classmate.TypeResolver;
 import com.google.common.primitives.Bytes;
 import lombok.Getter;
 
-import java.lang.reflect.AnnotatedParameterizedType;
-import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 public class OptionalTypeHandler implements TypeHandler {
     @Getter
@@ -25,20 +23,12 @@ public class OptionalTypeHandler implements TypeHandler {
         wrappedHandler = null;
     }
 
-    public OptionalTypeHandler(AnnotatedType annotatedType) throws TypeHandlerException {
-        if (!(annotatedType instanceof AnnotatedParameterizedType)) {
-            throw new IllegalArgumentException("List type parameter should be specified");
+    public OptionalTypeHandler(List<ResolvedType> typeParameters) throws TypeHandlerException {
+        if (typeParameters.size() != 1) {
+            throw new IllegalArgumentException("Optional type parameters should be specified");
         }
-        AnnotatedParameterizedType parameterizedType = (AnnotatedParameterizedType) annotatedType;
-        AnnotatedType arg = parameterizedType.getAnnotatedActualTypeArguments()[0];
-        Class<?> klass;
-        if (arg.getType() instanceof ParameterizedType) {
-            klass = (Class<?>) ((ParameterizedType) (arg.getType())).getRawType();
-        } else {
-            klass = (Class<?>) arg.getType();
-        }
-        ResolvedType resolvedType = new TypeResolver().resolve(klass);
-        wrappedHandler = TypeHandler.lookup(resolvedType, arg);
+        ResolvedType resolvedType = new TypeResolver().resolve(typeParameters.get(0));
+        wrappedHandler = TypeHandler.lookup(resolvedType);
     }
 
     @Override

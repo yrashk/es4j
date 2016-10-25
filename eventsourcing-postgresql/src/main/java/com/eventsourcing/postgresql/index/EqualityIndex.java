@@ -10,6 +10,7 @@ package com.eventsourcing.postgresql.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.Attribute;
+import com.eventsourcing.index.ReflectableAttribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
@@ -65,8 +66,13 @@ public class EqualityIndex<A, O extends Entity> extends PostgreSQLAttributeIndex
         this.unique = unique;
         layout = Layout.forClass(attribute.getEffectiveObjectType());
         TypeResolver typeResolver = new TypeResolver();
-        ResolvedType resolvedType = typeResolver.resolve(attribute.getAttributeType());
-        attributeTypeHandler = TypeHandler.lookup(resolvedType, null);
+        ResolvedType resolvedType;
+        if (attribute instanceof ReflectableAttribute) {
+            resolvedType = typeResolver.resolve(((ReflectableAttribute) attribute).getAttributeReflectedType());
+        } else {
+            resolvedType = typeResolver.resolve(attribute.getAttributeType());
+        }
+        attributeTypeHandler = TypeHandler.lookup(resolvedType);
         init();
     }
 

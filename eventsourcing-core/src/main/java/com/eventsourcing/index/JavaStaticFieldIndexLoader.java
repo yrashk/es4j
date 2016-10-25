@@ -10,11 +10,13 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import lombok.Getter;
 import lombok.SneakyThrows;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +49,7 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
                     EntityIndex index = ((EntityIndex) field.get(null));
                     ParameterizedType type = (ParameterizedType) field.getGenericType();
                     Class<Entity> objectType = (Class<Entity>) type.getActualTypeArguments()[0];
-                    Class<Object> attributeType = (Class<Object>) type.getActualTypeArguments()[1];
+                    Type attributeType = type.getActualTypeArguments()[1];
                     Class<EntityHandle<Entity>> entityType = (Class<EntityHandle<Entity>>) field.getType()
                                                                                                 .getInterfaces()[0];
                     Attribute attribute;
@@ -93,12 +95,18 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
 
 
     class EntitySimpleAttribute extends SimpleAttribute<Entity, Object> {
+        @Getter
+        private final Type attributeReflectedType;
         private final EntityIndex index;
 
         public EntitySimpleAttribute(Class<Entity> objectType, Class<EntityHandle<Entity>> entityType,
-                                     Class<Object> attributeType,
+                                     Type attributeType,
                                      Field field, EntityIndex index) {
-            super(objectType, entityType, attributeType, field.getName());
+            super(objectType, entityType,
+                  (Class<Object>) (attributeType instanceof ParameterizedType ? ((ParameterizedType) attributeType)
+                          .getRawType(): attributeType),
+                  field.getName());
+            this.attributeReflectedType = attributeType;
             this.index = index;
         }
 
@@ -108,12 +116,16 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
     }
 
     class MultiValueEntityAttribute extends MultiValueAttribute<Entity, Object> {
+        @Getter
+        private final Type attributeReflectedType;
         private final EntityIndex index;
 
         public MultiValueEntityAttribute(Class<Entity> objectType, Class<EntityHandle<Entity>> entityType,
-                                         Class<Object> attributeType,
+                                         Type attributeType,
                                          Field field, EntityIndex index) {
-            super(objectType, entityType, attributeType, field.getName());
+            super(objectType, entityType, (Class<Object>) (attributeType instanceof ParameterizedType ? ((ParameterizedType) attributeType)
+                    .getRawType(): attributeType), field.getName());
+            this.attributeReflectedType = attributeType;
             this.index = index;
         }
 

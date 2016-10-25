@@ -76,7 +76,7 @@ public interface TypeHandler {
      * @param type
      * @return
      */
-    static TypeHandler lookup(ResolvedType type, AnnotatedType annotatedType) throws TypeHandlerException {
+    static TypeHandler lookup(ResolvedType type) throws TypeHandlerException {
         try {
             if (type.isInstanceOf(Byte.TYPE) || type.isInstanceOf(Byte.class)) {
                 return BYTE_TYPE_HANDLER;
@@ -127,15 +127,15 @@ public interface TypeHandler {
             }
 
             if (type.isInstanceOf(List.class)) {
-                return new ListTypeHandler(annotatedType);
+                return new ListTypeHandler(type.getTypeParameters());
             }
 
             if (type.isInstanceOf(Map.class)) {
-                return new MapTypeHandler(annotatedType);
+                return new MapTypeHandler(type.getTypeParameters());
             }
 
             if (type.isInstanceOf(Optional.class)) {
-                return new OptionalTypeHandler(annotatedType);
+                return new OptionalTypeHandler(type.getTypeParameters());
             }
 
 

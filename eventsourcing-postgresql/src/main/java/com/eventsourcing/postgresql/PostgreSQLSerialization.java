@@ -437,10 +437,14 @@ public class PostgreSQLSerialization {
             s.setInt(i, (Integer) prepareValue(connection, typeHandler, value));
         } else
         if (typeHandler instanceof ListTypeHandler) {
-            s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
+            /// TODO: review when this gets updated https://github.com/impossibl/pgjdbc-ng/issues/288
+//            s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
+            s.setObject(i, ((Array)prepareValue(connection,typeHandler, value)).getArray());
         } else
         if (typeHandler instanceof MapTypeHandler) {
-            s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
+            /// TODO: review when this gets updated https://github.com/impossibl/pgjdbc-ng/issues/288
+//            s.setArray(i, (Array) prepareValue(connection, typeHandler, value));
+            s.setObject(i, ((Array) prepareValue(connection, typeHandler, value)).getArray());
         } else
         if (typeHandler instanceof LongTypeHandler) {
             s.setLong(i, (Long) prepareValue(connection, typeHandler, value));
