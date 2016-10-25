@@ -27,9 +27,9 @@ public class EnumTypeHandlerTest {
 
     @Test @SneakyThrows
     public void fingerprintShape() {
-        TypeHandler typeHandlerA = TypeHandler.lookup(new TypeResolver().resolve(A.class), null);
-        TypeHandler typeHandlerA1 = TypeHandler.lookup(new TypeResolver().resolve(A1.class), null);
-        TypeHandler typeHandlerA2 = TypeHandler.lookup(new TypeResolver().resolve(A2.class), null);
+        TypeHandler typeHandlerA = TypeHandler.lookup(new TypeResolver().resolve(A.class));
+        TypeHandler typeHandlerA1 = TypeHandler.lookup(new TypeResolver().resolve(A1.class));
+        TypeHandler typeHandlerA2 = TypeHandler.lookup(new TypeResolver().resolve(A2.class));
         assertTrue(Arrays.equals(typeHandlerA.getFingerprint(), typeHandlerA1.getFingerprint()));
         assertFalse(Arrays.equals(typeHandlerA.getFingerprint(), typeHandlerA2.getFingerprint()));
     }

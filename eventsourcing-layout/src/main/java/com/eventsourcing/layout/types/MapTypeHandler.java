@@ -13,9 +13,7 @@ import com.fasterxml.classmate.TypeResolver;
 import com.google.common.primitives.Bytes;
 import lombok.Getter;
 
-import java.lang.reflect.AnnotatedParameterizedType;
-import java.lang.reflect.AnnotatedType;
-import java.lang.reflect.ParameterizedType;
+import java.util.List;
 
 public class MapTypeHandler implements TypeHandler {
 
@@ -29,30 +27,14 @@ public class MapTypeHandler implements TypeHandler {
         wrappedValueHandler = null;
     }
 
-    public MapTypeHandler(AnnotatedType annotatedType) throws TypeHandlerException {
-        if (!(annotatedType instanceof AnnotatedParameterizedType)) {
+    public MapTypeHandler(List<ResolvedType> typeParameters) throws TypeHandlerException {
+        if (typeParameters.size() != 2) {
             throw new IllegalArgumentException("Map type parameters should be specified");
         }
-        AnnotatedParameterizedType parameterizedType = (AnnotatedParameterizedType) annotatedType;
-        AnnotatedType key = parameterizedType.getAnnotatedActualTypeArguments()[0];
-        AnnotatedType value = parameterizedType.getAnnotatedActualTypeArguments()[1];
-        Class<?> keyClass;
-        if (key.getType() instanceof ParameterizedType) {
-            keyClass = (Class<?>) ((ParameterizedType) (key.getType())).getRawType();
-        } else {
-            keyClass = (Class<?>) key.getType();
-        }
-        Class<?> valueClass;
-        if (value.getType() instanceof ParameterizedType) {
-            valueClass = (Class<?>) ((ParameterizedType) (value.getType())).getRawType();
-        } else {
-            valueClass = (Class<?>) value.getType();
-        }
-        ResolvedType resolvedKeyType = new TypeResolver().resolve(keyClass);
-        wrappedKeyHandler = TypeHandler.lookup(resolvedKeyType, key);
-        ResolvedType resolvedValueType = new TypeResolver().resolve(valueClass);
-        wrappedValueHandler = TypeHandler.lookup(resolvedValueType, value);
-
+        ResolvedType resolvedKeyType = new TypeResolver().resolve(typeParameters.get(0));
+        wrappedKeyHandler = TypeHandler.lookup(resolvedKeyType);
+        ResolvedType resolvedValueType = new TypeResolver().resolve(typeParameters.get(1));
+        wrappedValueHandler = TypeHandler.lookup(resolvedValueType);
     }
 
     @Override

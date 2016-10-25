@@ -19,6 +19,9 @@ import lombok.SneakyThrows;
 
 import java.lang.reflect.AnnotatedParameterizedType;
 import java.lang.reflect.AnnotatedType;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.util.List;
 import java.util.Set;
 
 public abstract class AbstractAttributeIndex<A, O extends Entity>
@@ -43,17 +46,21 @@ public abstract class AbstractAttributeIndex<A, O extends Entity>
             supportedQueries) {
         super(attribute, supportedQueries);
 
-        ResolvedType attributeType = new TypeResolver().resolve(attribute.getAttributeType());
+        Type t;
+        if (attribute instanceof ReflectableAttribute) {
+            t = ((ReflectableAttribute) attribute).getAttributeReflectedType();
+        } else {
+            t = attribute.getAttributeType();
+        }
 
-        AnnotatedParameterizedType cls = (AnnotatedParameterizedType) attribute.getClass().getAnnotatedSuperclass();
-        AnnotatedType annotatedType = cls.getAnnotatedActualTypeArguments()[1];
+        ResolvedType attributeType = new TypeResolver().resolve(t);
 
-        attrTypeHandler = TypeHandler.lookup(attributeType, annotatedType);
+        attrTypeHandler = TypeHandler.lookup(attributeType);
         attributeSerializer = serialization.getSerializer(attrTypeHandler);
         attributeDeserializer = serialization.getDeserializer(attrTypeHandler);
 
         ResolvedType objectType = new TypeResolver().resolve(attribute.getEffectiveObjectType());
-        ObjectTypeHandler objectTypeHandler = (ObjectTypeHandler) TypeHandler.lookup(objectType, null);
+        ObjectTypeHandler objectTypeHandler = (ObjectTypeHandler) TypeHandler.lookup(objectType);
         if (!(objectTypeHandler instanceof ObjectTypeHandler)) {
             throw new RuntimeException("Index " + attribute.getAttributeName() +
                                                " is not an object, but " + objectType.getBriefDescription());

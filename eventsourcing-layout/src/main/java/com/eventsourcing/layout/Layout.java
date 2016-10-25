@@ -41,7 +41,7 @@ import java.util.stream.Stream;
  * <li>Has a getter (fluent or JavaBean style)</li>
  * <li>Has a matching parameter in the constructor (same parameter name or same name through {@link PropertyName}
  *     parameter annotation)</li>
- * <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
+ * <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</li>
  * </ul>
  *
  * Additionally, inherited properties will be qualified by the following criteria:
@@ -49,7 +49,7 @@ import java.util.stream.Stream;
  *     <li>Has both a getter and a setter (fluent or JavaBean style)</li>
  *     <li>Has a matching parameter in the any parent's class constructor (same parameter name or same name through
  *     {@link PropertyName} parameter annotation)</li>
- *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType, AnnotatedType)})</li>
+ *     <li>Must be of a supported type (see {@link TypeHandler#lookup(ResolvedType)})</li>
  * </ul>
  * <p>
  *
@@ -235,10 +235,10 @@ public class Layout<T> {
 
             Method method = getter.get().get();
 
-            ResolvedType resolvedType = typeResolver.resolve(method.getReturnType());
+            ResolvedType resolvedType = typeResolver.resolve(method.getGenericReturnType());
             MethodHandle getterHandler = methodHandles.unreflect(method);
             Property<T> property = new Property<>(name, resolvedType,
-                                                   TypeHandler.lookup(resolvedType, method.getAnnotatedReturnType()),
+                                                   TypeHandler.lookup(resolvedType),
                                                    new GetterFunction<T>(getterHandler));
             properties.add(property);
             if (!parentClass) {

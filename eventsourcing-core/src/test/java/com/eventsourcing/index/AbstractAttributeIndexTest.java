@@ -21,6 +21,7 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
 
+import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -89,6 +90,12 @@ public class AbstractAttributeIndexTest {
     @SneakyThrows
     public void generics() {
         SimpleAttribute<Car, List<String>> FEATURES_LIST = new SimpleAttribute<Car, List<String>>("features") {
+
+            @SneakyThrows
+            @Override public Type getAttributeReflectedType() {
+                return AbstractAttributeIndexTest.class.getField("list").getGenericType();
+            }
+
             @Override
             public List<String> getValue(Car car, QueryOptions queryOptions) {
                 return car.getFeatures();
@@ -99,8 +106,8 @@ public class AbstractAttributeIndexTest {
 
         list = Arrays.asList("Hello");
         TypeResolver typeResolver = new TypeResolver();
-        ResolvedType klassType = typeResolver.resolve(List.class);
-        TypeHandler listTypeHandler = TypeHandler.lookup(klassType, getClass().getField("list").getAnnotatedType());
+        ResolvedType klassType = typeResolver.resolve(getClass().getField("list").getGenericType());
+        TypeHandler listTypeHandler = TypeHandler.lookup(klassType);
         ByteBuffer buffer = ByteBuffer.allocate(index.attributeSerializer.size(listTypeHandler, list));
         index.attributeSerializer.serialize(listTypeHandler, list, buffer);
         buffer.rewind();

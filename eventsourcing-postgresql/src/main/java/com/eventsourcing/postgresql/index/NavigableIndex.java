@@ -93,7 +93,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
         layout = Layout.forClass(attribute.getEffectiveObjectType());
         TypeResolver typeResolver = new TypeResolver();
         ResolvedType resolvedType = typeResolver.resolve(attribute.getAttributeType());
-        attributeTypeHandler = TypeHandler.lookup(resolvedType, null);
+        attributeTypeHandler = TypeHandler.lookup(resolvedType);
         init();
     }
 

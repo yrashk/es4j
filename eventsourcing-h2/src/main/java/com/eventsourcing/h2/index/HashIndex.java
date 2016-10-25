@@ -174,7 +174,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
 
         @Override
         public A next() {
-            return attributeDeserializer.deserialize(ByteBuffer.wrap(attrHashMap.get(cursor.next())));
+            return attributeDeserializer.deserialize(attrTypeHandler, ByteBuffer.wrap(attrHashMap.get(cursor.next())));
         }
     }
 
@@ -202,17 +202,17 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
     }
 
     private byte[] encodeAttribute(A value) {
-        int size = attributeSerializer.size(value);
+        int size = attributeSerializer.size(attrTypeHandler, value);
         ByteBuffer serializedAttribute = ByteBuffer.allocate(size);
-        attributeSerializer.serialize(value, serializedAttribute);
+        attributeSerializer.serialize(attrTypeHandler, value, serializedAttribute);
 
         return hashFunction.hashBytes(serializedAttribute.array()).asBytes();
     }
 
     private Entry encodeEntry(O object, A value) {
-        int attributeSize = attributeSerializer.size(value);
+        int attributeSize = attributeSerializer.size(attrTypeHandler, value);
         ByteBuffer serializedAttribute = ByteBuffer.allocate(attributeSize);
-        attributeSerializer.serialize(value, serializedAttribute);
+        attributeSerializer.serialize(attrTypeHandler, value, serializedAttribute);
 
         int objectSize = objectSerializer.size(object);
         ByteBuffer serializedObject = ByteBuffer.allocate(objectSize);
@@ -233,7 +233,7 @@ public class HashIndex<A, O extends Entity> extends AbstractHashingAttributeInde
         ByteBuffer buffer = ByteBuffer.wrap(bytes);
         byte[] hash = new byte[hashSize];
         buffer.get(hash);
-        return attributeDeserializer.deserialize(ByteBuffer.wrap(attrHashMap.get(hash)));
+        return attributeDeserializer.deserialize(attrTypeHandler, ByteBuffer.wrap(attrHashMap.get(hash)));
     }
 
     @Override
