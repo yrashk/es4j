@@ -220,15 +220,15 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
                     timestamp.update(txTimestamp);
                 }
 
-                T result = command.result(eventStream.getState(), repository, lockProvider);
-                lockProvider.release();
 
                 if (exception == null) {
+                    T result = command.result(eventStream.getState(), repository, lockProvider);
+                    lockProvider.release();
                     future.complete(result);
                 } else {
+                    lockProvider.release();
                     future.completeExceptionally(exception);
                 }
-
             }
 
         }
