@@ -1,3 +1,9 @@
+0.4.4
+=====
+
+This is primarily a bugfix release. Upgrade is strongly recommended to avoid
+running into exceptions.
+
 0.4.3
 =====
 

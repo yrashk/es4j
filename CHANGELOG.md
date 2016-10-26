@@ -1,3 +1,17 @@
+# 0.4.4
+
+**Bugfixes**
+
+* Absence of local NTP server silently locks es4j up ([#163](https://github.com/eventsourcing/es4j/pull/163))
+* Use of MultiValueIndex results in an exception ([#165](https://github.com/eventsourcing/es4j/pull/165))
+* Map type name in PostgreSQL can get too long and trimmed ([#168](https://github.com/eventsourcing/es4j/pull/168))
+* Impossible to index non-primitive attributes ([#169](https://github.com/eventsourcing/es4j/pull/169))
+* Exceptionally terminated commands still get `result()` called ([#170](https://github.com/eventsourcing/es4j/pull/170))
+
+**Features**
+
+* EntitySubscriber (optional) repository capture ([#166](https://github.com/eventsourcing/es4j/pull/166))
+
 # 0.4.3 
 
 **Backwards-incompatible changes**
