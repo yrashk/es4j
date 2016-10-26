@@ -440,6 +440,9 @@ public abstract class RepositoryTest<T extends Repository> {
 
 
     public static class ExceptionalCommand extends StandardCommand<Void, Object> {
+        @Getter
+        private boolean resultCalled = false;
+
         @Builder
         public ExceptionalCommand(HybridTimestamp timestamp) {
             super(timestamp);
@@ -448,6 +451,12 @@ public abstract class RepositoryTest<T extends Repository> {
         @Override
         public EventStream<Void> events() {
             throw new IllegalStateException();
+        }
+
+
+        @Override public Object result() {
+            resultCalled = true;
+            return null;
         }
     }
 
@@ -459,6 +468,8 @@ public abstract class RepositoryTest<T extends Repository> {
         Optional<Entity> commandLookup = journal.get(command.uuid());
         assertTrue(commandLookup.isPresent());
         assertTrue(command.hasTerminatedExceptionally(repository));
+        // result() was not called
+        assertFalse(command.isResultCalled());
         try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
                        and(all(CommandTerminatedExceptionally.class),
@@ -488,6 +499,8 @@ public abstract class RepositoryTest<T extends Repository> {
 
         private final UUID eventUUID;
 
+        @Getter
+        private boolean resultCalled = false;
 
         @LayoutConstructor
         public StreamExceptionCommand(HybridTimestamp timestamp) {
@@ -510,6 +523,11 @@ public abstract class RepositoryTest<T extends Repository> {
                                      throw new IllegalStateException();
                                  })));
         }
+
+        @Override public Void result() {
+            resultCalled = true;
+            return null;
+        }
     }
 
     @Test
@@ -522,6 +540,8 @@ public abstract class RepositoryTest<T extends Repository> {
         CompletableFuture<Void> future = repository.publish(command);
         while (!future.isDone()) { Thread.sleep(10); } // to avoid throwing an exception
         assertTrue(future.isCompletedExceptionally());
+        // result() was not called
+        assertFalse(command.isResultCalled());
         try (ResultSet<EntityHandle<CommandTerminatedExceptionally>> resultSet = repository
                 .query(CommandTerminatedExceptionally.class,
                        and(all(CommandTerminatedExceptionally.class),
