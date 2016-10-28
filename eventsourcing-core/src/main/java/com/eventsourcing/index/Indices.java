@@ -7,11 +7,18 @@
  */
 package com.eventsourcing.index;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * This annotation designates which classes should be scanned for
  * entity's indices. By default, this annotation is not necessary
  * and the entity's own class will be scanned.
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.TYPE)
 public @interface Indices {
     Class<?>[] value();
 }
