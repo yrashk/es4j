@@ -2,56 +2,56 @@
 
 **Bugfixes**
 
-* Absence of local NTP server silently locks es4j up ([#163](https://github.com/eventsourcing/es4j/pull/163))
-* Use of MultiValueIndex results in an exception ([#165](https://github.com/eventsourcing/es4j/pull/165))
-* Map type name in PostgreSQL can get too long and trimmed ([#168](https://github.com/eventsourcing/es4j/pull/168))
-* Impossible to index non-primitive attributes ([#169](https://github.com/eventsourcing/es4j/pull/169))
-* Exceptionally terminated commands still get `result()` called ([#170](https://github.com/eventsourcing/es4j/pull/170))
+* [HLC] Absence of local NTP server silently locks es4j up ([#163](https://github.com/eventsourcing/es4j/pull/163))
+* [Core] Use of MultiValueIndex results in an exception ([#165](https://github.com/eventsourcing/es4j/pull/165))
+* [PostgreSQL] Map type name in PostgreSQL can get too long and trimmed ([#168](https://github.com/eventsourcing/es4j/pull/168))
+* [Core] Impossible to index non-primitive attributes ([#169](https://github.com/eventsourcing/es4j/pull/169))
+* [Repository] Exceptionally terminated commands still get `result()` called ([#170](https://github.com/eventsourcing/es4j/pull/170))
 
 **Features**
 
-* EntitySubscriber (optional) repository capture ([#166](https://github.com/eventsourcing/es4j/pull/166))
+* [Core] EntitySubscriber (optional) repository capture ([#166](https://github.com/eventsourcing/es4j/pull/166))
 
-# 0.4.3 
+# 0.4.3
 
 **Backwards-incompatible changes**
 
-* OSGi BundleCommandSetProvider and BundleEventSetProvider are replaced with a
-  single, automatically installed OSGiEntitiesProvider that scans all bundles
+* [Core] OSGi BundleCommandSetProvider and BundleEventSetProvider are replaced
+  with a single, automatically installed OSGiEntitiesProvider that scans all bundles
   ([#161](https://github.com/eventsourcing/es4j/pull/161))
 
 **Bugfixes**
 
-* A test package was leaked into the main source set ([#162](https://github.com/eventsourcing/es4j/pull/162))
-* Netty dependency for eventsourcing-postgresql was not OSGi compatible ([#158](https://github.com/eventsourcing/es4j/pull/158))
+* [Core] A test package was leaked into the main source set ([#162](https://github.com/eventsourcing/es4j/pull/162))
+* [PostgreSQL] Netty dependency for eventsourcing-postgresql was not OSGi compatible ([#158](https://github.com/eventsourcing/es4j/pull/158))
 
 **Upgrades**
 
-* cqengine 2.8.0 ([#159](https://github.com/eventsourcing/es4j/pull/159))
+* [Core] cqengine 2.8.0 ([#159](https://github.com/eventsourcing/es4j/pull/159))
 
 # 0.4.2
 
 **Features**
 
-* Map (associative array) type has been added ([#152](https://github.com/eventsourcing/es4j/pull/152))
-* Index discovery mechanism is no longer hardcoded ([#154](https://github.com/eventsourcing/es4j/pull/154))
+* [Layout] Map (associative array) type has been added ([#152](https://github.com/eventsourcing/es4j/pull/152))
+* [Core] Index discovery mechanism is no longer hardcoded ([#154](https://github.com/eventsourcing/es4j/pull/154))
 
 # 0.4.1
 
 **Backwards-incompatible changes**
 
-* Index definition syntax is simplified for most of cases (when query
+* [Core] Index definition syntax is simplified for most of cases (when query
   options are not necessary) ([#144](https://github.com/eventsourcing/es4j/pull/144))
 
 **Bugfixes**
 
-* Command#events can no longer block publishing commands through the repository ([#147](https://github.com/eventsourcing/es4j/pull/147))
-* RFC 3/CEP event layout names were incorrect ([#148](https://github.com/eventsourcing/es4j/pull/148))
-* PostgreSQL is no longer leaking ResultSet when deserializing arrays ([#150](https://github.com/eventsourcing/es4j/pull/150))
+* [Repository] Command#events can no longer block publishing commands through the repository ([#147](https://github.com/eventsourcing/es4j/pull/147))
+* [CEP] RFC 3/CEP event layout names were incorrect ([#148](https://github.com/eventsourcing/es4j/pull/148))
+* [PostgreSQL] PostgreSQL is no longer leaking ResultSet when deserializing arrays ([#150](https://github.com/eventsourcing/es4j/pull/150))
 
 **Upgrades**
 
-* cqengine 2.7.1 ([#143](https://github.com/eventsourcing/es4j/pull/143))
+* [Core] cqengine 2.7.1 ([#143](https://github.com/eventsourcing/es4j/pull/143))
 
 **Misc**
 
