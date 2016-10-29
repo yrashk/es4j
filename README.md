@@ -53,12 +53,7 @@ We strive to specify the building blocks behind Eventsourcing and its ecosystem 
 
 # Roadmap
 
-As this project is striving to be a decentralized, contributors-driven project governed by the [C4 process](http://rfc.unprotocols.org/spec:1/C4), there is no central roadmap per se. However, individual
-contributors are free to publish their own roadmaps to help indicating their intentions. Current roadmaps available:
-
-* [Yurii Rashkovskii](https://github.com/yrashk/es4j/milestones/Roadmap)
-
-Also, there's a [centralized list of reported issues](https://github.com/eventsourcing/es4j/issues). These do not imply an actual roadmap, just what has been reported.
+As this project is striving to be a decentralized, contributors-driven project governed by the [C4 process](http://rfc.unprotocols.org/spec:1/C4), there is no central roadmap per se. However, there's a [centralized list of reported issues](https://github.com/eventsourcing/es4j/issues). These do not imply an actual roadmap, just what has been reported, ranging from bugs to longer-term  design issues.
 
 # Contributing
 

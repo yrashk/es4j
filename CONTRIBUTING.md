@@ -5,6 +5,10 @@ on the same matter](https://www.gitbook.com/book/hintjens/social-architecture/de
 
 The code style is defined as per [IntelliJ IDEA 15 XML code style file](es4j-intellij-code-style.xml)
 
+# Submitting an issue
+
+According to [development process](https://rfc.unprotocols.org/spec:1/C4#24-development-process), the issue should describe a documented and provable. What this means is that an issue should trive to have a clear, understandable problem statement. Just like a patch, it SHOULD be titled "Problem: ..." and have a detailed description describing evidence behind it, be it a bug or a feature request, or a longer term "exploratory" issue.
+
 # Preparing a patch
 
 According to [patch requirements](https://rfc.unprotocols.org/spec:1/C4#23-patch-requirements), the patch should be a minimal and accurate answer to exactly one identified and agreed problem. A patch commit message must consist of a single short (less than 50 characters) line stating the problem ("Problem: ...") being solved, followed by a blank line and then the proposed solution ("Solution: ...").
