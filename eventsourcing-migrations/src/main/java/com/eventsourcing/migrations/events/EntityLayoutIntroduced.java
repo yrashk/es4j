@@ -46,5 +46,5 @@ public class EntityLayoutIntroduced extends StandardEvent {
     }
 
     @Index({EQ, UNIQUE})
-    public static SimpleIndex<EntityLayoutIntroduced, byte[]> FINGERPRINT = EntityLayoutIntroduced::fingerprint;
+    public final static SimpleIndex<EntityLayoutIntroduced, byte[]> FINGERPRINT = SimpleIndex.as(EntityLayoutIntroduced::fingerprint);
 }

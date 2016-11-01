@@ -36,10 +36,10 @@ public class Undeleted extends StandardEvent {
     @Getter
     final UUID deleted;
 
-    public static SimpleIndex<Undeleted, UUID> DELETED_ID = Undeleted::deleted;
+    public final static SimpleIndex<Undeleted, UUID> DELETED_ID = SimpleIndex.as(Undeleted::deleted);
 
     @Index({EQ, LT, GT})
-    public static SimpleIndex<Undeleted, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<Undeleted, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 
     @LayoutConstructor
     public Undeleted(UUID deleted) {

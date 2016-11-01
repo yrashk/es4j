@@ -70,6 +70,6 @@ public class JavaExceptionOccurred extends StandardEvent {
                 map(StackTraceElement::new).collect(Collectors.toList());
     }
 
-    public static SimpleIndex<JavaExceptionOccurred, UUID> ID = StandardEntity::uuid;
+    public final static SimpleIndex<JavaExceptionOccurred, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
 
 }

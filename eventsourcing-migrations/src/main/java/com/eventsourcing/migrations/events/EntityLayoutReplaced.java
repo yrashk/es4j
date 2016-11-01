@@ -36,8 +36,8 @@ public class EntityLayoutReplaced extends StandardEvent {
         this.replacement = replacement;
     }
 
-    public static SimpleIndex<EntityLayoutReplaced, byte[]> FINGERPRINT = EntityLayoutReplaced::fingerprint;
+    public final static SimpleIndex<EntityLayoutReplaced, byte[]> FINGERPRINT = SimpleIndex.as(EntityLayoutReplaced::fingerprint);
 
-    public static SimpleIndex<EntityLayoutReplaced, UUID> REPLACEMENT = EntityLayoutReplaced::replacement;
+    public final static SimpleIndex<EntityLayoutReplaced, UUID> REPLACEMENT = SimpleIndex.as(EntityLayoutReplaced::replacement);
 
 }

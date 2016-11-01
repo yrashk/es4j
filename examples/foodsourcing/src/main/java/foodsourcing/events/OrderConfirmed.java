@@ -20,6 +20,6 @@ import java.util.UUID;
 public class OrderConfirmed extends StandardEvent {
     UUID reference;
 
-    @NonFinal
-    public static SimpleIndex<OrderConfirmed, UUID> REFERENCE = OrderConfirmed::reference;
+
+    public final static SimpleIndex<OrderConfirmed, UUID> REFERENCE = SimpleIndex.as(OrderConfirmed::reference);
 }
