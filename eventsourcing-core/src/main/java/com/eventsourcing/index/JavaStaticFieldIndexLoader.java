@@ -21,11 +21,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.googlecode.cqengine.index.Index;
+import lombok.extern.slf4j.Slf4j;
 import org.osgi.service.component.annotations.Component;
 
 import static com.eventsourcing.index.IndexEngine.IndexFeature.EQ;
 
 @Component
+@Slf4j
 public class JavaStaticFieldIndexLoader implements IndexLoader {
 
     @SneakyThrows
@@ -39,9 +41,6 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
             for (Field field : klass.getDeclaredFields()) {
                 if (Modifier.isStatic(field.getModifiers()) && Modifier.isPublic(field.getModifiers()) &&
                         EntityIndex.class.isAssignableFrom(field.getType())) {
-                    if (Modifier.isFinal(field.getModifiers())) {
-                        throw new IllegalArgumentException("Index attribute " + field + " can't be declared final");
-                    }
 
                     com.eventsourcing.index.Index annotation = field
                             .getAnnotation(com.eventsourcing.index.Index.class);
@@ -56,34 +55,24 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
 
                     if (SimpleIndex.class.isAssignableFrom(field.getType())) {
                         attribute = new EntitySimpleAttribute(objectType, entityType, attributeType, field, index);
-                        field.set(null, new SimpleIndex() {
-                            @Override public Attribute getAttribute() {
-                                return attribute;
-                            }
-
-                            @Override public Object getValue(Entity object) {
-                                return ((SimpleIndex) index).getValue(object);
-                            }
-
-                            @Override public Object getValue(Entity object, QueryOptions queryOptions) {
-                                return ((SimpleIndex) index).getValue(object, queryOptions);
-                            }
-                        });
+                        if (index instanceof WrappedSimpleIndex) {
+                            ((WrappedSimpleIndex) index).setAttribute(attribute);
+                        } else {
+                            log.warn("Non-final index definitions are deprecated, use EntityQueryFactory#attribute() instead");
+                            WrappedSimpleIndex wrappedIndex = new WrappedSimpleIndex((SimpleIndex) index);
+                            wrappedIndex.setAttribute(attribute);
+                            field.set(null, wrappedIndex);
+                        }
                     } else {
                         attribute = new MultiValueEntityAttribute(objectType, entityType, attributeType, field, index);
-                        field.set(null, new MultiValueIndex() {
-                            @Override public Attribute getAttribute() {
-                                return attribute;
-                            }
-
-                            @Override public Iterable getValues(Entity object) {
-                                return ((MultiValueIndex)index).getValues(object);
-                            }
-
-                            @Override public Iterable getValues(Entity object, QueryOptions queryOptions) {
-                                return index.getValues(object, queryOptions);
-                            }
-                        });
+                        if (index instanceof WrappedMultiValueIndex) {
+                            ((WrappedMultiValueIndex) index).setAttribute(attribute);
+                        } else {
+                            log.warn("Non-final index definitions are deprecated, use EntityQueryFactory#attribute() instead");
+                            WrappedMultiValueIndex wrappedIndex = new WrappedMultiValueIndex((MultiValueIndex) index);
+                            wrappedIndex.setAttribute(attribute);
+                            field.set(null, wrappedIndex);
+                        }
                     }
                     indices.add(engine.getIndexOnAttribute(attribute, features));
                 }

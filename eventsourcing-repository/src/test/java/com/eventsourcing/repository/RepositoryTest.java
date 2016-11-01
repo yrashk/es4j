@@ -43,6 +43,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.index.EntityQueryFactory.attribute;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 
@@ -105,10 +106,14 @@ public abstract class RepositoryTest<T extends Repository> {
         private final String string;
 
         @Index({EQ, SC})
-        public static SimpleIndex<TestEvent, String> ATTR = TestEvent::string;
+        public final static SimpleIndex<TestEvent, String> ATTR = attribute(TestEvent::string);
+
+        @Index({EQ, SC})
+        @Deprecated
+        public static SimpleIndex<TestEvent, String> ATTR_DEP = attribute(TestEvent::string);
 
         @Index
-        public static MultiValueIndex<TestEvent, String> ATTRS = TestEvent::strings;
+        public final static MultiValueIndex<TestEvent, String> ATTRS = attribute(TestEvent::strings);
 
         public List<String> strings() {
             return Arrays.asList(string);
@@ -312,6 +317,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
         repository.publish(RepositoryTestCommand.builder().build()).get();
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
+        assertTrue(coll.retrieve(equal(TestEvent.ATTR_DEP, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
         assertEquals(coll.retrieve(equal(TestEvent.ATTRS, "test")).uniqueResult().get().string(), "test");

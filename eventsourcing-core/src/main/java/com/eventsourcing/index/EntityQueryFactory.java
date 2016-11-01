@@ -27,6 +27,13 @@ import java.util.regex.Pattern;
  */
 public interface EntityQueryFactory {
 
+    static <O extends Entity, A> SimpleIndex<O, A> attribute(SimpleIndex<O, A> index) {
+        return new WrappedSimpleIndex<>(index);
+    }
+
+    static <O extends Entity, A> MultiValueIndex<O, A> attribute(MultiValueIndex<O, A> index) {
+        return new WrappedMultiValueIndex<>(index);
+    }
 
     /**
      * Creates an {@link Equal} query which asserts that an attribute equals a certain value.
@@ -1088,4 +1095,5 @@ public interface EntityQueryFactory {
     static <O extends Entity> Query<EntityHandle<O>> none(Class<O> objectType) {
         return new None<>(objectType);
     }
+
 }
