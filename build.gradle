@@ -24,6 +24,10 @@ apply plugin: 'me.champeau.gradle.jmh' // performance benchmarking
 apply plugin: 'nebula-aggregate-javadocs'
 apply plugin: 'io.codearte.nexus-staging'
 
+ext {
+    guavaVersion = '20.0'
+}
+
 if (hasProperty("snapshot") && gitVersion().toString().contentEquals("unspecified")) {
     throw new GradleException('snapshot version `unspecified');
 }

@@ -9,6 +9,6 @@ dependencies {
     compile 'com.eventsourcing:h2:1.4.192'
 
     // Useful utilities
-    compile 'com.google.guava:guava:19.0'
+    compile "com.google.guava:guava:$rootProject.ext.guavaVersion"
 
 }

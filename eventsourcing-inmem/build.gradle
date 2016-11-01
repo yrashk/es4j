@@ -6,6 +6,6 @@ dependencies {
     testCompile project(':eventsourcing-repository').sourceSets.test.output
 
     // Useful utilities
-    compile 'com.google.guava:guava:19.0'
+    compile "com.google.guava:guava:$rootProject.ext.guavaVersion"
 
 }
