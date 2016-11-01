@@ -24,9 +24,9 @@ public class MenuItemAdded extends StandardEvent {
 
     private UUID reference;
 
-    @NonFinal
-    public static SimpleIndex<MenuItemAdded, UUID> ID = StandardEntity::uuid;
 
-    @NonFinal
-    public static SimpleIndex<MenuItemAdded, UUID> REFERENCE_ID = MenuItemAdded::reference;
+    public final static SimpleIndex<MenuItemAdded, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
+
+
+    public final static SimpleIndex<MenuItemAdded, UUID> REFERENCE_ID = SimpleIndex.as(MenuItemAdded::reference);
 }

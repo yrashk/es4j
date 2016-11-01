@@ -22,9 +22,9 @@ public class PaymentCaptured extends StandardEvent {
     UUID reference;
     BigDecimal amount;
 
-    @NonFinal
-    public static SimpleIndex<PaymentCaptured, UUID> REFERENCE = PaymentCaptured::reference;
 
-    @NonFinal
-    public static SimpleIndex<PaymentCaptured, BigDecimal> AMOUNT = PaymentCaptured::amount;
+    public final static SimpleIndex<PaymentCaptured, UUID> REFERENCE = SimpleIndex.as(PaymentCaptured::reference);
+
+
+    public final static SimpleIndex<PaymentCaptured, BigDecimal> AMOUNT = SimpleIndex.as(PaymentCaptured::amount);
 }

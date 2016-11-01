@@ -46,12 +46,12 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
     public static class TestEvent extends StandardEvent {
         private String test;
         private UUID reference;
-        @NonFinal
-        public static SimpleIndex<TestEvent, UUID> REFERENCE_ID = TestEvent::reference;
 
-        @NonFinal
+        public final static SimpleIndex<TestEvent, UUID> REFERENCE_ID = SimpleIndex.as(TestEvent::reference);
+
+
         @Index({EQ, LT, GT})
-        public static SimpleIndex<TestEvent, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+        public final static SimpleIndex<TestEvent, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
     }
 
     @Value

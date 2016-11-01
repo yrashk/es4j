@@ -19,5 +19,5 @@ import java.util.UUID;
 @LayoutName("rfc.eventsourcing.com/spec:9/RIG/#CommandTerminatedExceptionally")
 public class CommandTerminatedExceptionally extends StandardEvent {
 
-    public static SimpleIndex<CommandTerminatedExceptionally, UUID> ID = StandardEntity::uuid;
+    public final static SimpleIndex<CommandTerminatedExceptionally, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
 }

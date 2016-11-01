@@ -49,10 +49,10 @@ public class DescriptionChanged extends StandardEvent {
         this.description = description;
     }
 
-    public static SimpleIndex<DescriptionChanged, UUID> REFERENCE_ID = DescriptionChanged::reference;
+    public final static SimpleIndex<DescriptionChanged, UUID> REFERENCE_ID = SimpleIndex.as(DescriptionChanged::reference);
 
-    public static SimpleIndex<DescriptionChanged, String> DESCRIPTION = DescriptionChanged::description;
+    public final static SimpleIndex<DescriptionChanged, String> DESCRIPTION = SimpleIndex.as(DescriptionChanged::description);
 
     @Index({LT, GT, EQ})
-    public static SimpleIndex<DescriptionChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<DescriptionChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 }

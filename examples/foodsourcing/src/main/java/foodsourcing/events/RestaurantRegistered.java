@@ -15,6 +15,6 @@ import java.util.UUID;
 
 public class RestaurantRegistered extends StandardEvent {
 
-    public static SimpleIndex<RestaurantRegistered, UUID> ID = StandardEntity::uuid;
+    public final static SimpleIndex<RestaurantRegistered, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
 
 }

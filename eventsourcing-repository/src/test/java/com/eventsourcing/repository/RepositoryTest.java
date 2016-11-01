@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.index.EntityQueryFactory.*;
-import static com.eventsourcing.index.EntityQueryFactory.attribute;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 
@@ -106,14 +105,14 @@ public abstract class RepositoryTest<T extends Repository> {
         private final String string;
 
         @Index({EQ, SC})
-        public final static SimpleIndex<TestEvent, String> ATTR = attribute(TestEvent::string);
+        public final static SimpleIndex<TestEvent, String> ATTR = SimpleIndex.as(TestEvent::string);
 
         @Index({EQ, SC})
         @Deprecated
-        public static SimpleIndex<TestEvent, String> ATTR_DEP = attribute(TestEvent::string);
+        public final static SimpleIndex<TestEvent, String> ATTR_DEP = SimpleIndex.as(TestEvent::string);
 
         @Index
-        public final static MultiValueIndex<TestEvent, String> ATTRS = attribute(TestEvent::strings);
+        public final static MultiValueIndex<TestEvent, String> ATTRS = MultiValueIndex.as(TestEvent::strings);
 
         public List<String> strings() {
             return Arrays.asList(string);
@@ -154,7 +153,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, SC})
-        public static SimpleIndex<RepositoryTestCommand, String> ATTR = RepositoryTestCommand::getValue;
+        public final static SimpleIndex<RepositoryTestCommand, String> ATTR = SimpleIndex.as(RepositoryTestCommand::getValue);
 
     }
 
@@ -618,7 +617,7 @@ public abstract class RepositoryTest<T extends Repository> {
         private final Optional<String> optional;
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalEvent, UUID> ATTR = StandardEntity::uuid;
+        public final static SimpleIndex<TestOptionalEvent, UUID> ATTR = SimpleIndex.as(StandardEntity::uuid);
 
         @Builder
         public TestOptionalEvent(Optional<String> optional) {
@@ -644,7 +643,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalCommand, UUID> ATTR = StandardEntity::uuid;
+        public final static SimpleIndex<TestOptionalCommand, UUID> ATTR = SimpleIndex.as(StandardEntity::uuid);
 
     }
 

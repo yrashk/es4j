@@ -30,10 +30,10 @@ public class PictureChanged extends StandardEvent implements Picture {
     private String contentType;
     private byte[] picture;
 
-    @NonFinal
-    public static SimpleIndex<PictureChanged, UUID> REFERENCE_ID = PictureChanged::reference;
 
-    @NonFinal
+    public final static SimpleIndex<PictureChanged, UUID> REFERENCE_ID = SimpleIndex.as(PictureChanged::reference);
+
+
     @Index({EQ, LT, GT})
-    public static SimpleIndex<PictureChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<PictureChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 }

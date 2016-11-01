@@ -19,6 +19,7 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 
 import com.googlecode.cqengine.index.Index;
 import lombok.extern.slf4j.Slf4j;
@@ -55,21 +56,22 @@ public class JavaStaticFieldIndexLoader implements IndexLoader {
 
                     if (SimpleIndex.class.isAssignableFrom(field.getType())) {
                         attribute = new EntitySimpleAttribute(objectType, entityType, attributeType, field, index);
-                        if (index instanceof WrappedSimpleIndex) {
-                            ((WrappedSimpleIndex) index).setAttribute(attribute);
+                        if (index instanceof IndexWithAttribute) {
+                            ((IndexWithAttribute) index).setAttribute(attribute);
                         } else {
-                            log.warn("Non-final index definitions are deprecated, use EntityQueryFactory#attribute() instead");
-                            WrappedSimpleIndex wrappedIndex = new WrappedSimpleIndex((SimpleIndex) index);
+                            log.warn("Non-final index definitions are deprecated, use SimpleIndex.as() instead");
+                            WrappedSimpleIndex wrappedIndex = new WrappedSimpleIndex<>((BiFunction<Entity, QueryOptions, Object>) ((SimpleIndex) index)::getValue);
                             wrappedIndex.setAttribute(attribute);
                             field.set(null, wrappedIndex);
                         }
                     } else {
                         attribute = new MultiValueEntityAttribute(objectType, entityType, attributeType, field, index);
-                        if (index instanceof WrappedMultiValueIndex) {
-                            ((WrappedMultiValueIndex) index).setAttribute(attribute);
+                        if (index instanceof IndexWithAttribute) {
+                            ((IndexWithAttribute) index).setAttribute(attribute);
                         } else {
-                            log.warn("Non-final index definitions are deprecated, use EntityQueryFactory#attribute() instead");
-                            WrappedMultiValueIndex wrappedIndex = new WrappedMultiValueIndex((MultiValueIndex) index);
+                            log.warn("Non-final index definitions are deprecated, use MultiValueIndex.as() instead");
+                            WrappedMultiValueIndex wrappedIndex = new WrappedMultiValueIndex(((BiFunction<Entity,
+                                    QueryOptions, Object>) ((MultiValueIndex) index)::getValues));
                             wrappedIndex.setAttribute(attribute);
                             field.set(null, wrappedIndex);
                         }

@@ -14,7 +14,6 @@ import com.eventsourcing.index.SimpleIndex;
 import foodsourcing.Order;
 import lombok.Value;
 import lombok.experimental.Accessors;
-import lombok.experimental.NonFinal;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,11 +24,11 @@ import java.util.stream.Collectors;
 public class OrderPlaced extends StandardEvent {
     private List<Order.Item> items;
 
-    @NonFinal
-    public static SimpleIndex<OrderPlaced, UUID> ID = StandardEntity::uuid;
 
-    @NonFinal
-    public static MultiValueIndex<OrderPlaced, UUID> ITEM =
-            (object) -> object.items().stream().map(Order.Item::menuItem)
-                              .collect(Collectors.toList());
+    public final static SimpleIndex<OrderPlaced, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
+
+
+    public final static MultiValueIndex<OrderPlaced, UUID> ITEM =
+            MultiValueIndex.as((object) -> object.items().stream().map(Order.Item::menuItem)
+                              .collect(Collectors.toList()));
 }

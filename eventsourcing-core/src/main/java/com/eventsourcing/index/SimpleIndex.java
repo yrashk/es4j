@@ -12,6 +12,7 @@ import com.googlecode.cqengine.query.option.QueryOptions;
 
 import java.util.Collections;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Designates a simple (single value) index using a functional interface.
@@ -45,6 +46,18 @@ public interface SimpleIndex<O extends Entity, A> extends EntityIndex<O, A> {
     A getValue(O object);
 
     /**
+     * Creates a SimpleIndex
+     *
+     * @param function
+     * @param <O>
+     * @param <A>
+     * @return
+     */
+    static <O extends Entity, A> SimpleIndex<O, A> as(Function<O, A> function) {
+        return new WrappedSimpleIndex<>(function);
+    }
+
+    /**
      * Creates a SimpleIndex with a function that can access {@link QueryOptions}
      *
      * @param function
@@ -53,15 +66,7 @@ public interface SimpleIndex<O extends Entity, A> extends EntityIndex<O, A> {
      * @return
      */
     static <O extends Entity, A> SimpleIndex<O, A> withQueryOptions(BiFunction<O, QueryOptions, A> function) {
-        return new SimpleIndex<O, A>() {
-            @Override public A getValue(O object, QueryOptions queryOptions) {
-                return function.apply(object, queryOptions);
-            }
-
-            @Override public A getValue(O object) {
-                return function.apply(object, EntityQueryFactory.noQueryOptions());
-            }
-        };
+        return new WrappedSimpleIndex<>(function);
     }
 
     default Iterable<A> getValues(O object, QueryOptions queryOptions) {

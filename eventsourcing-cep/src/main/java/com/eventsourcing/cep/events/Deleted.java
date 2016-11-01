@@ -38,12 +38,12 @@ public class Deleted extends StandardEvent {
     final UUID reference;
 
     @Index
-    public static SimpleIndex<Deleted, UUID> ID = StandardEntity::uuid;
+    public final static SimpleIndex<Deleted, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
 
-    public static SimpleIndex<Deleted, UUID> REFERENCE_ID = Deleted::reference;
+    public final static SimpleIndex<Deleted, UUID> REFERENCE_ID = SimpleIndex.as(Deleted::reference);
 
     @Index({EQ, LT, GT})
-    public static SimpleIndex<Deleted, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<Deleted, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 
     @LayoutConstructor
     public Deleted(UUID reference) {
