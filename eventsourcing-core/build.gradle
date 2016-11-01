@@ -3,7 +3,7 @@ dependencies {
     compile project(':eventsourcing-hlc')
 
     // Useful utilities
-    compile 'com.google.guava:guava:19.0'
+    compile "com.google.guava:guava:$rootProject.ext.guavaVersion"
     compile 'org.javatuples:javatuples:1.2'
 
     // Reflections API
