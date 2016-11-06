@@ -29,11 +29,11 @@ public class PriceChanged extends StandardEvent {
     private UUID reference;
     private BigDecimal price;
 
-    @NonFinal
-    public static SimpleIndex<PriceChanged, UUID> REFERENCE_ID = PriceChanged::reference;
 
-    @NonFinal
+    public final static SimpleIndex<PriceChanged, UUID> REFERENCE_ID = SimpleIndex.as(PriceChanged::reference);
+
+
     @Index({EQ, LT, GT})
-    public static SimpleIndex<PriceChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<PriceChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 
 }

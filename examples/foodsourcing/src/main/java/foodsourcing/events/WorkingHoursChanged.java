@@ -35,12 +35,12 @@ public class WorkingHoursChanged extends StandardEvent {
     private DayOfWeek dayOfWeek;
     private List<OpeningHours> openDuring;
 
-    @NonFinal
-    public static SimpleIndex<WorkingHoursChanged, UUID> REFERENCE_ID = WorkingHoursChanged::reference;
 
-    @NonFinal
+    public final static SimpleIndex<WorkingHoursChanged, UUID> REFERENCE_ID = SimpleIndex.as(WorkingHoursChanged::reference);
+
+
     @Index({EQ, LT, GT})
-    public static SimpleIndex<WorkingHoursChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<WorkingHoursChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 
     @Value
     public static class OpeningHoursBoundary
@@ -74,24 +74,24 @@ public class WorkingHoursChanged extends StandardEvent {
         }
     }
 
-    @NonFinal
+
     @Index({EQ, LT, GT})
-    public static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> OPENING_AT =
-            (workingHoursChanged) ->
+    public final static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> OPENING_AT =
+            MultiValueIndex.as((workingHoursChanged) ->
                     workingHoursChanged.openDuring().stream()
                             .map(openingHours ->
                                               new OpeningHoursBoundary(workingHoursChanged.dayOfWeek(), openingHours.from()))
-                            .collect(Collectors.toList());
+                            .collect(Collectors.toList()));
 
-    @NonFinal
+
     @Index({EQ, LT, GT})
-    public static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> CLOSING_AT =
-            (workingHoursChanged) ->
+    public final static MultiValueIndex<WorkingHoursChanged, OpeningHoursBoundary> CLOSING_AT =
+            MultiValueIndex.as((workingHoursChanged) ->
                     workingHoursChanged.openDuring().stream()
                                  .map(openingHours ->
                                               new OpeningHoursBoundary(workingHoursChanged.dayOfWeek(), openingHours.till()))
-                                 .collect(Collectors.toList());
-    @NonFinal
-    public static SimpleIndex<WorkingHoursChanged, DayOfWeek> DAY_OF_WEEK = WorkingHoursChanged::dayOfWeek;
+                                 .collect(Collectors.toList()));
+
+    public final static SimpleIndex<WorkingHoursChanged, DayOfWeek> DAY_OF_WEEK = SimpleIndex.as(WorkingHoursChanged::dayOfWeek);
 
 }

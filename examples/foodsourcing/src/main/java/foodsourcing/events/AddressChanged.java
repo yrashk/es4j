@@ -38,34 +38,30 @@ public class AddressChanged extends StandardEvent {
         return geoLocation.boundingCoordinates(distance, EARTH_RADIUS_KM);
     }
 
-    @NonFinal
-    public static SimpleIndex<AddressChanged, UUID> ID = StandardEntity::uuid;
 
-    @NonFinal
-    public static SimpleIndex<AddressChanged, UUID> REFERENCE_ID = AddressChanged::reference;
+    public final static SimpleIndex<AddressChanged, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
 
-    @NonFinal
+
+    public final static SimpleIndex<AddressChanged, UUID> REFERENCE_ID = SimpleIndex.as(AddressChanged::reference);
+
+
     @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<AddressChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 
-    @NonFinal
-    @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_START =
-            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees();
 
-    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_START =
-            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees();
+    public final static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_START = SimpleIndex.as((addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLatitudeInDegrees());
 
-    @NonFinal
-    @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_END =
-            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees();
 
-    @NonFinal
     @Index({EQ, LT, GT})
-    public static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_END =
-            (addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees();
+    public final static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_START = SimpleIndex.as((addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[0].getLongitudeInDegrees());
+
+
+    @Index({EQ, LT, GT})
+    public final static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LAT_END = SimpleIndex.as((addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLatitudeInDegrees());
+
+
+    @Index({EQ, LT, GT})
+    public final static SimpleIndex<AddressChanged, Double> BOUNDING_BOX_10K_LONG_END = SimpleIndex.as((addressChanged) -> addressChanged.boundingCoordinates(DISTANCE_10_KM)[1].getLongitudeInDegrees());
 
 }

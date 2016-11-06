@@ -30,7 +30,7 @@ public class ModelQueriesTest extends RepositoryUsingTest {
     }
 
     public static class TestEvent extends StandardEvent {
-        public static SimpleIndex<TestEvent, UUID> ID = StandardEntity::uuid;
+        public final static SimpleIndex<TestEvent, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
     }
 
     public static class TestCommand extends StandardCommand<TestEvent, UUID> {

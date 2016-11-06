@@ -49,10 +49,10 @@ public class NameChanged extends StandardEvent {
         this.name = name;
     }
 
-    public static SimpleIndex<NameChanged, UUID> REFERENCE_ID = NameChanged::reference;
+    public final static SimpleIndex<NameChanged, UUID> REFERENCE_ID = SimpleIndex.as(NameChanged::reference);
 
-    public static SimpleIndex<NameChanged, String> NAME = NameChanged::name;
+    public final static SimpleIndex<NameChanged, String> NAME = SimpleIndex.as(NameChanged::name);
 
     @Index({LT, GT, EQ})
-    public static SimpleIndex<NameChanged, HybridTimestamp> TIMESTAMP = StandardEntity::timestamp;
+    public final static SimpleIndex<NameChanged, HybridTimestamp> TIMESTAMP = SimpleIndex.as(StandardEntity::timestamp);
 }

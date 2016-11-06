@@ -11,6 +11,7 @@ import com.eventsourcing.Entity;
 import com.googlecode.cqengine.query.option.QueryOptions;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Designates a multiple values index using a functional interface
@@ -44,6 +45,19 @@ public interface MultiValueIndex<O extends Entity, A> extends EntityIndex<O, A> 
 
     Iterable<A> getValues(O object);
 
+
+    /**
+     * Creates a MultiValueIndex with a function that can access {@link QueryOptions}
+     * @param function
+     * @param <O>
+     * @param <A>
+     * @return
+     */
+    static <O extends Entity, A> MultiValueIndex<O, A> as(Function<O, Iterable<A>> function) {
+        return new WrappedMultiValueIndex<>(function);
+    }
+
+
     /**
      * Creates a MultiValueIndex with a function that can access {@link QueryOptions}
      * @param function
@@ -53,16 +67,9 @@ public interface MultiValueIndex<O extends Entity, A> extends EntityIndex<O, A> 
      */
     static <O extends Entity, A> MultiValueIndex<O, A>
         withQueryOptions(BiFunction<O, QueryOptions, Iterable<A>> function) {
-        return new MultiValueIndex<O, A>() {
-            @Override public Iterable<A> getValues(O object, QueryOptions queryOptions) {
-                return function.apply(object, queryOptions);
-            }
-
-            @Override public Iterable<A> getValues(O object) {
-                return function.apply(object, EntityQueryFactory.noQueryOptions());
-            }
-        };
+        return new WrappedMultiValueIndex<>(function);
     }
+
 
     default Attribute<O, A> getAttribute() {
         throw new IllegalStateException("Index " + this + " hasn't been initialized yet");

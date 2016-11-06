@@ -105,10 +105,14 @@ public abstract class RepositoryTest<T extends Repository> {
         private final String string;
 
         @Index({EQ, SC})
-        public static SimpleIndex<TestEvent, String> ATTR = TestEvent::string;
+        public final static SimpleIndex<TestEvent, String> ATTR = SimpleIndex.as(TestEvent::string);
+
+        @Index({EQ, SC})
+        @Deprecated
+        public final static SimpleIndex<TestEvent, String> ATTR_DEP = SimpleIndex.as(TestEvent::string);
 
         @Index
-        public static MultiValueIndex<TestEvent, String> ATTRS = TestEvent::strings;
+        public final static MultiValueIndex<TestEvent, String> ATTRS = MultiValueIndex.as(TestEvent::strings);
 
         public List<String> strings() {
             return Arrays.asList(string);
@@ -149,7 +153,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, SC})
-        public static SimpleIndex<RepositoryTestCommand, String> ATTR = RepositoryTestCommand::getValue;
+        public final static SimpleIndex<RepositoryTestCommand, String> ATTR = SimpleIndex.as(RepositoryTestCommand::getValue);
 
     }
 
@@ -312,6 +316,7 @@ public abstract class RepositoryTest<T extends Repository> {
 
         repository.publish(RepositoryTestCommand.builder().build()).get();
         assertTrue(coll.retrieve(equal(TestEvent.ATTR, "test")).isNotEmpty());
+        assertTrue(coll.retrieve(equal(TestEvent.ATTR_DEP, "test")).isNotEmpty());
         assertTrue(coll.retrieve(contains(TestEvent.ATTR, "es")).isNotEmpty());
         assertEquals(coll.retrieve(equal(TestEvent.ATTR, "test")).uniqueResult().get().string(), "test");
         assertEquals(coll.retrieve(equal(TestEvent.ATTRS, "test")).uniqueResult().get().string(), "test");
@@ -612,7 +617,7 @@ public abstract class RepositoryTest<T extends Repository> {
         private final Optional<String> optional;
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalEvent, UUID> ATTR = StandardEntity::uuid;
+        public final static SimpleIndex<TestOptionalEvent, UUID> ATTR = SimpleIndex.as(StandardEntity::uuid);
 
         @Builder
         public TestOptionalEvent(Optional<String> optional) {
@@ -638,7 +643,7 @@ public abstract class RepositoryTest<T extends Repository> {
         }
 
         @Index({EQ, UNIQUE})
-        public static SimpleIndex<TestOptionalCommand, UUID> ATTR = StandardEntity::uuid;
+        public final static SimpleIndex<TestOptionalCommand, UUID> ATTR = SimpleIndex.as(StandardEntity::uuid);
 
     }
 
