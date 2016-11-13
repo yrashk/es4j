@@ -71,6 +71,7 @@ public interface EntitySubscriber<T extends Entity> {
      * have been collected. It provides a default implementation that invokes {@link #onEntity(EntityHandle)}
      * for every entity handle.
      * @param entityStream
+     * @deprecated To avoid confusion, this method has been deprecated. Use {@link #accept(Repository, Stream)} instead.
      */
     default void accept(Stream<EntityHandle<T>> entityStream) {
         entityStream.forEach(this::onEntity);
