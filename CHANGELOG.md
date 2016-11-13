@@ -1,3 +1,18 @@
+# 0.4.5
+
+**Bugfixes**
+
+* [Core] `@Indices` annotation has no effect ([#171](https://github.com/eventsourcing/es4j/pull/171))
+
+**Deprecations**
+
+* [Core] `EntitySubscriber#accept(Stream)` is deprecated ([#172](https://github.com/eventsourcing/es4j/pull/172))
+* [Core] non-final index definitions are deprecated ([#176](https://github.com/eventsourcing/es4j/pull/176))
+
+**Upgrades**
+
+* [Core] Guava 20.0 ([#175](https://github.com/eventsourcing/es4j/pull/175))
+
 # 0.4.4
 
 **Bugfixes**

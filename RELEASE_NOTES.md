@@ -1,3 +1,27 @@
+0.4.5
+=====
+
+Most notable change is a soft deprecation of non-final public static
+fields syntax for index definitions.
+
+Old syntax:
+
+```java
+public static SimpleIndex<MyEvent, UUID> ID = StandardEntity::uuid;
+public static MultiValueIndex<MyEvent, String> VALS = MyEvent::vals;
+```
+
+New syntax:
+
+```java
+public static final SimpleIndex<MyEvent, UUID> ID = SimpleIndex.as(StandardEntity::uuid);
+public static final MultiValueIndex<MyEvent, String> VALS = MultiValueIndex.as(MyEvent::vals);
+```
+
+This change allowed us to make these index definitions static.
+
+Another deprecation is `EntitySubscriber#accept(Stream)`
+
 0.4.4
 =====
 
@@ -19,7 +43,7 @@ Most notably, this release introduces an associative array type (Map).
 It also allows to supply custom index discovery and loading mechanisms.
 
 Previous version was erroneously shipped with OSGi dependencies for
-LMAX Disruptor (which is no longer a dependency), this has been fixed. 
+LMAX Disruptor (which is no longer a dependency), this has been fixed.
 
 0.4.1
 =====
@@ -28,7 +52,7 @@ This release simplifies index definitions for most of scenarios, dropping the ne
 declare `queryOptions` attribute.
 
 Also, this release has improvemed support for long-running commands, they no longer
-block the repository. 
+block the repository.
 
 0.4.0
 =====
