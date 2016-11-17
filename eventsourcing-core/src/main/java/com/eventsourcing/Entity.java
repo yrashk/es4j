@@ -11,7 +11,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 
 import java.util.UUID;
 
-public interface Entity<E extends Entity> {
+public interface Entity<E extends Entity<E>> {
     UUID uuid();
     E uuid(UUID uuid);
     HybridTimestamp timestamp();

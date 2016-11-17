@@ -16,7 +16,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  * Standard {@link Entity} implementation. Will generate UUID if one is not provided.
  * @param <E>
  */
-public abstract class StandardEntity<E extends Entity> implements Entity<E> {
+public abstract class StandardEntity<E extends Entity<E>> implements Entity<E> {
 
     private static LinkedBlockingDeque<UUID> uuids = new LinkedBlockingDeque<>(10_000);
 
