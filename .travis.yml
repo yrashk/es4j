@@ -10,8 +10,8 @@ before_install:
   - sudo service ntp start
 script:
   - ./gradlew check
-  - ./gradlew publishToMavenLocal
-  - cd examples/foodsourcing && ./gradlew check
+  - ./gradlew -Psnapshot=true publishToMavenLocal
+  - cd examples/foodsourcing && ./gradlew -Psnapshot=true check
 after_success:
   - cd ../.. && ./gradlew -Psnapshot=true bintrayUpload
 env:
