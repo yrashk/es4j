@@ -219,7 +219,8 @@ public class Layout<T> {
             // prefer in this order: getX, isX, fluent
             Optional<Optional<Method>> getter = Stream.of(getX, isX, fluent).filter(Optional::isPresent).findFirst();
             if (!getter.isPresent()) {
-                throw new IllegalArgumentException("No getter found for " + layoutClass.getName() + "." + name);
+                throw new IllegalArgumentException("No getter found for " + parameter.getType() +
+                                                   " " + layoutClass.getName() + "." + name + ". ");
             }
 
             // Not a valid property if it doesn't have a setter and a setter is required
