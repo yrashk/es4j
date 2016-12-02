@@ -33,7 +33,7 @@ import static com.eventsourcing.cep.protocols.DeletedProtocol.notDeleted;
 import static com.eventsourcing.index.EntityQueryFactory.*;
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.*;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
-import static com.googlecode.cqengine.query.StreamFactory.streamOf;
+import static com.googlecode.cqengine.stream.StreamFactory.streamOf;
 
 public class Restaurant implements Model, NameProtocol, AddressProtocol {
     @Getter

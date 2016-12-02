@@ -1,5 +1,6 @@
 plugins {
     id "com.github.hierynomus.license" version "0.12.1"
+    id 'com.palantir.git-version' version '0.5.1'
 }
 
 apply plugin: 'java'
@@ -37,9 +38,12 @@ license {
     mapping "drl", 'JAVADOC_STYLE'
 }
 
-Properties props = new Properties()
-props.load(new FileInputStream("../../gradle.properties"))
-def eventsourcingVersion = props.get("version")
+
+if (hasProperty("snapshot") && gitVersion().toString().contentEquals("unspecified")) {
+    throw new GradleException('snapshot version `unspecified');
+}
+
+def eventsourcingVersion = gitVersion()
 
 dependencies {
     testCompile 'org.testng:testng:6.9.10'

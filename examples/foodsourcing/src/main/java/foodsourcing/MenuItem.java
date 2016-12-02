@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.eventsourcing.index.EntityQueryFactory.*;
-import static com.googlecode.cqengine.query.StreamFactory.streamOf;
+import static com.googlecode.cqengine.stream.StreamFactory.streamOf;
 
 public class MenuItem
         implements Model, NameProtocol, DescriptionProtocol, PriceProtocol, PictureProtocol,
