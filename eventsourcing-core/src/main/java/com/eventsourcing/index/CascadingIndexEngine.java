@@ -94,11 +94,13 @@ public class CascadingIndexEngine extends CQIndexEngine implements IndexEngine, 
     @Override
     public void setJournal(Journal journal) throws IllegalStateException {
         this.journal = journal;
+        indexEngines.forEach(indexEngine -> indexEngine.setJournal(journal));
     }
 
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
         this.repository = repository;
+        indexEngines.forEach(indexEngine -> indexEngine.setRepository(repository));
     }
 
     private Map<String, IndexEngine> decisions = new HashMap<>();

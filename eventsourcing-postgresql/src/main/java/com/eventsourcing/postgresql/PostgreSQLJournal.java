@@ -17,6 +17,8 @@ import com.google.common.io.BaseEncoding;
 import com.google.common.io.CharStreams;
 import com.google.common.util.concurrent.AbstractService;
 import com.googlecode.cqengine.index.support.CloseableIterator;
+import com.impossibl.postgres.jdbc.PGDataSource;
+import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -48,20 +50,30 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
     @Reference
     protected DataSourceProvider dataSourceProvider;
 
+    private HikariConfig hikariConfig;
     private DataSource dataSource;
 
-    @Getter @Setter
+    @Getter
     private Repository repository;
     private EntityLayoutExtractor entityLayoutExtractor = new EntityLayoutExtractor();
 
-    @Activate
-    protected void activate() {
-        dataSource = dataSourceProvider.getDataSource();
+    @Override public void setRepository(Repository repository) {
+        this.repository = repository;
+        PooledDataSource pooledDataSource = PooledDataSource.getInstance(repository);
+        if (hikariConfig != null) {
+            pooledDataSource.setHikariConfig(hikariConfig);
+        }
+        pooledDataSource.getHikariConfig().setDataSource(dataSourceProvider.getDataSource());
+        dataSource = pooledDataSource.getDataSource();
     }
 
     public PostgreSQLJournal() {}
-    public PostgreSQLJournal(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public PostgreSQLJournal(PGDataSource dataSource) {
+        this.dataSourceProvider = () -> dataSource;
+    }
+    public PostgreSQLJournal(PGDataSource dataSource, HikariConfig hikariConfig) {
+        this.dataSourceProvider = () -> dataSource;
+        this.hikariConfig = hikariConfig;
     }
 
     @Override public void onCommandsAdded(Set<Class<? extends Command>> commands) {

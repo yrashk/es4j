@@ -7,8 +7,8 @@
  */
 package com.eventsourcing.postgresql;
 
-import javax.sql.DataSource;
+import com.impossibl.postgres.jdbc.PGDataSource;
 
 public interface DataSourceProvider {
-    DataSource getDataSource();
+    PGDataSource getDataSource();
 }

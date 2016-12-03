@@ -14,17 +14,16 @@ import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.MemoryIndexEngine;
 import com.eventsourcing.repository.RepositoryTest;
 import com.eventsourcing.repository.StandardRepository;
+import com.impossibl.postgres.jdbc.PGDataSource;
 import lombok.SneakyThrows;
 import org.testng.annotations.Test;
-
-import javax.sql.DataSource;
 
 import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
 public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
 
-    private DataSource dataSource;
+    private PGDataSource dataSource;
 
     public PostgreSQLRepositoryTest() throws Exception {
         super(new StandardRepository());
