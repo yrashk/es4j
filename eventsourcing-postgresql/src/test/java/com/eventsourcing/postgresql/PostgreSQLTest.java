@@ -19,7 +19,7 @@ import javax.sql.DataSource;
 public abstract class PostgreSQLTest {
 
     @SneakyThrows
-    public static DataSource createDataSource() {
+    public static PGDataSource createDataSource() {
         PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getDefaultInstance();
         final PostgresConfig pgConfig = PostgresConfig.defaultWithDbName("eventsourcing",
                                                                          "eventsourcing", "eventsourcing");

@@ -34,7 +34,7 @@ import java.util.List;
 
 public abstract class TestWithRepository {
 
-    private static HikariDataSource dataSource;
+    private static PGDataSource dataSource;
     private final Package[] packages;
     protected Repository repository;
     protected LocalLockProvider lockProvider;
@@ -75,7 +75,13 @@ public abstract class TestWithRepository {
 
     private IndexEngine createIndexEngine() {
         if (System.getProperty("postgres") != null) {
-            return new CascadingIndexEngine(new PostgreSQLIndexEngine(getPostgreSQLDataSource()),
+            HikariConfig config = new HikariConfig();
+            config.setMaximumPoolSize(50);
+            config.setLeakDetectionThreshold(2000);
+            config.setConnectionInitSql("SET log_statement = 'all'; SET search_path = 'public'");
+
+
+            return new CascadingIndexEngine(new PostgreSQLIndexEngine(getPostgreSQLDataSource(), config),
                                             new MemoryIndexEngine());
         } else {
             return new MemoryIndexEngine();
@@ -83,22 +89,14 @@ public abstract class TestWithRepository {
     }
 
     @SneakyThrows
-    private static DataSource getPostgreSQLDataSource() {
-        if (dataSource == null ) {
+    private static PGDataSource getPostgreSQLDataSource() {
+        if (dataSource == null) {
             PGDataSource ds = new PGDataSource();
             ds.setHost("localhost");
             ds.setDatabase("foodsourcing");
             ds.setUser("foodsourcing");
             ds.setPassword("foodsourcing");
             ds.setHousekeeper(false);
-
-            HikariConfig config = new HikariConfig();
-            config.setMaximumPoolSize(50);
-            config.setDataSource(ds);
-            config.setLeakDetectionThreshold(2000);
-            config.setConnectionInitSql("SET log_statement = 'all'; SET search_path = 'public'");
-
-            dataSource = new HikariDataSource(config);
         }
 
         return dataSource;

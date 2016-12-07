@@ -25,8 +25,7 @@ public class PostgreSQLJournalBenchmark extends JournalBenchmark {
 
         HikariConfig config = new HikariConfig();
         config.setMaximumPoolSize(30);
-        config.setDataSource(ds);
 
-        return new PostgreSQLJournal(new HikariDataSource(config));
+        return new PostgreSQLJournal(ds, config);
     }
 }

@@ -14,6 +14,8 @@ import com.eventsourcing.index.CQIndexEngine;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.postgresql.index.EqualityIndex;
 import com.eventsourcing.postgresql.index.NavigableIndex;
+import com.impossibl.postgres.jdbc.PGDataSource;
+import com.zaxxer.hikari.HikariConfig;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -34,15 +36,20 @@ public class PostgreSQLIndexEngine extends CQIndexEngine implements IndexEngine 
     @Reference
     protected DataSourceProvider dataSourceProvider;
 
+    private HikariConfig hikariConfig;
     private DataSource dataSource;
 
     public PostgreSQLIndexEngine() {}
-    public PostgreSQLIndexEngine(DataSource dataSource) {this.dataSource = dataSource;}
 
-    @Activate
-    protected void activate() {
-        dataSource = dataSourceProvider.getDataSource();
+
+    public PostgreSQLIndexEngine(PGDataSource dataSource) {
+        this.dataSourceProvider = () -> dataSource;
     }
+    public PostgreSQLIndexEngine(PGDataSource dataSource, HikariConfig hikariConfig) {
+        this.dataSourceProvider = () -> dataSource;
+        this.hikariConfig = hikariConfig;
+    }
+
 
     @Override
     public void setRepository(Repository repository) throws IllegalStateException {
@@ -50,6 +57,12 @@ public class PostgreSQLIndexEngine extends CQIndexEngine implements IndexEngine 
             throw new IllegalStateException();
         }
         this.repository = repository;
+        PooledDataSource pooledDataSource = PooledDataSource.getInstance(repository);
+        if (hikariConfig != null) {
+            pooledDataSource.setHikariConfig(hikariConfig);
+        }
+        pooledDataSource.getHikariConfig().setDataSource(dataSourceProvider.getDataSource());
+        dataSource = pooledDataSource.getDataSource();
     }
 
     @Override
