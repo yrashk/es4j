@@ -56,6 +56,8 @@ dependencies {
     compile "com.eventsourcing:eventsourcing-inmem:${eventsourcingVersion}"
     compile "com.eventsourcing:eventsourcing-postgresql:${eventsourcingVersion}"
 
+    testCompile "com.eventsourcing:eventsourcing-repository:${eventsourcingVersion}"
+
     // Drools
     compile 'org.kie:kie-api:6.4.0.Final'
     compile 'org.drools:drools-compiler:6.4.0.Final'
