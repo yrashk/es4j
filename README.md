@@ -5,7 +5,7 @@
 
 # ![logo](https://eventsourcing.com/android-icon-48x48.png) Eventsourcing for Java
 
-### *Keep the past, because predicting future is hard*
+### *Enabling plurality and evolution of domain models*
 
 Instead of mutating data in a database, Eventsourcing stores all changes (*events*) and what caused them (*commands*). To make this data useful,
 Eventsourcing builds indices over it.
@@ -15,6 +15,9 @@ about designing the *right* domain models upfront (or as close to *right* as pos
 our domain models over time with very little friction. Furthermore, this approach removes a need to have a *one and only* domain model for every entity. We experience the world and reality in different ways, depending on circumstances and points of view, and our programs should be able to reflect that.
 
 To learn more about what kind of problems ES4J addresses, please read [Why Use Eventsourcing Database](https://blog.eventsourcing.com/why-use-eventsourcing-database-6b5e2ac61848)
+
+[![Lazy event sourcing: living in the now](https://img.youtube.com/vi/aqv8d1pjmU8/0.jpg)](https://www.youtube.com/watch?v=aqv8d1pjmU8)
+
 
 ## Key benefits
 
