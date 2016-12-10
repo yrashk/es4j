@@ -16,7 +16,7 @@ our domain models over time with very little friction. Furthermore, this approac
 
 To learn more about what kind of problems ES4J addresses, please read [Why Use Eventsourcing Database](https://blog.eventsourcing.com/why-use-eventsourcing-database-6b5e2ac61848)
 
-[![Lazy event sourcing: living in the now](https://www.dropbox.com/s/k2zdv7ez9wq4zog/lazy_eventsourcing_video.png)](https://www.youtube.com/watch?v=aqv8d1pjmU8)
+[![Lazy event sourcing: living in the now](https://www.dropbox.com/s/k2zdv7ez9wq4zog/lazy_eventsourcing_video.png?dl=1)](https://www.youtube.com/watch?v=aqv8d1pjmU8)
 
 
 ## Key benefits
