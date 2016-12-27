@@ -8,12 +8,10 @@
 package com.eventsourcing.kotlin
 
 import com.eventsourcing.layout.Layout
-import com.eventsourcing.layout.UseClassAnalyzer
 import org.testng.annotations.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 
-@UseClassAnalyzer(KotlinClassAnalyzer::class)
 class TestClass(val x: String)
 
 class LayoutTest {
