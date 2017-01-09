@@ -27,6 +27,8 @@ public class BinarySerialization extends Serialization {
     private BinarySerialization() {
         addDeserializer(BIG_DECIMAL_TYPE_HANDLER, new BigDecimalBinaryDeserializer());
         addSerializer(BIG_DECIMAL_TYPE_HANDLER, new BigDecimalBinarySerializer());
+        addDeserializer(BIG_INTEGER_TYPE_HANDLER, new BigIntegerBinaryDeserializer());
+        addSerializer(BIG_INTEGER_TYPE_HANDLER, new BigIntegerBinarySerializer());
         addDeserializer(BOOLEAN_TYPE_HANDLER, new BooleanBinaryDeserializer());
         addSerializer(BOOLEAN_TYPE_HANDLER, new BooleanBinarySerializer());
         addDeserializer(BYTE_ARRAY_TYPE_HANDLER, new ByteArrayBinaryDeserializer());

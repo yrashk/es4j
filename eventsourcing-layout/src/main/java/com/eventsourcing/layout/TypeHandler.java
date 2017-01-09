@@ -12,8 +12,8 @@ import com.fasterxml.classmate.ResolvedType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
-import java.lang.reflect.AnnotatedType;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 /**
@@ -23,6 +23,7 @@ import java.util.*;
 public interface TypeHandler {
 
     BigDecimalTypeHandler BIG_DECIMAL_TYPE_HANDLER = new BigDecimalTypeHandler();
+    BigIntegerTypeHandler BIG_INTEGER_TYPE_HANDLER = new BigIntegerTypeHandler();
     BooleanTypeHandler BOOLEAN_TYPE_HANDLER = new BooleanTypeHandler();
     ByteArrayTypeHandler BYTE_ARRAY_TYPE_HANDLER = new ByteArrayTypeHandler(true);
     ByteTypeHandler BYTE_TYPE_HANDLER = new ByteTypeHandler();
@@ -100,6 +101,10 @@ public interface TypeHandler {
 
             if (type.isInstanceOf(Double.TYPE) || type.isInstanceOf(Double.class)) {
                 return DOUBLE_TYPE_HANDLER;
+            }
+
+            if (type.isInstanceOf(BigInteger.class)) {
+                return BIG_INTEGER_TYPE_HANDLER;
             }
 
             if (type.isInstanceOf(BigDecimal.class)) {

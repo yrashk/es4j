@@ -24,6 +24,7 @@ import lombok.SneakyThrows;
 
 import java.io.DataInput;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.sql.*;
 import java.time.Instant;
@@ -87,7 +88,7 @@ public class PostgreSQLSerialization {
 
     @SneakyThrows
     public static String getMappedType(Connection connection, TypeHandler typeHandler) {
-        if (typeHandler instanceof BigDecimalTypeHandler) {
+        if (typeHandler instanceof BigDecimalTypeHandler || typeHandler instanceof BigIntegerTypeHandler) {
             return "NUMERIC";
         }
         if (typeHandler instanceof BooleanTypeHandler) {
@@ -257,7 +258,7 @@ public class PostgreSQLSerialization {
     }
 
     public static int getMappedSqlType(TypeHandler typeHandler) {
-        if (typeHandler instanceof BigDecimalTypeHandler) {
+        if (typeHandler instanceof BigDecimalTypeHandler || typeHandler instanceof BigIntegerTypeHandler) {
             return Types.DECIMAL;
         }
         if (typeHandler instanceof BooleanTypeHandler) {
@@ -315,6 +316,9 @@ public class PostgreSQLSerialization {
     private static Object prepareValue(Connection connection, TypeHandler typeHandler, Object value) {
         if (typeHandler instanceof BigDecimalTypeHandler) {
             return value == null ? BigDecimal.ZERO : (BigDecimal) value;
+        } else if (typeHandler instanceof BigIntegerTypeHandler) {
+            return value == null ? BigInteger.ZERO :
+                    (value instanceof BigDecimal ? ((BigDecimal) value).toBigInteger() : (BigInteger) value);
         } else if (typeHandler instanceof BooleanTypeHandler) {
             return value == null ? false: (Boolean) value;
         } else if (typeHandler instanceof ByteArrayTypeHandler) {
@@ -411,6 +415,10 @@ public class PostgreSQLSerialization {
             typeHandler) {
         if (typeHandler instanceof BigDecimalTypeHandler) {
             s.setBigDecimal(i, (BigDecimal) prepareValue(connection, typeHandler, value));
+        } else
+        if (typeHandler instanceof BigIntegerTypeHandler) {
+            Object val = prepareValue(connection, typeHandler, new BigDecimal((BigInteger) value));
+            s.setBigDecimal(i, val instanceof BigDecimal ? (BigDecimal) val : new BigDecimal((BigInteger)val));
         } else
         if (typeHandler instanceof BooleanTypeHandler) {
             s.setBoolean(i, (Boolean) prepareValue(connection, typeHandler, value));
@@ -542,18 +550,20 @@ public class PostgreSQLSerialization {
             Object[] arr = (Object[]) v;
             return Arrays.stream(arr)
                          .collect(Collectors.toMap(new Function<Object, Object>() {
-                             @SneakyThrows
-                             @Override public Object apply(Object i) {
-                                 return getPropertyValue(keyHandler, ((PGStruct) i).getAttributes()[0]);
-                               }
-                           },
-                           new Function<Object, Object>() {
-                               @SneakyThrows
-                               @Override public Object apply(Object i) {
-                                   return getPropertyValue(valueHandler,
-                                                           ((PGStruct) i).getAttributes()[1]);
-                               }
-                           }));
+                                                       @SneakyThrows
+                                                       @Override public Object apply(Object i) {
+                                                           return getPropertyValue(keyHandler, ((PGStruct) i).getAttributes()[0]);
+                                                       }
+                                                   },
+                                                   new Function<Object, Object>() {
+                                                       @SneakyThrows
+                                                       @Override public Object apply(Object i) {
+                                                           return getPropertyValue(valueHandler,
+                                                                                   ((PGStruct) i).getAttributes()[1]);
+                                                       }
+                                                   }));
+        } else if (t instanceof BigIntegerTypeHandler) {
+            return ((BigDecimal)v).toBigInteger();
         } else {
             return v;
         }
@@ -564,6 +574,9 @@ public class PostgreSQLSerialization {
     public static Object getValue(ResultSet resultSet, AtomicInteger i, TypeHandler typeHandler) {
         if (typeHandler instanceof BigDecimalTypeHandler) {
             return resultSet.getBigDecimal(i.getAndIncrement());
+        }
+        if (typeHandler instanceof BigIntegerTypeHandler) {
+            return resultSet.getBigDecimal(i.getAndIncrement()).toBigInteger();
         }
         if (typeHandler instanceof BooleanTypeHandler) {
             return resultSet.getBoolean(i.getAndIncrement());

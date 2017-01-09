@@ -16,6 +16,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.*;
 
@@ -78,13 +79,15 @@ public class SerializerTest {
 
         private final BigDecimal bigDecimal;
 
+        private final BigInteger bigInteger;
+
         private final Date date;
 
         public TestClass(byte pByte, Byte oByte, byte[] pByteArr, Byte[] oByteArr, short pShort, Short oShort, int pInt,
                          Integer oInt, long pLong, Long oLong, float pFloat, Float oFloat, double pDouble,
                          Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
                          E e, SomeValue value, List<List<String>> list, Map<String, List<String>> map,
-                         Optional<String> optional, BigDecimal bigDecimal,
+                         Optional<String> optional, BigDecimal bigDecimal, BigInteger bigInteger,
                          Date date) {
             this.pByte = pByte;
             this.oByte = oByte;
@@ -110,6 +113,7 @@ public class SerializerTest {
             this.map = map;
             this.optional = optional;
             this.bigDecimal = bigDecimal;
+            this.bigInteger = bigInteger;
             this.date = date;
         }
     }
@@ -363,6 +367,18 @@ public class SerializerTest {
         TestClass deserialized = deserializer.deserialize(buffer);
 
         assertEquals(deserialized.getBigDecimal(), new BigDecimal(PI));
+    }
+
+    @Test
+    public void bigIntegerSerialization() {
+        TestClass test = TestClass.builder().bigInteger(new BigInteger("1000")).build();
+
+        ByteBuffer buffer = serializer.serialize(test);
+        buffer.rewind();
+
+        TestClass deserialized = deserializer.deserialize(buffer);
+
+        assertEquals(deserialized.getBigInteger(), new BigInteger("1000"));
     }
 
     @Test
