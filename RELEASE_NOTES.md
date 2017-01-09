@@ -1,3 +1,10 @@
+0.4.6
+=====
+
+Most important change in this maintenance release is the enforcement of pgjdbc-ng driver use and internal use of HikariCP pool. This means it's easier now to configure es4j and if you had any pool in front of your pgjdbc-ng, it must be removed.
+
+Another interesting (yet experimental) addition is `QuerySubscriber`, a method for reacting to updated result sets.
+
 0.4.5
 =====
 

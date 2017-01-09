@@ -1,3 +1,27 @@
+# 0.4.6
+
+**Bugfixes**
+
+* [Core] Entity interface drops type parameter ([#178](https://github.com/eventsourcing/es4j/pull/178))
+
+
+**Features**
+
+* [Repository] Introduced QuerySubscriber ([#164](https://github.com/eventsourcing/es4j/pull/164))
+
+
+**Improvements**
+
+* [Layout] Improve error message ([#180](https://github.com/eventsourcing/es4j/pull/180))
+* [PostgreSQL] enforce pgjdbc-ng and make use of HikariCP underneath ([#185](https://github.com/eventsourcing/es4j/pull/185))
+* Minor components dependency graph improvement ([#186](https://github.com/eventsourcing/es4j/pull/186))
+* [Kotlin] Drop class analyzer requirement ([#187](https://github.com/eventsourcing/es4j/pull/187))
+
+**Upgrades**
+
+* [Core] cqengine 2.9.2 ([#182](https://github.com/eventsourcing/es4j/pull/182))
+* [Kotlin] Use Kotlin 1.1-M04 ([#189](https://github.com/eventsourcing/es4j/pull/189))
+
 # 0.4.5
 
 **Bugfixes**
