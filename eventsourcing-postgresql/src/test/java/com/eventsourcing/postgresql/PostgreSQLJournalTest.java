@@ -19,6 +19,7 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 
 import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
@@ -146,6 +147,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         private final BigDecimal bigDecimal;
 
         @Getter
+        private final BigInteger bigInteger;
+
+        @Getter
         private final Date date;
 
         @Builder
@@ -154,7 +158,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
                          Double oDouble, boolean pBoolean, Boolean oBoolean, String str, UUID uuid,
                          E e, SomeValue value, SomeValue1 value1, List<List<String>> list,
                          Map<String, List<String>> map, Optional<String> optional,
-                         BigDecimal bigDecimal, Date date) {
+                         BigDecimal bigDecimal, BigInteger bigInteger, Date date) {
             this.pByte = pByte;
             this.oByte = oByte;
             this.pByteArr = pByteArr;
@@ -180,6 +184,7 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
             this.map = map;
             this.optional = optional;
             this.bigDecimal = bigDecimal;
+            this.bigInteger = bigInteger;
             this.date = date;
         }
     }
@@ -285,6 +290,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
         assertNotNull(test.bigDecimal);
         assertEquals(test.bigDecimal, BigDecimal.ZERO);
 
+        assertNotNull(test.bigInteger);
+        assertEquals(test.bigInteger, BigInteger.ZERO);
+
         assertNotNull(test.date);
         assertEquals(test.date, new Date(0));
 
@@ -359,6 +367,9 @@ public class PostgreSQLJournalTest extends JournalTest<PostgreSQLJournal> {
 
         BigDecimal bigDecimal = new BigDecimal("0.00000000000000000000000000001");
         assertEquals(serializationResult(TestClass.builder().bigDecimal(bigDecimal).build()).bigDecimal(), bigDecimal);
+
+        BigInteger bigInteger = new BigInteger("100001");
+        assertEquals(serializationResult(TestClass.builder().bigInteger(bigInteger).build()).bigInteger(), bigInteger);
 
         Date date = new Date();
         assertEquals(serializationResult(TestClass.builder().date(date).build()).date(), date);

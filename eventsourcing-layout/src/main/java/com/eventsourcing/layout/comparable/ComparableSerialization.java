@@ -20,6 +20,7 @@ public class ComparableSerialization extends Serialization {
 
     private ComparableSerialization() {
         addSerializer(BIG_DECIMAL_TYPE_HANDLER, new BigDecimalComparableSerializer());
+        addSerializer(BIG_INTEGER_TYPE_HANDLER, new BigIntegerComparableSerializer());
         addSerializer(BYTE_ARRAY_TYPE_HANDLER, new ByteArrayComparableSerializer());
         addSerializer(LIST_TYPE_HANDLER, new ListComparableSerializer());
         addSerializer(MAP_TYPE_HANDLER, new MapComparableSerializer());
