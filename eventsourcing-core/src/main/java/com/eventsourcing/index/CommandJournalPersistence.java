@@ -32,12 +32,12 @@ public class CommandJournalPersistence<T extends Command<?, ?>> extends JournalP
 
     @Override
     public void openRequestScopeResources(QueryOptions queryOptions) {
-
+        queryOptions.put(EagerFetching.class, true);
     }
 
     @Override
     public void closeRequestScopeResources(QueryOptions queryOptions) {
-
+        queryOptions.remove(EagerFetching.class);
     }
 
     static class CommandJournalObjectStore<T extends Command<?, ?>> extends JournalObjectStore<T> {

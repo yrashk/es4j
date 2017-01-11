@@ -33,12 +33,12 @@ public class EventJournalPersistence<T extends Event> extends JournalPersistence
 
     @Override
     public void openRequestScopeResources(QueryOptions queryOptions) {
-
+        queryOptions.put(EagerFetching.class, true);
     }
 
     @Override
     public void closeRequestScopeResources(QueryOptions queryOptions) {
-
+        queryOptions.remove(EagerFetching.class);
     }
 
     static class EventJournalObjectStore<T extends Event> extends JournalObjectStore<T> {
