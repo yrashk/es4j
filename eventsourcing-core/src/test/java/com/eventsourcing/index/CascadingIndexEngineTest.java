@@ -11,6 +11,7 @@ import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
 import com.eventsourcing.StandardEntity;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import lombok.SneakyThrows;

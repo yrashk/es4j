@@ -12,7 +12,7 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.googlecode.cqengine.index.support.CloseableIterator;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;

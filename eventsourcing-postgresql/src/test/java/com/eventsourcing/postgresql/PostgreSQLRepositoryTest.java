@@ -11,7 +11,7 @@ import com.eventsourcing.Journal;
 import com.eventsourcing.Repository;
 import com.eventsourcing.index.CascadingIndexEngine;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.repository.RepositoryTest;
 import com.eventsourcing.repository.StandardRepository;
 import com.impossibl.postgres.jdbc.PGDataSource;

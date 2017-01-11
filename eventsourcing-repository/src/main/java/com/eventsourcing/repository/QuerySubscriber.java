@@ -13,7 +13,7 @@ import com.eventsourcing.EntitySubscriber;
 import com.eventsourcing.Repository;
 import com.eventsourcing.index.IndexEngine;
 import com.eventsourcing.index.IndexLoader;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.query.Query;

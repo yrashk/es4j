@@ -12,7 +12,7 @@ import com.eventsourcing.PackageCommandSetProvider;
 import com.eventsourcing.PackageEventSetProvider;
 import com.eventsourcing.Repository;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;

@@ -5,10 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-package com.eventsourcing.index;
+package com.eventsourcing.inmem;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.index.Attribute;
+import com.eventsourcing.index.NavigableIndexTest;
 import com.googlecode.cqengine.index.Index;
 import com.googlecode.cqengine.index.navigable.NavigableIndex;
 import com.googlecode.cqengine.quantizer.Quantizer;
