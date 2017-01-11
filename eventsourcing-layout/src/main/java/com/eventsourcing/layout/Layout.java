@@ -187,7 +187,7 @@ public class Layout<T> {
         }
 
         if (ambiguityDetected) {
-            throw new IllegalArgumentException(klass + "has more than one constructor with " +
+            throw new IllegalArgumentException(klass + " has more than one constructor with " +
                                                constructor.getParameters().length +
                                                " parameters and no @LayoutConstructor-annotated constructor");
         }
