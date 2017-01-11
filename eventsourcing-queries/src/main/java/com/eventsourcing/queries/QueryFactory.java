@@ -11,7 +11,6 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.EntityIndex;
-import com.eventsourcing.index.EntityQueryFactory;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.Query;
 
@@ -47,4 +46,27 @@ public class QueryFactory {
                    final EntityIndex<O, HybridTimestamp> timestampAttribute) {
         return new IsLatestEntity<>(collection, query, timestampAttribute.getAttribute());
     }
+
+    /**
+     * Checks if an entity has the smallest comparable attribute value in the collection
+     * @param entityIndex entity index
+     * @param <O> Entity
+     * @param <A> Attribute
+     * @return query
+     */
+    public static <O extends Entity, A extends Comparable<A>> Min<O, A> min(EntityIndex<O, A> entityIndex) {
+        return new Min<>(entityIndex.getAttribute());
+    }
+
+    /**
+     * Checks if an entity has the largest comparable attribute value in the collection
+     * @param entityIndex entity index
+     * @param <O> Entity
+     * @param <A> Attribute
+     * @return query
+     */
+    public static <O extends Entity, A extends Comparable<A>> Max<O, A> max(EntityIndex<O, A> entityIndex) {
+        return new Max<>(entityIndex.getAttribute());
+    }
+
 }
