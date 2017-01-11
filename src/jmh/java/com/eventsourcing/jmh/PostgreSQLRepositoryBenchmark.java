@@ -9,11 +9,10 @@ package com.eventsourcing.jmh;
 
 import com.eventsourcing.Journal;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.postgresql.PostgreSQLJournal;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 
 public class PostgreSQLRepositoryBenchmark extends RepositoryBenchmark {
     @Override protected IndexEngine createIndex() {

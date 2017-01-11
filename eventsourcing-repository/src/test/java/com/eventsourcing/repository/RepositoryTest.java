@@ -16,6 +16,7 @@ import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.*;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;

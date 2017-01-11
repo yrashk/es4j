@@ -8,7 +8,7 @@
 
 import com.eventsourcing.StandardEvent
 import com.eventsourcing.index.JavaStaticFieldIndexLoader
-import com.eventsourcing.index.MemoryIndexEngine
+import com.eventsourcing.inmem.MemoryIndexEngine
 import com.eventsourcing.index.SimpleIndex
 import org.testng.annotations.Test
 import kotlin.test.assertTrue

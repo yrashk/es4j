@@ -10,6 +10,7 @@ package com.eventsourcing.index;
 import com.eventsourcing.*;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.repository.StandardRepository;
 import com.googlecode.cqengine.resultset.ResultSet;

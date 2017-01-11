@@ -12,7 +12,7 @@ import com.eventsourcing.cep.events.Deleted;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.index.CascadingIndexEngine;
 import com.eventsourcing.index.IndexEngine;
-import com.eventsourcing.index.MemoryIndexEngine;
+import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.inmem.MemoryJournal;
 import com.eventsourcing.postgresql.PostgreSQLIndexEngine;
 import com.eventsourcing.postgresql.PostgreSQLJournal;

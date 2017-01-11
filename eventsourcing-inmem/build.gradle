@@ -1,6 +1,7 @@
 dependencies {
     compile project(':eventsourcing-core')
 
+    testCompile project(':eventsourcing-core').sourceSets.test.output
     testCompile project(':eventsourcing-repository').sourceSets.test.output
     testCompile project(':eventsourcing-repository')
 
