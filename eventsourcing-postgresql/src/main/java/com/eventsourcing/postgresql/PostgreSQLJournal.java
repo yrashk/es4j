@@ -20,10 +20,8 @@ import com.googlecode.cqengine.index.support.CloseableIterator;
 import com.impossibl.postgres.jdbc.PGDataSource;
 import com.zaxxer.hikari.HikariConfig;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.Value;
-import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
 
@@ -180,22 +178,40 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
     }
 
     @Override public <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass) {
-        return entityIterator(klass);
+        return commandIterator(klass, false);
     }
 
     @Override public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass) {
-        return entityIterator(klass);
+        return eventIterator(klass, false);
+    }
+
+    @Override public <T extends Command<?, ?>> CloseableIterator<EntityHandle<T>> commandIterator(Class<T> klass, boolean eagerFetching) {
+        return entityIterator(klass, eagerFetching);
+    }
+
+    @Override public <T extends Event> CloseableIterator<EntityHandle<T>> eventIterator(Class<T> klass, boolean eagerFetching) {
+        return entityIterator(klass, eagerFetching);
     }
 
     @SneakyThrows
-    private <T extends Entity> CloseableIterator<EntityHandle<T>> entityIterator(Class<T> klass) {
+    private <T extends Entity> CloseableIterator<EntityHandle<T>> entityIterator(Class<T> klass, boolean eagerFetching) {
         Connection connection = dataSource.getConnection();
 
-        Layout layout = getLayout(klass);
+        Layout<?> layout = getLayout(klass);
         String hash = BaseEncoding.base16().encode(layout.getHash());
 
-        PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_v1_" + hash);
-        return new EntityIterator<>(this, s, connection);
+        if (!eagerFetching) {
+            PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_v1_" + hash);
+            return new EntityIterator<>(this, s, connection);
+        } else {
+            ReaderFunction reader = readerFunctions.get(hash);
+            List<? extends Property<?>> properties = layout.getProperties();
+            String columns = Joiner.on(", ").join(properties.stream()
+                                                        .map(p -> "\"" + p.getName() + "\"").collect(Collectors.toList()));
+            String query = "SELECT " + columns + ", uuid AS ___uuid___ FROM layout_v1_" + hash;
+            PreparedStatement s = connection.prepareStatement(query);
+            return new EagerEntityIterator<>(this, s, connection, reader);
+        }
     }
 
     static private class EntityIterator<R extends Entity> extends PostgreSQLStatementIterator<EntityHandle<R>> {
@@ -212,6 +228,27 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
         @Override
         public EntityHandle<R> fetchNext() {
             return new JournalEntityHandle<>(journal, UUID.fromString(resultSet.getString(1)));
+        }
+    }
+
+    static private class EagerEntityIterator<R extends Entity> extends PostgreSQLStatementIterator<EntityHandle<R>> {
+
+        private final Journal journal;
+        private final ReaderFunction reader;
+
+        public EagerEntityIterator(Journal journal, PreparedStatement statement,
+                                   Connection connection, ReaderFunction reader) {
+            super(statement, connection, true);
+            this.journal = journal;
+            this.reader = reader;
+        }
+
+        @SneakyThrows
+        @Override
+        public EntityHandle<R> fetchNext() {
+            Entity<?> o = (Entity) reader.apply(resultSet);
+            o.uuid(UUID.fromString(resultSet.getString("___uuid___")));
+            return new ResolvedEntityHandle<>((R) o);
         }
     }
 

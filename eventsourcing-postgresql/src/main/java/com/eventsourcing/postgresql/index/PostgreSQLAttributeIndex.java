@@ -10,10 +10,8 @@ package com.eventsourcing.postgresql.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.ResolvedEntityHandle;
+import com.eventsourcing.index.*;
 import com.eventsourcing.index.AbstractAttributeIndex;
-import com.eventsourcing.index.Attribute;
-import com.eventsourcing.index.KeyObjectStore;
-import com.eventsourcing.index.MultiValueAttribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
@@ -273,6 +271,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             this.keyObjectStore = new SetKeyObjectStore(objectStore, queryOptions);
         }
         queryOptions.put(OnConflictDo.class, OnConflictDo.NOTHING);
+        queryOptions.put(EagerFetching.class, true);
         addAll(objectStore, queryOptions);
     }
 
