@@ -8,7 +8,6 @@ include 'eventsourcing-queries'
 include 'eventsourcing-kotlin'
 
 include 'eventsourcing-inmem'
-include 'eventsourcing-h2'
 include 'eventsourcing-postgresql'
 
 include 'eventsourcing-cep'
