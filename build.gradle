@@ -245,8 +245,8 @@ idea {
 dependencies {
     compile project(':eventsourcing-core')
     compile project(':eventsourcing-inmem')
-    compile project(':eventsourcing-h2')
     compile project(':eventsourcing-postgresql')
+    compile project(':eventsourcing-repository')
 
     // Remove boilerplate
     compile 'org.projectlombok:lombok:1.16.8'

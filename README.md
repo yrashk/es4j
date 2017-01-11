@@ -36,7 +36,7 @@ To learn more about what kind of problems ES4J addresses, please read [Why Use E
 * Batteries included (shared event languages)
 * Basic support for [Kotlin](http://kotlinlang.org)
 * Causality-preserving [Hybrid Logical Clocks](http://www.cse.buffalo.edu/tech-reports/2014-04.pdf)
-* In-memory, server (**PostgreSQL**) and on-disk (**H2/MVStore**) storage
+* In-memory and server (**PostgreSQL**)storage
 * Locking synchronization primitive
 * JMX-based introspection and management
 
