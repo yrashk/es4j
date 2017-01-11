@@ -49,7 +49,7 @@ public class EventJournalPersistence<T extends Event> extends JournalPersistence
 
         @Override
         public CloseableIterator<EntityHandle<T>> iterator(QueryOptions queryOptions) {
-            return journal.eventIterator(klass);
+            return journal.eventIterator(klass, queryOptions.get(EagerFetching.class) != null);
         }
     }
 }

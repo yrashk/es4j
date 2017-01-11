@@ -48,7 +48,7 @@ public class CommandJournalPersistence<T extends Command<?, ?>> extends JournalP
 
         @Override
         public CloseableIterator<EntityHandle<T>> iterator(QueryOptions queryOptions) {
-            return journal.commandIterator(klass);
+            return journal.commandIterator(klass, queryOptions.get(EagerFetching.class) != null);
         }
     }
 }
