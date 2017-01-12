@@ -9,6 +9,6 @@ dependencies {
     compile 'com.zaxxer:HikariCP:2.5.1'
 
     // Embedded PostgreSQL for testing
-    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.15'
+    testCompile 'ru.yandex.qatools.embed:postgresql-embedded:1.19'
 
 }
