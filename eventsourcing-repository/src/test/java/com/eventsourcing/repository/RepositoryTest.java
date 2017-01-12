@@ -43,7 +43,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
-import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.queries.QueryFactory.*;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 

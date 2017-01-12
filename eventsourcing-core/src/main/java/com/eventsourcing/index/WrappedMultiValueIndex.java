@@ -15,7 +15,7 @@ import lombok.Setter;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.eventsourcing.index.EntityQueryFactory.noQueryOptions;
+import static com.eventsourcing.queries.QueryFactory.noQueryOptions;
 
 class WrappedMultiValueIndex<O extends Entity, A, I extends Iterable<A>> implements MultiValueIndex<O, A>,
         IndexWithAttribute<O, A> {

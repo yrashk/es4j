@@ -20,7 +20,7 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.queries.QueryFactory.*;
 
 /**
  * Provides a query for retrieving the latest entry, associated with a model. For example,

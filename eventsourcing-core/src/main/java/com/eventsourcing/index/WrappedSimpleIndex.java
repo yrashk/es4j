@@ -16,7 +16,7 @@ import lombok.Setter;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static com.eventsourcing.index.EntityQueryFactory.noQueryOptions;
+import static com.eventsourcing.queries.QueryFactory.noQueryOptions;
 
 class WrappedSimpleIndex<O extends Entity, A> implements SimpleIndex<O, A>, IndexWithAttribute<O, A> {
     private final BiFunction<O, QueryOptions, A> index;

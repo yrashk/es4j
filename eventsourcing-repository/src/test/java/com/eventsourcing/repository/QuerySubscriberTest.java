@@ -21,9 +21,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-import static com.eventsourcing.index.EntityQueryFactory.and;
-import static com.eventsourcing.index.EntityQueryFactory.equal;
-import static com.eventsourcing.index.EntityQueryFactory.existsIn;
+import static com.eventsourcing.queries.QueryFactory.and;
+import static com.eventsourcing.queries.QueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.existsIn;
 import static org.testng.Assert.*;
 
 public class QuerySubscriberTest extends RepositoryUsingTest {

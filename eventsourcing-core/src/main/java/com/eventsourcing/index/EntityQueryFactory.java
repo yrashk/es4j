@@ -24,7 +24,9 @@ import java.util.regex.Pattern;
 
 /**
  * Static factory for creating {@link Query} objects for {@link Entity}
+ * @deprecated Use {@link com.eventsourcing.queries.QueryFactory instead}
  */
+@Deprecated
 public interface EntityQueryFactory {
 
     /**
@@ -36,6 +38,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link Equal} query
      */
+    @Deprecated
     static <O extends Entity, A> Equal<EntityHandle<O>, A> equal(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new Equal<>(entityIndex.getAttribute(), attributeValue);
     }
@@ -50,6 +53,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link LessThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> LessThan<EntityHandle<O>, A>
             lessThanOrEqualTo(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new LessThan<>(entityIndex.getAttribute(), attributeValue, true);
@@ -65,6 +69,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link LessThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> LessThan<EntityHandle<O>, A> 
            lessThan(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new LessThan<>(entityIndex.getAttribute(), attributeValue, false);
@@ -80,6 +85,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link GreaterThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> GreaterThan<EntityHandle<O>, A> 
            greaterThanOrEqualTo(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new GreaterThan<>(entityIndex.getAttribute(), attributeValue, true);
@@ -95,6 +101,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link GreaterThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> GreaterThan<EntityHandle<O>, A> 
            greaterThan(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new GreaterThan<>(entityIndex.getAttribute(), attributeValue, false);
@@ -112,6 +119,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link GreaterThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> Between<EntityHandle<O>, A> between(EntityIndex<O, A> entityIndex, A lowerValue, boolean lowerInclusive, A upperValue, boolean upperInclusive) {
         return new Between<>(entityIndex.getAttribute(), lowerValue, lowerInclusive, upperValue, upperInclusive);
     }
@@ -127,6 +135,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return A {@link GreaterThan} query
      */
+    @Deprecated
     static <O extends Entity, A extends Comparable<A>> Between<EntityHandle<O>, A> between(EntityIndex<O, A> entityIndex, A lowerValue, A upperValue) {
         return new Between<>(entityIndex.getAttribute(), lowerValue, true, upperValue, true);
     }
@@ -142,6 +151,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link In} query
      */
+    @Deprecated
     static <O extends Entity, A> Query<EntityHandle<O>> in(EntityIndex<O, A> entityIndex, A... attributeValues) {
         return in(entityIndex, Arrays.asList(attributeValues));
     }
@@ -157,6 +167,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link In} query
      */
+    @Deprecated
     static <O extends Entity, A> Query<EntityHandle<O>> in(EntityIndex<O, A> entityIndex, Collection<A> attributeValues) {
         return in(entityIndex, entityIndex instanceof SimpleIndex, attributeValues);
     }
@@ -172,6 +183,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link In} query
      */
+    @Deprecated
     static <O extends Entity, A> Query<EntityHandle<O>> in(EntityIndex<O, A> entityIndex, boolean disjoint, Collection<A> 
             attributeValues) {
         int n = attributeValues.size();
@@ -197,6 +209,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringStartsWith} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringStartsWith<EntityHandle<O>, A> startsWith(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new StringStartsWith<>(entityIndex.getAttribute(), attributeValue);
     }
@@ -210,6 +223,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringEndsWith} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringEndsWith<EntityHandle<O>, A> endsWith(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new StringEndsWith<>(entityIndex.getAttribute(), attributeValue);
     }
@@ -223,6 +237,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringContains} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringContains<EntityHandle<O>, A> contains(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new StringContains<>(entityIndex.getAttribute(), attributeValue);
     }
@@ -237,6 +252,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringStartsWith} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringIsContainedIn<EntityHandle<O>, A> isContainedIn(EntityIndex<O, A> entityIndex, A attributeValue) {
         return new StringIsContainedIn<>(entityIndex.getAttribute(), attributeValue);
     }
@@ -252,6 +268,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringStartsWith} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringMatchesRegex<EntityHandle<O>, A> matchesRegex(EntityIndex<O, A> entityIndex, Pattern regexPattern) {
         return new StringMatchesRegex<>(entityIndex.getAttribute(), regexPattern);
     }
@@ -267,6 +284,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link StringStartsWith} query
      */
+    @Deprecated
     static <O extends Entity, A extends CharSequence> StringMatchesRegex<EntityHandle<O>, A> matchesRegex(EntityIndex<O, A> entityIndex, String regex) {
         return new StringMatchesRegex<>(entityIndex.getAttribute(), Pattern.compile(regex));
     }
@@ -285,6 +303,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link Has} query
      */
+    @Deprecated
     static <O extends Entity, A> Has<EntityHandle<O>, A> has(EntityIndex<O, A> entityIndex) {
         return new Has<>(entityIndex.getAttribute());
     }
@@ -298,6 +317,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link And} query, representing a logical AND on child queries
      */
+    @Deprecated
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2) {
         @SuppressWarnings({"unchecked"})
         Collection<Query<EntityHandle<O>>> queries = Arrays.asList(query1, query2);
@@ -314,6 +334,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link And} query, representing a logical AND on child queries
      */
+    @Deprecated
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, 
                                              Query<EntityHandle<O>>... 
             additionalQueries) {
@@ -334,6 +355,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link And} query, representing a logical AND on child queries
      */
+    @Deprecated
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Collection<Query<EntityHandle<O>>> additionalQueries) {
         Collection<Query<EntityHandle<O>>> queries = new ArrayList<>(2 + additionalQueries.size());
         queries.add(query1);
@@ -351,6 +373,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link Or} query, representing a logical OR on child queries
      */
+    @Deprecated
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2) {
         @SuppressWarnings({"unchecked"})
         Collection<Query<EntityHandle<O>>> queries = Arrays.asList(query1, query2);
@@ -367,6 +390,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link Or} query, representing a logical OR on child queries
      */
+    @Deprecated
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>>... additionalQueries) {
         Collection<Query<EntityHandle<O>>> queries = new ArrayList<>(2 + additionalQueries.length);
         queries.add(query1);
@@ -385,6 +409,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return An {@link Or} query, representing a logical OR on child queries
      */
+    @Deprecated
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Collection<Query<EntityHandle<O>>> additionalQueries) {
         Collection<Query<EntityHandle<O>>> queries = new ArrayList<>(2 + additionalQueries.size());
         queries.add(query1);
@@ -401,6 +426,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing attributes to which child queries refer
      * @return A {@link Not} query, representing a logical negation of a child query
      */
+    @Deprecated
     static <O extends Entity> Not<EntityHandle<O>> not(Query<EntityHandle<O>> query) {
         return new Not<>(query);
     }
@@ -431,6 +457,7 @@ public interface EntityQueryFactory {
      * @return A query which checks if the local object matches any objects in the foreign collection based on the given
      * key attributes being equal
      */
+    @Deprecated
     static <O extends Entity, F extends Entity, A> Query<EntityHandle<O>>
            existsIn(final IndexedCollection<EntityHandle<F>> foreignCollection,
                     final EntityIndex<O, A> localKeyAttribute,
@@ -468,6 +495,7 @@ public interface EntityQueryFactory {
      * @return A query which checks if the local object matches any objects in the foreign collection based on the given
      * key attributes being equal
      */
+    @Deprecated
     static <O extends Entity, F extends Entity, A> Query<EntityHandle<O>>
            existsIn(final IndexedCollection<EntityHandle<F>> foreignCollection,
                     final EntityIndex<O, A> localKeyAttribute, final EntityIndex<F, A> foreignKeyAttribute,
@@ -486,6 +514,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attributes
      * @return An {@link OrderByOption} query option, requests results to be sorted in the given order
      */
+    @Deprecated
     static <O> OrderByOption<O> orderBy(List<AttributeOrder<O>> attributeOrders) {
         return new OrderByOption<>(attributeOrders);
     }
@@ -499,6 +528,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attributes
      * @return An {@link OrderByOption} query option, requests results to be sorted in the given order
      */
+    @Deprecated
     static <O> OrderByOption<O> orderBy(AttributeOrder<O>... attributeOrders) {
         return new OrderByOption<>(Arrays.asList(attributeOrders));
     }
@@ -514,6 +544,7 @@ public interface EntityQueryFactory {
      * @return An {@link AttributeOrder} object, encapsulating the attribute and a preference to sort results by it
      * in ascending order
      */
+    @Deprecated
     static <O extends Entity> AttributeOrder<EntityHandle<O>> ascending(EntityIndex<O, ? extends Comparable>
                                                                               entityIndex) {
         return new AttributeOrder<>(entityIndex.getAttribute(), false);
@@ -530,6 +561,7 @@ public interface EntityQueryFactory {
      * @return An {@link AttributeOrder} object, encapsulating the attribute and a preference to sort results by it
      * in descending order
      */
+    @Deprecated
     static <O extends Entity> AttributeOrder<EntityHandle<O>> descending(EntityIndex<O, ? extends Comparable>
                                                                               entityIndex) {
         return new AttributeOrder<>(entityIndex.getAttribute(), true);
@@ -543,6 +575,7 @@ public interface EntityQueryFactory {
      * @param deduplicationStrategy The deduplication strategy the query engine should use
      * @return A {@link DeduplicationOption} query option, requests duplicate objects to be eliminated from results
      */
+    @Deprecated
     static DeduplicationOption deduplicate(DeduplicationStrategy deduplicationStrategy) {
         return new DeduplicationOption(deduplicationStrategy);
     }
@@ -554,6 +587,7 @@ public interface EntityQueryFactory {
      * @param isolationLevel The transaction isolation level to request
      * @return An {@link IsolationOption} query option
      */
+    @Deprecated
     static IsolationOption isolationLevel(IsolationLevel isolationLevel) {
         return new IsolationOption(isolationLevel);
     }
@@ -566,6 +600,7 @@ public interface EntityQueryFactory {
      * @param strategy The argument validation strategy to request
      * @return An {@link ArgumentValidationOption} query option
      */
+    @Deprecated
     static ArgumentValidationOption argumentValidation(ArgumentValidationStrategy strategy) {
         return new ArgumentValidationOption(strategy);
     }
@@ -577,6 +612,7 @@ public interface EntityQueryFactory {
      * @param queryOptions The objects to encapsulate as QueryOptions
      * @return A {@link QueryOptions} object
      */
+    @Deprecated
     static QueryOptions queryOptions(Object... queryOptions) {
         return queryOptions(Arrays.asList(queryOptions));
     }
@@ -588,6 +624,7 @@ public interface EntityQueryFactory {
      * @param queryOptions The objects to encapsulate as QueryOptions
      * @return A {@link QueryOptions} object
      */
+    @Deprecated
     static QueryOptions queryOptions(Collection<Object> queryOptions) {
         QueryOptions resultOptions = new QueryOptions();
         for (Object queryOption : queryOptions) {
@@ -602,6 +639,7 @@ public interface EntityQueryFactory {
      *
      * @return A {@link QueryOptions} object
      */
+    @Deprecated
     static QueryOptions noQueryOptions() {
         return new QueryOptions();
     }
@@ -616,6 +654,7 @@ public interface EntityQueryFactory {
      * @param flags Arbitrary objects which represent flags which may be interpreted by indexes etc.
      * @return A populated {@link FlagsEnabled} object which may be added to query options
      */
+    @Deprecated
     static FlagsEnabled enableFlags(Object... flags) {
         FlagsEnabled result = new FlagsEnabled();
         for (Object flag: flags) {
@@ -634,6 +673,7 @@ public interface EntityQueryFactory {
      * @param flags Arbitrary objects which represent flags which may be interpreted by indexes etc.
      * @return A populated {@link FlagsDisabled} object which may be added to query options
      */
+    @Deprecated
     static FlagsDisabled disableFlags(Object... flags) {
         FlagsDisabled result = new FlagsDisabled();
         for (Object flag: flags) {
@@ -650,6 +690,7 @@ public interface EntityQueryFactory {
      * @param thresholds Encapsulates Double values relating to thresholds to be overridden
      * @return A populated {@link Thresholds} object which may be added to query options
      */
+    @Deprecated
     static Thresholds applyThresholds(Threshold... thresholds) {
         return new Thresholds(Arrays.asList(thresholds));
     }
@@ -661,6 +702,7 @@ public interface EntityQueryFactory {
      * @param value The value to set for the threshold
      * @return A populated {@link Threshold} object encapsulating the given arguments
      */
+    @Deprecated
     static Threshold threshold(Object key, Double value) {
         return new Threshold(key, value);
     }
@@ -671,6 +713,7 @@ public interface EntityQueryFactory {
      * @param objectType The type of object
      * @return a {@link SelfAttribute} for the given object
      */
+    @Deprecated
     static <O> SelfAttribute<O> selfAttribute(Class<O> objectType) {
         return new SelfAttribute<>(objectType);
     }
@@ -689,6 +732,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link OrderMissingLastAttribute} which orders objects with values before those without values
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     static <O> OrderMissingLastAttribute<O> missingLast(Attribute<O, ? extends Comparable> delegateAttribute) {
         return new OrderMissingLastAttribute<O>(delegateAttribute);
@@ -709,6 +753,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the object containing the attribute
      * @return An {@link OrderMissingFirstAttribute} which orders objects without values before those with values
      */
+    @Deprecated
     @SuppressWarnings("unchecked")
     static <O> OrderMissingFirstAttribute<O> missingFirst(Attribute<O, ? extends Comparable> delegateAttribute) {
         return new OrderMissingFirstAttribute<O>(delegateAttribute);
@@ -721,6 +766,7 @@ public interface EntityQueryFactory {
      * @param standingQuery The standing query to encapsulate
      * @return a {@link StandingQueryAttribute} encapsulating the given query
      */
+    @Deprecated
     static <O extends Entity> StandingQueryAttribute<EntityHandle<O>> forStandingQuery(Query<EntityHandle<O>>
                                                                                           standingQuery) {
         return new StandingQueryAttribute<>(standingQuery);
@@ -737,6 +783,7 @@ public interface EntityQueryFactory {
      * @return a {@link StandingQueryAttribute} which returns true if the given attribute does not have values for
      * an object
      */
+    @Deprecated
     static <O extends Entity, A> StandingQueryAttribute<EntityHandle<O>> forObjectsMissing(EntityIndex<O, A>
                                                                                                  entityIndex) {
         return forStandingQuery(not(has(entityIndex)));
@@ -759,6 +806,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3) {
         @SuppressWarnings({"unchecked"})
@@ -772,6 +820,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3, Query<EntityHandle<O>> query4) {
         @SuppressWarnings({"unchecked"})
@@ -785,6 +834,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> And<EntityHandle<O>> and(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3, Query<EntityHandle<O>> query4, Query<EntityHandle<O>> query5) {
         @SuppressWarnings({"unchecked"})
@@ -800,6 +850,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3) {
         @SuppressWarnings({"unchecked"})
@@ -813,6 +864,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3, Query<EntityHandle<O>> query4) {
         @SuppressWarnings({"unchecked"})
@@ -826,6 +878,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O extends Entity> Or<EntityHandle<O>> or(Query<EntityHandle<O>> query1, Query<EntityHandle<O>> query2, Query<EntityHandle<O>> query3, Query<EntityHandle<O>> query4, Query<EntityHandle<O>> query5) {
         @SuppressWarnings({"unchecked"})
@@ -842,6 +895,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O> OrderByOption<O> orderBy(AttributeOrder<O> attributeOrder) {
         @SuppressWarnings({"unchecked"})
@@ -856,6 +910,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O> OrderByOption<O> orderBy(AttributeOrder<O> attributeOrder1, AttributeOrder<O> attributeOrder2) {
         @SuppressWarnings({"unchecked"})
@@ -870,6 +925,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O> OrderByOption<O> orderBy(AttributeOrder<O> attributeOrder1, AttributeOrder<O> attributeOrder2,
                                                AttributeOrder<O> attributeOrder3) {
@@ -885,6 +941,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O> OrderByOption<O> orderBy(AttributeOrder<O> attributeOrder1, AttributeOrder<O> attributeOrder2,
                                                AttributeOrder<O> attributeOrder3, AttributeOrder<O> attributeOrder4) {
@@ -901,6 +958,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static <O> OrderByOption<O> orderBy(AttributeOrder<O> attributeOrder1, AttributeOrder<O> attributeOrder2,
                                                AttributeOrder<O> attributeOrder3, AttributeOrder<O> attributeOrder4,
@@ -919,6 +977,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static QueryOptions queryOptions(Object queryOption) {
         return queryOptions(Collections.singleton(queryOption));
@@ -930,6 +989,7 @@ public interface EntityQueryFactory {
      * Note: This method is unnecessary as of Java 7, and is provided only for backward compatibility with Java 6 and
      * earlier, to eliminate generic array creation warnings output by the compiler in those versions.
      */
+    @Deprecated
     @SuppressWarnings({"JavaDoc"})
     static QueryOptions queryOptions(Object queryOption1, Object queryOption2) {
         @SuppressWarnings({"unchecked", "UnnecessaryLocalVariable"})
@@ -937,6 +997,7 @@ public interface EntityQueryFactory {
         return queryOptions(queryOptions);
     }
 
+    @Deprecated
     class All<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
 
         final Class<O> attributeType;
@@ -1008,10 +1069,12 @@ public interface EntityQueryFactory {
      * @param <O> The type of the objects in the collection
      * @return A query which matches all objects in the collection
      */
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>> all(Class<O> objectType) {
         return new All<>(objectType);
     }
 
+    @Deprecated
     class None<O extends Entity> extends SimpleQuery<EntityHandle<O>, O> {
 
         final Class<O> attributeType;
@@ -1083,7 +1146,7 @@ public interface EntityQueryFactory {
      * @param <O> The type of the objects in the collection
      * @return A query which matches none of the objects in the collection
      */
-
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>> none(Class<O> objectType) {
         return new None<>(objectType);
     }

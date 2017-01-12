@@ -22,7 +22,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.equal;
 
 public class IntroduceEntityLayouts extends StandardCommand<Lock, Void> {
 
