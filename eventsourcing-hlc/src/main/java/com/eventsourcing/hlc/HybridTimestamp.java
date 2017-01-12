@@ -13,6 +13,7 @@ import com.eventsourcing.layout.SerializableComparable;
 import lombok.Getter;
 import org.apache.commons.net.ntp.TimeStamp;
 
+import java.math.BigInteger;
 import java.util.Date;
 
 /**
@@ -20,7 +21,7 @@ import java.util.Date;
  * currently heavily inspired by a corresponding <a href="https://github.com/tschottdorf/hlc-rs">Rust library</a>.
  */
 @LayoutName("rfc.eventsourcing.com/spec:6/HLC/#Timestamp")
-public class HybridTimestamp implements Comparable<HybridTimestamp>, SerializableComparable<Long> {
+public class HybridTimestamp implements Comparable<HybridTimestamp>, SerializableComparable<BigInteger> {
 
     private final PhysicalTimeProvider physicalTimeProvider;
 
@@ -165,7 +166,11 @@ public class HybridTimestamp implements Comparable<HybridTimestamp>, Serializabl
                 () + ">";
     }
 
-    @Override public Long getSerializableComparable() {
-        return TimeStamp.getNtpTime(timestamp()).getDate().getTime();
+    @Override public BigInteger getSerializableComparable() {
+        TimeStamp t = new TimeStamp(logicalTime);
+        return BigInteger.valueOf(t.getSeconds())
+                         .shiftLeft(64)
+                         .add(BigInteger.valueOf(t.getFraction()).shiftLeft(32))
+                         .add(BigInteger.valueOf(logicalCounter));
     }
 }
