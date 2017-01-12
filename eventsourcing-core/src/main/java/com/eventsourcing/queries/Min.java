@@ -10,6 +10,7 @@ package com.eventsourcing.queries;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.index.EntityIndex;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
@@ -62,8 +63,9 @@ public class Min<O extends Entity, A extends Comparable<A>> extends SimpleQuery<
                 }            }
         }
     }
-    public Min(Attribute<EntityHandle<O>, A> attribute) {
-        super(attribute);
+
+    public Min(EntityIndex<O, A> index) {
+        super(index.getAttribute());
     }
 
     @Override
@@ -91,5 +93,15 @@ public class Min<O extends Entity, A extends Comparable<A>> extends SimpleQuery<
         return "min(" + asLiteral(super.getAttributeName()) + ")";
     }
 
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Min)) return false;
+
+        Min min = (Min) o;
+
+        if (!attribute.equals(min.attribute)) return false;
+
+        return true;
+    }
 
 }

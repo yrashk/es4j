@@ -10,10 +10,12 @@ package com.eventsourcing.queries;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.index.EntityIndex;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.query.option.QueryOptions;
+import com.googlecode.cqengine.query.simple.Equal;
 import com.googlecode.cqengine.query.simple.SimpleQuery;
 
 import java.util.Iterator;
@@ -63,9 +65,10 @@ public class Max<O extends Entity, A extends Comparable<A>> extends SimpleQuery<
         }
     }
 
-    public Max(Attribute<EntityHandle<O>, A> attribute) {
-        super(attribute);
+    public Max(EntityIndex<O, A> index) {
+        super(index.getAttribute());
     }
+
     @Override
     protected boolean matchesSimpleAttribute(SimpleAttribute<EntityHandle<O>, A> attribute, EntityHandle<O> object,
                                              QueryOptions queryOptions) {
@@ -91,5 +94,14 @@ public class Max<O extends Entity, A extends Comparable<A>> extends SimpleQuery<
         return "max(" + asLiteral(super.getAttributeName()) + ")";
     }
 
+    @Override public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Max)) return false;
 
+        Max max = (Max) o;
+
+        if (!attribute.equals(max.attribute)) return false;
+
+        return true;
+    }
 }

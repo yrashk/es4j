@@ -1126,7 +1126,7 @@ public interface QueryFactory  {
      * @return query
      */
     static <O extends Entity, A extends Comparable<A>> Min<O, A> min(EntityIndex<O, A> entityIndex) {
-        return new Min<>(entityIndex.getAttribute());
+        return new Min<>(entityIndex);
     }
 
     /**
@@ -1137,6 +1137,6 @@ public interface QueryFactory  {
      * @return query
      */
     static <O extends Entity, A extends Comparable<A>> Max<O, A> max(EntityIndex<O, A> entityIndex) {
-        return new Max<>(entityIndex.getAttribute());
+        return new Max<>(entityIndex);
     }
 }
