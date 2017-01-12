@@ -20,8 +20,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.all;
+import static com.eventsourcing.queries.QueryFactory.equal;
 
 public class LayoutMigration<A extends Event, B extends Event> {
 

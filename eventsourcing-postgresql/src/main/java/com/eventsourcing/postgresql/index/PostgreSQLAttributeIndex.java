@@ -10,8 +10,8 @@ package com.eventsourcing.postgresql.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.ResolvedEntityHandle;
-import com.eventsourcing.index.*;
 import com.eventsourcing.index.AbstractAttributeIndex;
+import com.eventsourcing.index.*;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
@@ -37,20 +37,25 @@ import java.sql.BatchUpdateException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
 public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
+    private AdditionProcessor additionProcessor;
     protected KeyObjectStore<UUID, EntityHandle<O>> keyObjectStore;
 
     protected static <A, O extends Entity> Attribute<O, ?> serializableComparable(Attribute<O, A> attribute) {
         if (SerializableComparable.class.isAssignableFrom(attribute.getAttributeType())) {
             Class<?> type = SerializableComparable.getType(attribute.getAttributeType());
             @SuppressWarnings("unchecked")
-            MultiValueAttribute newAttribute = new SerializableComparableAttribute<>(attribute, type);
+            MultiValueAttribute newAttribute = new SerializableComparableAttribute<O, A>(attribute, type);
             return newAttribute;
         } else {
             return attribute;
@@ -183,6 +188,14 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         return this;
     }
 
+    protected interface AdditionProcessor<O extends Entity, A> extends BiConsumer<EntityHandle<O>, A> {
+        default void commit() throws SQLException {}
+    }
+
+    protected AdditionProcessor createAdditionProcessor() {
+        return (AdditionProcessor<O, A>) (handle, attr) -> {};
+    }
+
     @Override public boolean addAll(ObjectSet<EntityHandle<O>> objectSet, QueryOptions queryOptions) {
         try (CloseableIterator<EntityHandle<O>> iterator = objectSet.iterator()) {
             return addAll(iterator, queryOptions);
@@ -200,17 +213,19 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             try (PreparedStatement s = connection.prepareStatement(insert)) {
                 while (iterator.hasNext()) {
                     EntityHandle<O> object = iterator.next();
-                    Iterator<A> attrIterator = attribute.getValues(object, queryOptions).iterator();
+                    Iterator<A> attrIterator = getOwnAttribute().getValues(object, queryOptions).iterator();
                     while (attrIterator.hasNext()) {
                         int i = 1;
                         A attr = attrIterator.next();
                         i = setValue(connection, s, i, getQuantizedValue(attr), getAttributeTypeHandler());
                         s.setString(i, object.uuid().toString());
                         s.addBatch();
+                        additionProcessor.accept(object, attr);
                     }
                 }
                 try {
                     s.executeBatch();
+                    additionProcessor.commit();
                 } catch (BatchUpdateException e) {
                     connection.rollback();
                     Throwable nextException = e.getCause();
@@ -229,6 +244,10 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         }
 
         return true;
+    }
+
+    protected com.googlecode.cqengine.attribute.Attribute<EntityHandle<O>, A> getOwnAttribute() {
+        return attribute;
     }
 
     protected void addAll(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
@@ -265,6 +284,7 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
     }
 
     @Override public void init(ObjectStore<EntityHandle<O>> objectStore, QueryOptions queryOptions) {
+        additionProcessor = createAdditionProcessor();
         if (objectStore instanceof KeyObjectStore) {
             this.keyObjectStore = (KeyObjectStore<UUID, EntityHandle<O>>) objectStore;
         } else {
@@ -438,12 +458,13 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
         }
     }
 
-    private static class SerializableComparableAttribute<O extends Entity, A> extends MultiValueAttribute<O, Object> {
+    protected static class SerializableComparableAttribute<O extends Entity, A> extends MultiValueAttribute<O, A> {
 
+        @Getter
         private final Attribute<O, A> attribute;
 
         public SerializableComparableAttribute(Attribute<O, A> attribute, Class<?> type) {
-            super(attribute.getEffectiveObjectType(), attribute.getObjectType(), (Class<Object>) type,
+            super(attribute.getEffectiveObjectType(), attribute.getObjectType(), (Class<A>) type,
                   attribute.getAttributeName());
             this.attribute = attribute;
         }
@@ -457,6 +478,23 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
                 values.add(value1.getSerializableComparable());
             }
             return values;
+        }
+
+        @Override public int hashCode() {
+            return attribute.hashCode();
+        }
+
+        @Override public boolean equals(Object o) {
+            if (o == this) {
+                return true;
+            }
+            if (o instanceof SerializableComparableAttribute) {
+                return attribute.equals(((SerializableComparableAttribute) o).attribute);
+            }
+            if (o instanceof Attribute) {
+                return attribute.equals(o);
+            }
+            return false;
         }
     }
 
@@ -484,14 +522,14 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
 
     protected class MatchingResultSet<O extends Entity, T extends Query<EntityHandle<O>>> extends
             ResultSet<EntityHandle<O>> {
-        private final PostgreSQLStatementIterator<EntityHandle<O>> iterator;
+        private final Iterator<EntityHandle<O>> iterator;
         @Getter
         private final T query;
         @Getter
         private final QueryOptions queryOptions;
         private final int finalSize;
 
-        public MatchingResultSet(PostgreSQLStatementIterator<EntityHandle<O>> iterator, T query,
+        public MatchingResultSet(Iterator<EntityHandle<O>> iterator, T query,
                                  QueryOptions queryOptions, int finalSize) {
             this.iterator = iterator;
             this.query = query;
@@ -540,7 +578,9 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
 
         @Override
         public void close() {
-            iterator.close();
+            if (iterator instanceof PostgreSQLStatementIterator) {
+                ((PostgreSQLStatementIterator) iterator).close();
+            }
         }
     }
 

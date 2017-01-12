@@ -21,7 +21,7 @@ import org.unprotocols.coss.RFC;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.equal;
 import static com.googlecode.cqengine.stream.StreamFactory.streamOf;
 
 @Draft @RFC(url = "http://rfc.eventsourcing.com/spec:3/CEP")

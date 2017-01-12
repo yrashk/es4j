@@ -11,9 +11,12 @@ import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.layout.Layout;
+import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
+import com.eventsourcing.queries.Max;
+import com.eventsourcing.queries.Min;
 import com.fasterxml.classmate.ResolvedType;
 import com.fasterxml.classmate.TypeResolver;
 import com.google.common.io.BaseEncoding;
@@ -32,8 +35,12 @@ import javax.sql.DataSource;
 import java.security.MessageDigest;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
@@ -42,6 +49,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
         implements SortedKeyStatisticsAttributeIndex<A, EntityHandle<O>> {
 
     protected static final int INDEX_RETRIEVAL_COST = 40;
+    public static final int AGGREGATE_RETRIEVAL_COST = 25;
 
     @Getter
     private final DataSource dataSource;
@@ -49,8 +57,11 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
     private final Layout<O> layout;
     @Getter
     private final TypeHandler attributeTypeHandler;
+    private final Attribute<O, A> comparableAttribute;
     @Getter
     private String tableName;
+    @Getter
+    private String aggregateTableName;
 
     @Override protected boolean isUnique() {
         return false;
@@ -82,19 +93,29 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
 
     @SneakyThrows
     protected NavigableIndex(DataSource dataSource, Attribute<O, A> attribute) {
-        super(attribute, new HashSet<Class<? extends Query>>() {{
+        super(attribute instanceof SerializableComparableAttribute ? ((SerializableComparableAttribute) attribute)
+                .getAttribute() : attribute, new HashSet<Class<?
+                extends Query>>
+                () {{
             add(Equal.class);
             add(LessThan.class);
             add(GreaterThan.class);
             add(Between.class);
             add(Has.class);
+            add(Min.class);
+            add(Max.class);
         }});
+        comparableAttribute = attribute;
         this.dataSource = dataSource;
-        layout = Layout.forClass(attribute.getEffectiveObjectType());
+        layout = Layout.forClass(comparableAttribute.getEffectiveObjectType());
         TypeResolver typeResolver = new TypeResolver();
-        ResolvedType resolvedType = typeResolver.resolve(attribute.getAttributeType());
+        ResolvedType resolvedType = typeResolver.resolve(comparableAttribute.getAttributeType());
         attributeTypeHandler = TypeHandler.lookup(resolvedType);
         init();
+    }
+
+    @Override protected com.googlecode.cqengine.attribute.Attribute<EntityHandle<O>, A> getOwnAttribute() {
+        return comparableAttribute;
     }
 
     @SneakyThrows
@@ -102,7 +123,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
         try(Connection connection = dataSource.getConnection()) {
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             digest.update(layout.getHash());
-            digest.update(attribute.getAttributeName().getBytes());
+            digest.update(getOwnAttribute().getAttributeName().getBytes());
             String encodedHash = BaseEncoding.base16().encode(digest.digest());
             tableName = "index_v1_" + encodedHash + "_navigable";
             String attributeType = PostgreSQLSerialization.getMappedType(connection, attributeTypeHandler);
@@ -122,13 +143,111 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             try (PreparedStatement s = connection.prepareStatement(indexObj)) {
                 s.executeUpdate();
             }
-            String indexComment = layout.getName() + "." + attribute.getAttributeName() + " EQ LT GT BT";
+            String indexComment = layout.getName() + "." + getOwnAttribute().getAttributeName() + " EQ LT GT BT";
             String comment = "COMMENT ON TABLE " + tableName + " IS '" + indexComment + "'";
             try (PreparedStatement s = connection.prepareStatement(comment)) {
                 s.executeUpdate();
             }
+            aggregateTableName = "index_v1_" + encodedHash + "_navaggr";
+            String createAggregates = "CREATE TABLE IF NOT EXISTS " + aggregateTableName + " (" +
+                                      "aggregate_type VARCHAR(255) NOT NULL UNIQUE," +
+                                      "object UUID," +
+                                      "val " + attributeType +
+                                      ")";
+            try (PreparedStatement s = connection.prepareStatement(createAggregates)) {
+                s.executeUpdate();
+            }
 
         }
+    }
+
+    private static class NavigableAdditionProcessor<O extends Entity, A extends Comparable>
+            implements AdditionProcessor<O, A> {
+
+        private final String aggregateTableName;
+        private final TypeHandler attributeTypeHandler;
+        private final DataSource dataSource;
+
+        private A min;
+        private UUID minRef;
+        private A max;
+        private UUID maxRef;
+
+        @SneakyThrows
+        public NavigableAdditionProcessor(String aggregateTableName, TypeHandler attributeTypeHandler,
+                                          DataSource dataSource) {
+            this.aggregateTableName = aggregateTableName;
+            this.attributeTypeHandler = attributeTypeHandler;
+            this.dataSource = dataSource;
+            try (Connection c = dataSource.getConnection()) {
+                String query = "SELECT aggregate_type, object, val FROM " + aggregateTableName + " WHERE " +
+                               "aggregate_type IN ('min','max')";
+                try (PreparedStatement s = c.prepareStatement(query)) {
+                    try (java.sql.ResultSet rs = s.executeQuery()) {
+                        while (rs.next()) {
+                            String aggregateType = rs.getString(1);
+                            if (aggregateType.contentEquals("min")) {
+                                minRef = UUID.fromString(rs.getString(2));
+                                AtomicInteger valPos = new AtomicInteger(3);
+                                min = (A) PostgreSQLSerialization.getValue(rs, valPos, attributeTypeHandler);
+                            }
+                            if (aggregateType.contentEquals("max")) {
+                                maxRef = UUID.fromString(rs.getString(2));
+                                AtomicInteger valPos = new AtomicInteger(3);
+                                max = (A) PostgreSQLSerialization.getValue(rs, valPos, attributeTypeHandler);
+                            }
+
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override public void commit() throws SQLException {
+            try (Connection c = dataSource.getConnection()) {
+                String insert = "INSERT INTO " + aggregateTableName + " (aggregate_type, object, val) " +
+                        "VALUES (?, ?::UUID, ?) ON CONFLICT (aggregate_type) DO UPDATE SET object = ?::UUID, val = ? " +
+                        "WHERE " +
+                        aggregateTableName + ".aggregate_type = ?";
+                try (PreparedStatement s = c.prepareStatement(insert)) {
+                    if (min != null) {
+                        s.setString(1, "min"); // insert
+                        s.setString(6, "min"); // update
+                        s.setString(2, minRef.toString()); // insert
+                        s.setString(4, minRef.toString()); // update
+                        PostgreSQLSerialization.setValue(c, s, 3, min, attributeTypeHandler); // insert
+                        PostgreSQLSerialization.setValue(c, s, 5, min, attributeTypeHandler); // update
+                        s.addBatch();
+                    }
+                    if (max != null) {
+                        s.setString(1, "max"); // insert
+                        s.setString(6, "max"); // update
+                        s.setString(2, maxRef.toString()); // insert
+                        s.setString(4, maxRef.toString()); // update
+                        PostgreSQLSerialization.setValue(c, s, 3, max, attributeTypeHandler); // insert
+                        PostgreSQLSerialization.setValue(c, s, 5, max, attributeTypeHandler); // update
+                        s.addBatch();
+                    }
+                    s.executeBatch();
+                }
+            }
+        }
+
+        @Override public void accept(EntityHandle<O> handle, A a) {
+            if (min == null || a.compareTo(min) < 0) {
+                min = a;
+                minRef = handle.uuid();
+            }
+            if (max == null || a.compareTo(max) > 0) {
+                max = a;
+                maxRef = handle.uuid();
+            }
+        }
+    }
+
+    @Override protected AdditionProcessor createAdditionProcessor() {
+        return new NavigableAdditionProcessor<O, A>(getAggregateTableName(), getAttributeTypeHandler(),
+                                                    getDataSource());
     }
 
     @SneakyThrows
@@ -146,7 +265,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                     .prepareStatement("SELECT count(object) FROM " + getTableName() + " WHERE key " + op + " " +
                                       getParameter
                             (connection, getAttributeTypeHandler(), null))) {
-                setValue(connection, counter, 1, value, getAttributeTypeHandler());
+                setValue(connection, counter, 1, getSerializableValue(value), getAttributeTypeHandler());
                 try (java.sql.ResultSet resultSet = counter.executeQuery()) {
                     resultSet.next();
                     size = resultSet.getInt(1);
@@ -156,7 +275,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             PreparedStatement s = connection
                     .prepareStatement("SELECT object FROM " + getTableName() + " WHERE key " + op + " " +
                                               getParameter(connection, getAttributeTypeHandler(), null));
-            setValue(connection, s, 1, value, getAttributeTypeHandler());
+            setValue(connection, s, 1, getSerializableValue(value), getAttributeTypeHandler());
 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
@@ -185,7 +304,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                     .prepareStatement("SELECT count(object) FROM " + getTableName() + " WHERE key " + op + " " +
                                               getParameter
                                                       (connection, getAttributeTypeHandler(), null))) {
-                setValue(connection, counter, 1, value,
+                setValue(connection, counter, 1, getSerializableValue(value),
                          getAttributeTypeHandler());
                 try (java.sql.ResultSet resultSet = counter.executeQuery()) {
                     resultSet.next();
@@ -196,7 +315,7 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             PreparedStatement s = connection
                     .prepareStatement("SELECT object FROM " + getTableName() + " WHERE key " + op + " " +
                                               getParameter(connection, getAttributeTypeHandler(), null));
-            setValue(connection, s, 1, value, getAttributeTypeHandler());
+            setValue(connection, s, 1, getSerializableValue(value), getAttributeTypeHandler());
 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
@@ -229,8 +348,8 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                                               "key " + lowerOp + " " + parameter + " AND " +
                                               "key " + upperOp + " " + parameter
                     )) {
-                setValue(connection, counter, 1, lowerValue, getAttributeTypeHandler());
-                setValue(connection, counter, 2, upperValue, getAttributeTypeHandler());
+                setValue(connection, counter, 1, getSerializableValue(lowerValue), getAttributeTypeHandler());
+                setValue(connection, counter, 2, getSerializableValue(upperValue), getAttributeTypeHandler());
 
                 try (java.sql.ResultSet resultSet = counter.executeQuery()) {
                     resultSet.next();
@@ -242,8 +361,8 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                     .prepareStatement("SELECT object FROM " + getTableName() + " WHERE " +
                                               "key " + lowerOp + " " + parameter + " AND " +
                                               "key " + upperOp + " " + parameter);
-            setValue(connection, s, 1, lowerValue, getAttributeTypeHandler());
-            setValue(connection, s, 2, upperValue, getAttributeTypeHandler());
+            setValue(connection, s, 1, getSerializableValue(lowerValue), getAttributeTypeHandler());
+            setValue(connection, s, 2, getSerializableValue(upperValue), getAttributeTypeHandler());
 
             PostgreSQLStatementIterator<EntityHandle<O>> iterator = new PostgreSQLStatementIterator<EntityHandle<O>>
                     (s, connection, isMutable()) {
@@ -264,7 +383,56 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             };
             return new CloseableResultSet<>(rs, query, queryOptions);
         }
+        if (queryClass.equals(Min.class)) {
+            try (Connection c = getDataSource().getConnection()) {
+                String q = "SELECT object FROM " + aggregateTableName + " WHERE " +
+                           "aggregate_type = 'min'";
+                try (PreparedStatement s = c.prepareStatement(q)) {
+                    try (java.sql.ResultSet resultSet = s.executeQuery()) {
+                        if (resultSet.next()) {
+                            UUID uuid = UUID.fromString(resultSet.getString(1));
+                            Iterator<EntityHandle<O>> iterator = Collections.singletonList(keyObjectStore.get(uuid))
+                                                                            .iterator();
+                            ResultSet<EntityHandle<O>> rs = new MatchingResultSet<O, Min<O, A>>
+                                    (iterator, (Min<O, A>) query, queryOptions, 1) {
+                                @Override public int getRetrievalCost() {
+                                    return AGGREGATE_RETRIEVAL_COST;
+                                }
+                            };
+                            return new CloseableResultSet<>(rs, query, queryOptions);
+                        }
+                    }
+                }
+            }
+        }
+        if (queryClass.equals(Max.class)) {
+            try (Connection c = getDataSource().getConnection()) {
+                String q = "SELECT object FROM " + aggregateTableName + " WHERE " +
+                           "aggregate_type = 'max'";
+                try (PreparedStatement s = c.prepareStatement(q)) {
+                    try (java.sql.ResultSet resultSet = s.executeQuery()) {
+                        if (resultSet.next()) {
+                            UUID uuid = UUID.fromString(resultSet.getString(1));
+                            Iterator<EntityHandle<O>> iterator = Collections.singletonList(keyObjectStore.get(uuid))
+                                                                            .iterator();
+                            ResultSet<EntityHandle<O>> rs = new MatchingResultSet<O, Max<O, A>>
+                                    (iterator, (Max<O, A>) query, queryOptions, 1) {
+                                @Override public int getRetrievalCost() {
+                                    return AGGREGATE_RETRIEVAL_COST;
+                                }
+                            };
+                            return new CloseableResultSet<>(rs, query, queryOptions);
+                        }
+                    }
+                }
+            }
+        }
         return super.retrieve(query, queryOptions);
+    }
+
+    protected Object getSerializableValue(A value) {
+        return value instanceof SerializableComparable ? ((SerializableComparable)
+                         value).getSerializableComparable() : value;
     }
 
 

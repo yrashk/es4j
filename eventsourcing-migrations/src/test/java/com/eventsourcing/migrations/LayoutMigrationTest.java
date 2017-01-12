@@ -22,8 +22,8 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.eventsourcing.index.EntityQueryFactory.all;
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.all;
+import static com.eventsourcing.queries.QueryFactory.equal;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 

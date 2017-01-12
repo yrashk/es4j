@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.eventsourcing.cep.protocols.DeletedProtocol.notDeleted;
-import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.queries.QueryFactory.*;
 import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.*;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static com.googlecode.cqengine.stream.StreamFactory.streamOf;

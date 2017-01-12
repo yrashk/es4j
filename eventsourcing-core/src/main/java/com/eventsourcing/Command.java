@@ -12,7 +12,7 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
 import com.googlecode.cqengine.resultset.ResultSet;
 
-import static com.eventsourcing.index.EntityQueryFactory.*;
+import static com.eventsourcing.queries.QueryFactory.*;
 
 /**
  * Command is a request for changes in the domain. Unlike an event,

@@ -11,6 +11,7 @@ import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.IndexEngine;
 import com.google.common.util.concurrent.Service;
+import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.QueryFactory;
 import com.googlecode.cqengine.query.option.QueryOptions;
@@ -190,7 +191,9 @@ public interface Repository extends Service {
      */
     default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query,
                                                                         QueryOptions queryOptions) {
-        return getIndexEngine().getIndexedCollection(klass).retrieve(query, queryOptions);
+        IndexedCollection<EntityHandle<E>> collection = getIndexEngine().getIndexedCollection(klass);
+        queryOptions.put(IndexedCollection.class, collection);
+        return collection.retrieve(query, queryOptions);
     }
 
 }

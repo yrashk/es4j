@@ -27,7 +27,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.equal;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static org.testng.Assert.assertEquals;

@@ -10,9 +10,13 @@ package com.eventsourcing.index;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.ResolvedEntityHandle;
+import com.eventsourcing.StandardEntity;
 import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.hlc.NTPServerTimeProvider;
 import com.eventsourcing.models.Car;
 import com.eventsourcing.models.CarFactory;
+import com.eventsourcing.queries.Max;
+import com.eventsourcing.queries.Min;
 import com.google.common.collect.Lists;
 import com.googlecode.cqengine.ConcurrentIndexedCollection;
 import com.googlecode.cqengine.IndexedCollection;
@@ -24,15 +28,21 @@ import com.googlecode.cqengine.index.support.SortedKeyStatisticsIndex;
 import com.googlecode.cqengine.quantizer.IntegerQuantizer;
 import com.googlecode.cqengine.quantizer.Quantizer;
 import com.googlecode.cqengine.query.Query;
+import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.resultset.ResultSet;
+import lombok.SneakyThrows;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.annotations.Test;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static com.eventsourcing.queries.QueryFactory.max;
 import static com.googlecode.cqengine.query.QueryFactory.*;
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertFalse;
 import static org.testng.Assert.assertTrue;
 
 // This test was originally copied from CQEngine in order to test
@@ -384,6 +394,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
     }
 
     @Test
+    @SneakyThrows
     public void serializableComparable() {
         IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
         NavigableIndex index = onAttribute(Car.TIMESTAMP);
@@ -393,8 +404,16 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
         Car car1 = CarFactory.createCar(1);
         Car car2 = CarFactory.createCar(2);
 
-        HybridTimestamp ts1 = new HybridTimestamp(TimeStamp.getNtpTime(new Date().getTime()).ntpValue(), 1);
-        HybridTimestamp ts2 = new HybridTimestamp(TimeStamp.getNtpTime(new Date().getTime() + 1000).ntpValue(), 0);
+        NTPServerTimeProvider ntpServerTimeProvider = new NTPServerTimeProvider();
+        ntpServerTimeProvider.startAsync().awaitRunning();
+
+        HybridTimestamp ts1 = new HybridTimestamp(ntpServerTimeProvider);
+        HybridTimestamp ts2 = ts1.clone();
+        Thread.sleep(1000);
+        ts2.update();
+
+        assertTrue(ts2.compareTo(ts1) > 0);
+        assertTrue(ts2.getSerializableComparable().compareTo(ts1.getSerializableComparable()) > 0);
 
         car1.timestamp(ts1);
         car2.timestamp(ts2);
@@ -406,6 +425,10 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
             assertEquals(resultSet.size(), 1);
             assertEquals(resultSet.uniqueResult().get().getModel(), "Taurus");
         }
+
+        index.clear(noQueryOptions());
+
+        ntpServerTimeProvider.stopAsync().awaitTerminated();
 
     }
 
@@ -436,6 +459,46 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
         PRICE_INDEX.clear(noQueryOptions());
         PRICE_INDEX_1.clear(noQueryOptions());
+    }
+
+    @Test
+    public void minMax() {
+        Random random = new Random();
+        IndexedCollection<EntityHandle<Car>> collection = new ConcurrentIndexedCollection<>();
+        SortedKeyStatisticsIndex<HybridTimestamp, EntityHandle<Car>> MODEL_INDEX = onAttribute(Car.TIMESTAMP);
+        WrappedSimpleIndex<Car, HybridTimestamp> i = new WrappedSimpleIndex<>((Function<Car, HybridTimestamp>) StandardEntity::timestamp);
+        i.setAttribute(Car.TIMESTAMP);
+        if (MODEL_INDEX.supportsQuery(new Min<>(i), noQueryOptions()) &&
+            MODEL_INDEX.supportsQuery(new Max<>(i), noQueryOptions())) {
+            MODEL_INDEX.clear(noQueryOptions());
+            collection.addIndex(MODEL_INDEX);
+
+            Set<EntityHandle<Car>> cars1 = CarFactory.createCollectionOfCars(100_000);
+            cars1.forEach(car -> car.get().timestamp(new HybridTimestamp(random.nextInt(), 0)));
+            collection.addAll(cars1);
+
+            QueryOptions queryOptions = queryOptions();
+            queryOptions.put(IndexedCollection.class, collection);
+
+            long t1 = System.nanoTime();
+            HybridTimestamp max1 = collection.retrieve(max(i), queryOptions).uniqueResult().get().timestamp();
+            long t2 = System.nanoTime();
+
+            assertFalse(cars1.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(max1.getSerializableComparable()) > 0));
+
+            Set<EntityHandle<Car>> cars2 = CarFactory.createCollectionOfCars(100_000);
+            cars2.forEach(car -> car.get().timestamp(new HybridTimestamp(random.nextInt(), random.nextInt(2))));
+            collection.addAll(cars2);
+
+            long t1_ = System.nanoTime();
+            HybridTimestamp max2 = collection.retrieve(max(i), queryOptions).uniqueResult().get().timestamp();
+            long t2_ = System.nanoTime();
+
+            assertFalse(cars2.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(max2.getSerializableComparable()) > 0));
+
+            MODEL_INDEX.clear(noQueryOptions());
+
+        }
     }
 
 }

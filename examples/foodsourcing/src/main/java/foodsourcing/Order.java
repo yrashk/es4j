@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.eventsourcing.index.EntityQueryFactory.equal;
+import static com.eventsourcing.queries.QueryFactory.equal;
 import static foodsourcing.Order.Status.CONFIRMED;
 
 public class Order {
