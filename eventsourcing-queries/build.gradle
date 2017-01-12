@@ -1,5 +1,0 @@
-dependencies {
-    compile project(':eventsourcing-core')
-    testCompile project(':eventsourcing-inmem')
-    testCompile project(':eventsourcing-repository')
-}
