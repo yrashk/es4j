@@ -26,6 +26,7 @@ import static com.eventsourcing.index.IndexEngine.IndexFeature.LT;
 import static com.eventsourcing.queries.QueryFactory.max;
 import static com.eventsourcing.queries.QueryFactory.min;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 public class MinMaxTest extends RepositoryUsingTest {
 
@@ -71,5 +72,16 @@ public class MinMaxTest extends RepositoryUsingTest {
         try (ResultSet<EntityHandle<TestEvent>> rs = repository.query(TestEvent.class, max(TestEvent.TIMESTAMP))) {
             assertEquals(rs.uniqueResult().get().timestamp(), ts3);
         }
+    }
+
+
+    @Test
+    @SneakyThrows
+    public void empty() {
+
+        try (ResultSet<EntityHandle<TestEvent>> rs = repository.query(TestEvent.class, min(TestEvent.TIMESTAMP))) {
+            assertTrue(rs.isEmpty());
+        }
+
     }
 }

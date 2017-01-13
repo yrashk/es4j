@@ -400,6 +400,14 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                                 }
                             };
                             return new CloseableResultSet<>(rs, query, queryOptions);
+                        } else {
+                            ResultSet<EntityHandle<O>> rs = new MatchingResultSet<O, Min<O, A>>
+                                    (Collections.emptyIterator(), (Min<O, A>) query, queryOptions, 0) {
+                                @Override public int getRetrievalCost() {
+                                    return AGGREGATE_RETRIEVAL_COST;
+                                }
+                            };
+                            return new CloseableResultSet<>(rs, query, queryOptions);
                         }
                     }
                 }
@@ -422,8 +430,15 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                                 }
                             };
                             return new CloseableResultSet<>(rs, query, queryOptions);
-                        }
-                    }
+                        } else {
+                            ResultSet<EntityHandle<O>> rs = new MatchingResultSet<O, Max<O, A>>
+                                    (Collections.emptyIterator(), (Max<O, A>) query, queryOptions, 0) {
+                                @Override public int getRetrievalCost() {
+                                    return AGGREGATE_RETRIEVAL_COST;
+                                }
+                            };
+                            return new CloseableResultSet<>(rs, query, queryOptions);
+                        }                    }
                 }
             }
         }

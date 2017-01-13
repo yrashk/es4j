@@ -39,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 
 import static com.eventsourcing.queries.QueryFactory.max;
+import static com.eventsourcing.queries.QueryFactory.min;
 import static com.googlecode.cqengine.query.QueryFactory.*;
 import static java.util.Arrays.asList;
 import static org.testng.Assert.assertEquals;
@@ -473,18 +474,23 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
             MODEL_INDEX.clear(noQueryOptions());
             collection.addIndex(MODEL_INDEX);
 
+            QueryOptions queryOptions = queryOptions();
+            queryOptions.put(IndexedCollection.class, collection);
+
+            assertTrue(collection.retrieve(max(i), queryOptions).isEmpty());
+            assertTrue(collection.retrieve(min(i), queryOptions).isEmpty());
+
             Set<EntityHandle<Car>> cars1 = CarFactory.createCollectionOfCars(100_000);
             cars1.forEach(car -> car.get().timestamp(new HybridTimestamp(random.nextInt(), 0)));
             collection.addAll(cars1);
 
-            QueryOptions queryOptions = queryOptions();
-            queryOptions.put(IndexedCollection.class, collection);
-
             long t1 = System.nanoTime();
             HybridTimestamp max1 = collection.retrieve(max(i), queryOptions).uniqueResult().get().timestamp();
+            HybridTimestamp min1 = collection.retrieve(min(i), queryOptions).uniqueResult().get().timestamp();
             long t2 = System.nanoTime();
 
             assertFalse(cars1.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(max1.getSerializableComparable()) > 0));
+            assertFalse(cars1.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(min1.getSerializableComparable()) < 0));
 
             Set<EntityHandle<Car>> cars2 = CarFactory.createCollectionOfCars(100_000);
             cars2.forEach(car -> car.get().timestamp(new HybridTimestamp(random.nextInt(), random.nextInt(2))));
@@ -492,9 +498,11 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
 
             long t1_ = System.nanoTime();
             HybridTimestamp max2 = collection.retrieve(max(i), queryOptions).uniqueResult().get().timestamp();
+            HybridTimestamp min2 = collection.retrieve(min(i), queryOptions).uniqueResult().get().timestamp();
             long t2_ = System.nanoTime();
 
             assertFalse(cars2.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(max2.getSerializableComparable()) > 0));
+            assertFalse(cars2.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(min2.getSerializableComparable()) < 0));
 
             MODEL_INDEX.clear(noQueryOptions());
 
