@@ -14,12 +14,44 @@ import ru.yandex.qatools.embed.postgresql.PostgresProcess;
 import ru.yandex.qatools.embed.postgresql.PostgresStarter;
 import ru.yandex.qatools.embed.postgresql.config.PostgresConfig;
 
-import javax.sql.DataSource;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.util.UUID;
 
 public abstract class PostgreSQLTest {
 
+    private static PostgresConfig pgConfig;
+
     @SneakyThrows
     public static PGDataSource createDataSource() {
+        if (pgConfig == null) {
+            pgConfig = launchPostgres();
+        }
+
+        PGDataSource ds = new PGDataSource();
+        ds.setHost(pgConfig.net().host());
+        ds.setDatabase(pgConfig.storage().dbName());
+        ds.setUser(pgConfig.credentials().username());
+        ds.setPassword(pgConfig.credentials().password());
+        ds.setPort(pgConfig.net().port());
+        ds.setHousekeeper(false);
+
+
+        String databaseName = UUID.randomUUID().toString();
+
+        try (Connection c = ds.getConnection()) {
+            try (PreparedStatement preparedStatement = c.prepareStatement("CREATE DATABASE \"" + databaseName + "\"")) {
+                preparedStatement.executeUpdate();
+            }
+        }
+
+        ds.setDatabase(databaseName);
+
+        return ds;
+    }
+
+    protected static PostgresConfig launchPostgres() throws IOException {
         PostgresStarter<PostgresExecutable, PostgresProcess> runtime = PostgresStarter.getDefaultInstance();
         final PostgresConfig pgConfig = PostgresConfig.defaultWithDbName("eventsourcing",
                                                                          "eventsourcing", "eventsourcing");
@@ -32,15 +64,7 @@ public abstract class PostgreSQLTest {
             }
         });
 
-        PGDataSource ds = new PGDataSource();
-        ds.setHost(pgConfig.net().host());
-        ds.setDatabase(pgConfig.storage().dbName());
-        ds.setUser(pgConfig.credentials().username());
-        ds.setPassword(pgConfig.credentials().password());
-        ds.setPort(pgConfig.net().port());
-        ds.setHousekeeper(false);
-
-        return ds;
+        return pgConfig;
     }
 
 }
