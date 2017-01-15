@@ -21,13 +21,9 @@ import org.testng.annotations.Test;
 import static com.eventsourcing.postgresql.PostgreSQLTest.createDataSource;
 
 @Test
-public class PostgreSQLRepositoryTest extends RepositoryTest<Repository> {
+public class PostgreSQLRepositoryTest extends RepositoryTest {
 
     private PGDataSource dataSource;
-
-    public PostgreSQLRepositoryTest() throws Exception {
-        super(new StandardRepository());
-    }
 
     @SneakyThrows
     @Override protected Journal createJournal() {

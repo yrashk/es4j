@@ -13,10 +13,7 @@ import com.eventsourcing.repository.StandardRepository;
 import org.testng.annotations.Test;
 
 @Test
-public class MemoryJournalRepositoryTest extends RepositoryTest<StandardRepository> {
-    public MemoryJournalRepositoryTest() {
-        super(new StandardRepository());
-    }
+public class MemoryJournalRepositoryTest extends RepositoryTest {
 
     protected Journal createJournal() {
         return new MemoryJournal();

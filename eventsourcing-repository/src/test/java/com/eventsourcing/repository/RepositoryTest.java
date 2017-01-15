@@ -15,18 +15,19 @@ import com.eventsourcing.events.EventCausalityEstablished;
 import com.eventsourcing.events.JavaExceptionOccurred;
 import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.hlc.NTPServerTimeProvider;
+import com.eventsourcing.hlc.PhysicalTimeProvider;
 import com.eventsourcing.index.*;
 import com.eventsourcing.inmem.MemoryIndexEngine;
 import com.eventsourcing.layout.LayoutConstructor;
 import com.eventsourcing.migrations.events.EntityLayoutIntroduced;
 import com.eventsourcing.repository.commands.IntroduceEntityLayouts;
 import com.google.common.collect.Iterables;
+import com.google.common.util.concurrent.AbstractService;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.Service;
 import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.resultset.ResultSet;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.SneakyThrows;
-import lombok.ToString;
+import lombok.*;
 import lombok.experimental.Accessors;
 import org.apache.commons.net.ntp.TimeStamp;
 import org.testng.Assert;
@@ -47,22 +48,19 @@ import static com.eventsourcing.queries.QueryFactory.*;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
 import static org.testng.Assert.*;
 
-public abstract class RepositoryTest<T extends Repository> {
+public abstract class RepositoryTest {
 
-    private final T repository;
+    private Repository repository;
     private Journal journal;
     private IndexEngine indexEngine;
     private LocalLockProvider lockProvider;
     private NTPServerTimeProvider timeProvider;
     private TimeStamp startTime;
 
-    public RepositoryTest(T repository) {
-        this.repository = repository;
-    }
-
     @BeforeClass
     public void setUpEnv() throws Exception {
         startTime = new TimeStamp(new Date());
+        repository = new StandardRepository();
         repository
                 .addCommandSetProvider(new PackageCommandSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
         repository.addEventSetProvider(new PackageEventSetProvider(new Package[]{RepositoryTest.class.getPackage()}));
@@ -731,4 +729,84 @@ public abstract class RepositoryTest<T extends Repository> {
         cmd1.future.complete(null);
     }
 
+    @Accessors(fluent = true)
+    class StickyTimeProvider extends AbstractService implements PhysicalTimeProvider {
+
+        private final PhysicalTimeProvider timeProvider;
+
+        StickyTimeProvider(PhysicalTimeProvider timeProvider) {this.timeProvider = timeProvider;}
+
+        @Setter
+        private boolean sticky = false;
+        private Long lastValue = null;
+
+
+        @Override public long getPhysicalTime() {
+            if (sticky && lastValue == null) {
+                lastValue = timeProvider.getPhysicalTime();
+            }
+            if (sticky) {
+                return lastValue;
+            }
+            return timeProvider.getPhysicalTime();
+        }
+
+        @Override protected void doStart() {
+            timeProvider.startAsync().addListener(new Listener() {
+                @Override public void failed(State from, Throwable failure) {
+                    notifyFailed(failure);
+                }
+
+                @Override public void running() {
+                    notifyStarted();
+                }
+            }, MoreExecutors.directExecutor());
+        }
+
+        @Override protected void doStop() {
+            timeProvider.stopAsync().addListener(new Listener() {
+
+                @Override public void terminated(State from) {
+                    notifyStopped();
+                }
+
+                @Override public void failed(State from, Throwable failure) {
+                    notifyFailed(failure);
+                }
+            }, MoreExecutors.directExecutor());
+        }
+    }
+
+    @Test
+    @SneakyThrows
+    public void repositoryTimestamp() {
+        StandardRepository newRepository = new StandardRepository();
+        StickyTimeProvider newTimeProvider = new StickyTimeProvider(new NTPServerTimeProvider());
+        newTimeProvider.startAsync().awaitRunning();
+        newTimeProvider.sticky(true);
+
+        newRepository.setPhysicalTimeProvider(newTimeProvider);
+        HybridTimestamp hybridTimestamp = new HybridTimestamp(newTimeProvider);
+        hybridTimestamp.update();
+        Journal newJournal = createJournal();
+        newJournal.setRepository(newRepository);
+        newJournal.getProperties().setRepositoryTimestamp(hybridTimestamp);
+        newRepository.setJournal(newJournal);
+        IndexEngine newIndexEngine = createIndexEngine();
+        newRepository.setIndexEngine(newIndexEngine);
+        LocalLockProvider newLockProvider = new LocalLockProvider();
+        newRepository.setLockProvider(newLockProvider);
+        newRepository.startAsync().awaitRunning();
+
+        // Because the time is not advancing, the logical counter is
+        // this proves that the saved timestamp was used
+        assertEquals(newRepository.getTimestamp().getLogicalTime(), hybridTimestamp.getLogicalTime());
+        assertTrue(newRepository.getTimestamp().getLogicalCounter() > hybridTimestamp.getLogicalCounter());
+
+        // This tests that the repository saves the timestamp back
+        assertEquals(newJournal.getProperties().getRepositoryTimestamp().get(), newRepository.getTimestamp());
+
+        newRepository.stopAsync().awaitTerminated();
+        newTimeProvider.stopAsync().awaitTerminated();
+    }
 }

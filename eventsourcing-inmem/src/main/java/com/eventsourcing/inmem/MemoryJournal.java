@@ -8,6 +8,7 @@
 package com.eventsourcing.inmem;
 
 import com.eventsourcing.*;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.layout.ObjectDeserializer;
 import com.eventsourcing.layout.ObjectSerializer;
 import com.eventsourcing.layout.Serialization;
@@ -102,6 +103,16 @@ public class MemoryJournal extends AbstractService implements Journal {
     @Override public Journal.Transaction beginTransaction() {
         return new Transaction(this);
     }
+
+    @Getter
+    private final Properties properties = new Properties() {
+            @Getter
+            private Optional<HybridTimestamp> repositoryTimestamp = Optional.empty();
+
+            @Override public void setRepositoryTimestamp(HybridTimestamp timestamp) {
+                repositoryTimestamp = Optional.of(timestamp);
+            }
+    };
 
     @Override @SuppressWarnings("unchecked")
     public <T extends Entity> Optional<T> get(UUID uuid) {
