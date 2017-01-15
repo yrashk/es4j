@@ -1095,7 +1095,9 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
+     * @deprecated use {@link #isLatestEntity(Query, EntityIndex)}
      */
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final IndexedCollection<EntityHandle<O>> collection,
                    final Query<EntityHandle<O>> query,
@@ -1110,12 +1112,40 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
+     * @deprecated use {@link #isLatestEntity(Function, EntityIndex)}
      */
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final IndexedCollection<EntityHandle<O>> collection,
                    final Function<EntityHandle<O>, Query<EntityHandle<O>>> query,
                    final EntityIndex<O, HybridTimestamp> timestampAttribute) {
         return new IsLatestEntity<>(collection, query, timestampAttribute.getAttribute());
+    }
+
+    /**
+     * @see LatestAssociatedEntryQuery
+     * @param query query as is
+     * @param timestampAttribute timestamp attribute
+     * @param <O> entity type
+     * @return a query
+     */
+    static <O extends Entity> Query<EntityHandle<O>>
+    isLatestEntity(final Query<EntityHandle<O>> query,
+                   final EntityIndex<O, HybridTimestamp> timestampAttribute) {
+        return new IsLatestEntity<>(query, timestampAttribute.getAttribute());
+    }
+
+    /**
+     * @see LatestAssociatedEntryQuery
+     * @param query query returning function
+     * @param timestampAttribute timestamp attribute
+     * @param <O> entity type
+     * @return a query
+     */
+    static <O extends Entity> Query<EntityHandle<O>>
+    isLatestEntity(final Function<EntityHandle<O>, Query<EntityHandle<O>>> query,
+                   final EntityIndex<O, HybridTimestamp> timestampAttribute) {
+        return new IsLatestEntity<>(query, timestampAttribute.getAttribute());
     }
 
     /**
