@@ -9,6 +9,7 @@ package com.eventsourcing.postgresql.index;
 
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
+import com.eventsourcing.hlc.HybridTimestamp;
 import com.eventsourcing.index.Attribute;
 import com.eventsourcing.layout.Layout;
 import com.eventsourcing.layout.SerializableComparable;
@@ -127,6 +128,11 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
             String encodedHash = BaseEncoding.base16().encode(digest.digest());
             tableName = "index_v1_" + encodedHash + "_navigable";
             String attributeType = PostgreSQLSerialization.getMappedType(connection, attributeTypeHandler);
+
+            // Because of the bug fixed in https://github.com/eventsourcing/es4j/pull/197 (commit a4d6771)
+            // serializable comparable for timestamp wasn't correct and such indices have to be rebuilt
+            dropInvalidIndex_a4d6771(connection);
+
             String create = "CREATE TABLE IF NOT EXISTS " + tableName + " (" +
                     "\"key\" " + attributeType + ",\n" +
                     "\"object\" UUID," +
@@ -158,6 +164,26 @@ public class NavigableIndex <A extends Comparable<A>, O extends Entity> extends 
                 s.executeUpdate();
             }
 
+        }
+    }
+
+    private void dropInvalidIndex_a4d6771(Connection connection) throws SQLException {
+        if (getAttribute().getAttributeType() == HybridTimestamp.class) {
+            try (PreparedStatement s = connection
+                    .prepareStatement("SELECT count(column_name) from information_schema.columns where " +
+                                          "lower(table_name) = lower(?) AND lower(column_name) = 'key' " +
+                                          " AND lower(data_type) != 'numeric'")) {
+                s.setString(1, tableName);
+                try (java.sql.ResultSet rs = s.executeQuery()) {
+                    if (rs.next()) {
+                        if (rs.getInt(1) > 0) {
+                            try (PreparedStatement drop = connection.prepareStatement("DROP TABLE " + tableName)) {
+                                drop.executeUpdate();
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
