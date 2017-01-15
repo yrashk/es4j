@@ -154,4 +154,17 @@ public interface Journal extends Service {
         void rollback();
     }
 
+    /**
+     * Journal-stored "system" properties
+     */
+    interface Properties {
+        Optional<HybridTimestamp> getRepositoryTimestamp();
+        void setRepositoryTimestamp(HybridTimestamp timestamp);
+    }
+
+    /**
+     * @return journal {@link Properties} object
+     */
+    Properties getProperties();
+
 }

@@ -48,6 +48,12 @@ public class HybridTimestamp implements Comparable<HybridTimestamp>, Serializabl
         this.logicalCounter = logicalCounter;
     }
 
+    public HybridTimestamp(PhysicalTimeProvider physicalTimeProvider, HybridTimestamp ts) {
+        this.physicalTimeProvider = physicalTimeProvider;
+        this.logicalTime = ts.logicalTime;
+        this.logicalCounter = ts.logicalCounter;
+    }
+
     @LayoutConstructor
     public HybridTimestamp(long logicalTime, long logicalCounter) {
         physicalTimeProvider = null;
@@ -85,6 +91,10 @@ public class HybridTimestamp implements Comparable<HybridTimestamp>, Serializabl
         TimeStamp t1 = new TimeStamp(time1);
         TimeStamp t2 = new TimeStamp(time2);
         return compare(t1, t2);
+    }
+
+    @Override public boolean equals(Object obj) {
+        return obj instanceof HybridTimestamp && compareTo((HybridTimestamp) obj) == 0;
     }
 
     public static int compare(TimeStamp t1, TimeStamp t2) {

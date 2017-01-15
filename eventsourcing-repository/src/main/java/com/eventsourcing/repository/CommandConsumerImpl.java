@@ -51,8 +51,13 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
         this.journal = journal;
         this.indexEngine = indexEngine;
         this.lockProvider = lockProvider;
-        this.timestamp = new HybridTimestamp(timeProvider);
-        timestamp.update();
+        Optional<HybridTimestamp> repositoryTimestamp = journal.getProperties().getRepositoryTimestamp();
+        if (repositoryTimestamp.isPresent()) {
+            this.timestamp = new HybridTimestamp(timeProvider, repositoryTimestamp.get());
+        } else {
+            this.timestamp = new HybridTimestamp(timeProvider);
+            timestamp.update();
+        }
     }
 
     private void timestamp(Entity entity, HybridTimestamp timestamp) {
@@ -218,6 +223,7 @@ class CommandConsumerImpl extends AbstractService implements CommandConsumer {
 
                 synchronized (timestamp) {
                     timestamp.update(txTimestamp);
+                    journal.getProperties().setRepositoryTimestamp(timestamp);
                 }
 
 

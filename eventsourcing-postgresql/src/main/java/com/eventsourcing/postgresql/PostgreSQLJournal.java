@@ -8,9 +8,8 @@
 package com.eventsourcing.postgresql;
 
 import com.eventsourcing.*;
-import com.eventsourcing.layout.Layout;
-import com.eventsourcing.layout.Property;
-import com.eventsourcing.layout.TypeHandler;
+import com.eventsourcing.hlc.HybridTimestamp;
+import com.eventsourcing.layout.*;
 import com.eventsourcing.layout.binary.BinarySerialization;
 import com.google.common.base.Joiner;
 import com.google.common.io.BaseEncoding;
@@ -112,6 +111,73 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
     @Override public Journal.Transaction beginTransaction() {
         return new Transaction(dataSource);
+    }
+
+    private class PostgreSQLJournalProperties implements Properties {
+
+        private final BinarySerialization serialization = BinarySerialization.getInstance();
+        private final ObjectDeserializer<HybridTimestamp> timestampDeserializer = serialization.getDeserializer(HybridTimestamp.class);
+        private final ObjectSerializer<HybridTimestamp> timestampSerializer = serialization.getSerializer(HybridTimestamp.class);
+
+        private boolean initialized = false;
+
+        @SneakyThrows
+        private void ensureInitialized() {
+            if (!initialized && dataSource != null) {
+                try (Connection c = dataSource.getConnection()) {
+                    String sql = "CREATE TABLE IF NOT EXISTS properties_v1 (name VARCHAR(255) UNIQUE, " + "val BYTEA)";
+                    try (PreparedStatement s = c.prepareStatement(sql)) {
+                        s.executeUpdate();
+                    }
+                }
+                initialized = true;
+            }
+        }
+
+        @SneakyThrows
+        @Override public Optional<HybridTimestamp> getRepositoryTimestamp() {
+            ensureInitialized();
+            try (Connection c = dataSource.getConnection()) {
+                String sql = "SELECT val FROM properties_v1 WHERE name = ?";
+                try (PreparedStatement s = c.prepareStatement(sql)) {
+                    s.setString(1, "repository_timestamp");
+                    try (ResultSet rs = s.executeQuery()) {
+                        if (rs.next()) {
+                            HybridTimestamp ts = timestampDeserializer
+                                    .deserialize(ByteBuffer.wrap(rs.getBytes(1)));
+                            return Optional.of(ts);
+                        } else {
+                            return Optional.empty();
+                        }
+                    }
+                }
+            }
+        }
+
+        @SneakyThrows
+        @Override public void setRepositoryTimestamp(HybridTimestamp timestamp) {
+            ensureInitialized();
+            try (Connection c = dataSource.getConnection()) {
+                String sql = "INSERT INTO properties_v1 (name, val) VALUES (?, ?) ON CONFLICT (name) DO" +
+                             " UPDATE SET val = ? WHERE properties_v1.name = ?";
+                try (PreparedStatement s = c.prepareStatement(sql)) {
+                    ByteBuffer serialized = timestampSerializer.serialize(timestamp);
+                    s.setString(1, "repository_timestamp"); // insert
+                    s.setString(4, "repository_timestamp"); // update
+                    s.setBytes(2, serialized.array()); // insert
+                    s.setBytes(3, serialized.array()); // update
+                    s.executeUpdate();
+                }
+            }
+        }
+    }
+    private Properties properties;
+
+    @Override public Properties getProperties() {
+        if (properties == null) {
+            properties = new PostgreSQLJournalProperties();
+        }
+        return properties;
     }
 
     @Override public <S, T> Command<S, T> journal(Journal.Transaction tx, Command<S, T> command) {
