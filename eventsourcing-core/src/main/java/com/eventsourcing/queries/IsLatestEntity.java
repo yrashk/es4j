@@ -36,13 +36,12 @@ import static com.googlecode.cqengine.query.QueryFactory.greaterThan;
  * For example, to query the latest NameChanged across all entities:
  *
  * <code>
- *     isLatestEntity(repository.getIndexEngine().getIndexedCollection(NameChanged.class),
- *                    (h) -&gt; equal(NameChanged.REFERENCE_ID, h.get().reference()),
+ *     isLatestEntity((h) -&gt; equal(NameChanged.REFERENCE_ID, h.get().reference()),
  *                    NameChanged.TIMESTAMP)
  * </code>
  *
- * @see QueryFactory#isLatestEntity(IndexedCollection, Function, EntityIndex)
- * @see QueryFactory#isLatestEntity(IndexedCollection, Query, EntityIndex)
+ * @see QueryFactory#isLatestEntity(Function, EntityIndex)
+ * @see QueryFactory#isLatestEntity(Query, EntityIndex)
  *
  * @param <O>
  */
@@ -54,10 +53,12 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
     private Query<O> query;
 
     /**
+     * @deprecated
      * @param collection collection to query against
      * @param queryFunction query returning function
      * @param timestampAttribute timestamp attribute.
      */
+    @Deprecated
     public IsLatestEntity(IndexedCollection<O> collection,
                           Function<O, Query<O>> queryFunction,
                           Attribute<O, HybridTimestamp> timestampAttribute) {
@@ -68,15 +69,41 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
     }
 
     /**
+     * @deprecated
      * @param collection collection to query against
      * @param query query
      * @param timestampAttribute timestamp attribute.
      */
+    @Deprecated
     public IsLatestEntity(IndexedCollection<O> collection,
                           Query<O> query,
                           Attribute<O, HybridTimestamp> timestampAttribute) {
         super(timestampAttribute);
         this.collection = collection;
+        this.query = query;
+        this.timestampAttribute = timestampAttribute;
+    }
+
+    /**
+     * @param queryFunction query returning function
+     * @param timestampAttribute timestamp attribute.
+     */
+    public IsLatestEntity(Function<O, Query<O>> queryFunction,
+                          Attribute<O, HybridTimestamp> timestampAttribute) {
+        super(timestampAttribute);
+        this.collection = null;
+        this.queryFunction = queryFunction;
+        this.timestampAttribute = timestampAttribute;
+    }
+
+    /**
+     * @param query query
+     * @param timestampAttribute timestamp attribute.
+     */
+    public IsLatestEntity(Query<O> query,
+                          Attribute<O, HybridTimestamp> timestampAttribute) {
+        super(timestampAttribute);
+        this.collection = null;
         this.query = query;
         this.timestampAttribute = timestampAttribute;
     }
@@ -118,11 +145,17 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
             return terminatedQuery.get();
         }
         HybridTimestamp value = attribute.getValue(object, queryOptions);
+        IndexedCollection<O> collection = getCollection(queryOptions);
         try (ResultSet<O> resultSet = collection.retrieve(and(
                 actualQuery,
                 greaterThan(timestampAttribute, value)))) {
             return matches(resultSet, actualQuery, object, queryOptions);
         }
+    }
+
+    private IndexedCollection<O> getCollection(QueryOptions queryOptions) {
+        return this.collection == null ? queryOptions.get(IndexedCollection.class) : this
+                .collection;
     }
 
     @Override
@@ -138,6 +171,7 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
                                                  .map(v -> greaterThan(timestampAttribute, v))
                                                  .collect(Collectors.toList());
         Query<O> timestampQuery = conditions.size() == 1 ? conditions.get(0) : new Or<>(conditions);
+        IndexedCollection<O> collection = getCollection(queryOptions);
         try (ResultSet<O> resultSet = collection.retrieve(and(
                 actualQuery,
                 timestampQuery))) {
@@ -146,7 +180,7 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
     }
 
     @Override protected int calcHashCode() {
-        int result = collection.hashCode();
+        int result = attribute.hashCode();
         result = 31 * result + (query == null ? queryFunction : query).hashCode();
         result = 31 * result + timestampAttribute.hashCode();
         return result;
@@ -168,7 +202,6 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
 
         IsLatestEntity latestReference = (IsLatestEntity) o;
 
-        if (!collection.equals(latestReference.collection)) return false;
         if (query != null && !query.equals(query)) return false;
         if (queryFunction != null && !queryFunction.equals(latestReference.queryFunction)) return false;
         if (!timestampAttribute.equals(latestReference.timestampAttribute)) return false;

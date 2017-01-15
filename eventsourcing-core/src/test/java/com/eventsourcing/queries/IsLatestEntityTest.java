@@ -20,15 +20,14 @@ import lombok.EqualsAndHashCode;
 import lombok.SneakyThrows;
 import lombok.Value;
 import lombok.experimental.Accessors;
-import lombok.experimental.NonFinal;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.eventsourcing.queries.QueryFactory.equal;
 import static com.eventsourcing.index.IndexEngine.IndexFeature.*;
+import static com.eventsourcing.queries.QueryFactory.equal;
 import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -75,9 +74,7 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
     public void test() {
         UUID uuid = UUID.randomUUID();
         repository.publish(new TestCommand("test1", uuid)).get();
-        IndexedCollection<EntityHandle<TestEvent>> coll = repository.getIndexEngine().getIndexedCollection
-                (TestEvent.class);
-        Query<EntityHandle<TestEvent>> query = isLatestEntity(coll, equal(TestEvent.REFERENCE_ID, uuid),
+        Query<EntityHandle<TestEvent>> query = isLatestEntity(equal(TestEvent.REFERENCE_ID, uuid),
                                                               TestEvent.TIMESTAMP);
         try (ResultSet<EntityHandle<TestEvent>> resultSet = repository.query(TestEvent.class, query)) {
             assertEquals(resultSet.size(), 1);
@@ -96,10 +93,7 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
         for (int i = 0; i < 10000; i++ ) {
             repository.publish(new TestCommand("test" + (i + 1), uuid)).get();
         }
-        IndexedCollection<EntityHandle<TestEvent>> coll = repository.getIndexEngine().getIndexedCollection
-                (TestEvent.class);
-
-        Query<EntityHandle<TestEvent>> query = isLatestEntity(coll, equal(TestEvent.REFERENCE_ID, uuid),
+        Query<EntityHandle<TestEvent>> query = isLatestEntity(equal(TestEvent.REFERENCE_ID, uuid),
                                                               TestEvent.TIMESTAMP);
         long t1 = System.nanoTime();
         try (ResultSet<EntityHandle<TestEvent>> resultSet = repository.query(TestEvent.class, query)) {
@@ -123,10 +117,7 @@ public class IsLatestEntityTest extends RepositoryUsingTest {
         repository.publish(new TestCommand("testN1", uuidN)).get();
         repository.publish(new TestCommand("testN2", uuidN)).get();
 
-        IndexedCollection<EntityHandle<TestEvent>> coll = repository.getIndexEngine().getIndexedCollection
-                (TestEvent.class);
-        Query<EntityHandle<TestEvent>> query = isLatestEntity(coll,
-                                                              (h) -> equal(TestEvent.REFERENCE_ID, h.get().reference()),
+        Query<EntityHandle<TestEvent>> query = isLatestEntity((h) -> equal(TestEvent.REFERENCE_ID, h.get().reference()),
                                                               TestEvent.TIMESTAMP);
         try (ResultSet<EntityHandle<TestEvent>> resultSet = repository.query(TestEvent.class, query)) {
             assertEquals(resultSet.size(), 2);
