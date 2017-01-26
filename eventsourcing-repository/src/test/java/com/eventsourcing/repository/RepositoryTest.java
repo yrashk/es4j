@@ -752,28 +752,13 @@ public abstract class RepositoryTest {
         }
 
         @Override protected void doStart() {
-            timeProvider.startAsync().addListener(new Listener() {
-                @Override public void failed(State from, Throwable failure) {
-                    notifyFailed(failure);
-                }
-
-                @Override public void running() {
-                    notifyStarted();
-                }
-            }, MoreExecutors.directExecutor());
+            timeProvider.startAsync().awaitRunning();
+            notifyStarted();
         }
 
         @Override protected void doStop() {
-            timeProvider.stopAsync().addListener(new Listener() {
-
-                @Override public void terminated(State from) {
-                    notifyStopped();
-                }
-
-                @Override public void failed(State from, Throwable failure) {
-                    notifyFailed(failure);
-                }
-            }, MoreExecutors.directExecutor());
+            timeProvider.stopAsync().awaitTerminated();
+            notifyStopped();
         }
     }
 
