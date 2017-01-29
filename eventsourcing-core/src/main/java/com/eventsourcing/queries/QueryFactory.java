@@ -1095,7 +1095,7 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
-     * @deprecated use {@link #isLatestEntity(Query, EntityIndex)}
+     * @deprecated See {@link #max(EntityIndex)}
      */
     @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
@@ -1112,7 +1112,7 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
-     * @deprecated use {@link #isLatestEntity(Function, EntityIndex)}
+     * @deprecated See {@link #max(EntityIndex)}
      */
     @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
@@ -1128,7 +1128,9 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
+     * @deprecated See {@link #max(EntityIndex)}
      */
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final Query<EntityHandle<O>> query,
                    final EntityIndex<O, HybridTimestamp> timestampAttribute) {
@@ -1141,7 +1143,9 @@ public interface QueryFactory  {
      * @param timestampAttribute timestamp attribute
      * @param <O> entity type
      * @return a query
+     * @deprecated See {@link #max(EntityIndex)}
      */
+    @Deprecated
     static <O extends Entity> Query<EntityHandle<O>>
     isLatestEntity(final Function<EntityHandle<O>, Query<EntityHandle<O>>> query,
                    final EntityIndex<O, HybridTimestamp> timestampAttribute) {
@@ -1168,5 +1172,10 @@ public interface QueryFactory  {
      */
     static <O extends Entity, A extends Comparable<A>> Max<O, A> max(EntityIndex<O, A> entityIndex) {
         return new Max<>(entityIndex);
+    }
+
+
+    static <O extends Entity> Scoped<O> scoped(Query<EntityHandle<O>> scope, Query<EntityHandle<O>> query) {
+        return new Scoped<>(scope, query);
     }
 }

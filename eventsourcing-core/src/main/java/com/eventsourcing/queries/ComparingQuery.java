@@ -10,11 +10,12 @@ package com.eventsourcing.queries;
 import com.eventsourcing.Entity;
 import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.EntityIndex;
-import com.googlecode.cqengine.IndexedCollection;
 import com.googlecode.cqengine.attribute.Attribute;
 import com.googlecode.cqengine.attribute.SimpleAttribute;
+import com.googlecode.cqengine.query.Query;
 import com.googlecode.cqengine.query.option.QueryOptions;
 import com.googlecode.cqengine.query.simple.SimpleQuery;
+import lombok.Getter;
 
 import java.util.Iterator;
 
@@ -30,7 +31,7 @@ public abstract class ComparingQuery<O extends Entity, A extends Comparable<A>> 
 
     private void ensureTargetIsFound(Attribute<EntityHandle<O>, A> attribute, QueryOptions queryOptions) {
         if (target == null) {
-            IndexedCollection<EntityHandle<O>> collection = queryOptions.get(IndexedCollection.class);
+            Iterable<EntityHandle<O>> collection = queryOptions.get(Iterable.class);
             if (collection == null) {
                 throw new RuntimeException(
                         toString() + " has to be supported by the target index or queryOptions should" +
@@ -54,7 +55,6 @@ public abstract class ComparingQuery<O extends Entity, A extends Comparable<A>> 
     public ComparingQuery(EntityIndex<O, A> index) {
         super(index.getAttribute());
     }
-
 
     @Override
     protected boolean matchesNonSimpleAttribute(Attribute<EntityHandle<O>, A> attribute, EntityHandle<O> object,

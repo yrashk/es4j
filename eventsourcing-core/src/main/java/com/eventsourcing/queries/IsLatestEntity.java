@@ -43,8 +43,11 @@ import static com.googlecode.cqengine.query.QueryFactory.greaterThan;
  * @see QueryFactory#isLatestEntity(Function, EntityIndex)
  * @see QueryFactory#isLatestEntity(Query, EntityIndex)
  *
+ * @deprecated See {@link Max}
+ *
  * @param <O>
  */
+@Deprecated
 public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, HybridTimestamp> {
 
     private final IndexedCollection<O> collection;
@@ -145,7 +148,7 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
             return terminatedQuery.get();
         }
         HybridTimestamp value = attribute.getValue(object, queryOptions);
-        IndexedCollection<O> collection = getCollection(queryOptions);
+        IndexedCollection<O> collection = (IndexedCollection<O>) getCollection(queryOptions);
         try (ResultSet<O> resultSet = collection.retrieve(and(
                 actualQuery,
                 greaterThan(timestampAttribute, value)))) {
@@ -153,8 +156,8 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
         }
     }
 
-    private IndexedCollection<O> getCollection(QueryOptions queryOptions) {
-        return this.collection == null ? queryOptions.get(IndexedCollection.class) : this
+    private Iterable<O> getCollection(QueryOptions queryOptions) {
+        return this.collection == null ? queryOptions.get(Iterable.class) : this
                 .collection;
     }
 
@@ -171,7 +174,7 @@ public class IsLatestEntity<O extends EntityHandle> extends SimpleQuery<O, Hybri
                                                  .map(v -> greaterThan(timestampAttribute, v))
                                                  .collect(Collectors.toList());
         Query<O> timestampQuery = conditions.size() == 1 ? conditions.get(0) : new Or<>(conditions);
-        IndexedCollection<O> collection = getCollection(queryOptions);
+        IndexedCollection<O> collection = (IndexedCollection<O>) getCollection(queryOptions);
         try (ResultSet<O> resultSet = collection.retrieve(and(
                 actualQuery,
                 timestampQuery))) {
