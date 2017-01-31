@@ -48,6 +48,7 @@ import static com.eventsourcing.postgresql.PostgreSQLSerialization.getParameter;
 import static com.eventsourcing.postgresql.PostgreSQLSerialization.setValue;
 
 public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends AbstractAttributeIndex<A, O> {
+    public static final int MAX_ADDITION_BATCH = 1000;
     private AdditionProcessor additionProcessor;
     protected KeyObjectStore<UUID, EntityHandle<O>> keyObjectStore;
 
@@ -208,38 +209,44 @@ public abstract class PostgreSQLAttributeIndex<A, O extends Entity> extends Abst
             connection.setAutoCommit(false);
             String insert = "INSERT INTO " + getTableName() + " VALUES (" + getParameter(connection, getAttributeTypeHandler(),
                                                                                     null) + ", ?::UUID) " +
-                    (queryOptions.get(OnConflictDo.class) == null ? "" :
-                            "ON CONFLICT DO " + queryOptions.get(OnConflictDo.class));
-            try (PreparedStatement s = connection.prepareStatement(insert)) {
-                while (iterator.hasNext()) {
-                    EntityHandle<O> object = iterator.next();
-                    Iterator<A> attrIterator = getOwnAttribute().getValues(object, queryOptions).iterator();
-                    while (attrIterator.hasNext()) {
-                        int i = 1;
-                        A attr = attrIterator.next();
-                        i = setValue(connection, s, i, getQuantizedValue(attr), getAttributeTypeHandler());
-                        s.setString(i, object.uuid().toString());
-                        s.addBatch();
-                        additionProcessor.accept(object, attr);
+                             (queryOptions.get(OnConflictDo.class) == null ? "" : "ON CONFLICT DO " + queryOptions.get
+                             (OnConflictDo.class));
+            while (iterator.hasNext()) {
+                int counter = 0;
+
+                try (PreparedStatement s = connection.prepareStatement(insert)) {
+                    while (counter < MAX_ADDITION_BATCH && iterator.hasNext()) {
+                        EntityHandle<O> object = iterator.next();
+                        Iterator<A> attrIterator = getOwnAttribute().getValues(object, queryOptions).iterator();
+                        while (attrIterator.hasNext()) {
+                            int i = 1;
+                            A attr = attrIterator.next();
+                            i = setValue(connection, s, i, getQuantizedValue(attr), getAttributeTypeHandler());
+                            s.setString(i, object.uuid().toString());
+                            s.addBatch();
+                            additionProcessor.accept(object, attr);
+                            counter++;
+                        }
                     }
-                }
-                try {
-                    s.executeBatch();
-                    additionProcessor.commit();
-                } catch (BatchUpdateException e) {
-                    connection.rollback();
-                    Throwable nextException = e.getCause();
-                    if (nextException instanceof PGSQLIntegrityConstraintViolationException) {
-                        if (nextException.getMessage().contains("duplicate key value violates unique constraint")) {
-                            throw new UniqueIndex.UniqueConstraintViolatedException(nextException.getMessage());
+                    try {
+                        s.executeBatch();
+                        additionProcessor.commit();
+                    } catch (BatchUpdateException e) {
+                        connection.rollback();
+                        Throwable nextException = e.getCause();
+                        if (nextException instanceof PGSQLIntegrityConstraintViolationException) {
+                            if (nextException.getMessage().contains("duplicate key value violates unique constraint")) {
+                                throw new UniqueIndex.UniqueConstraintViolatedException(nextException.getMessage());
+                            } else {
+                                throw e;
+                            }
                         } else {
                             throw e;
                         }
-                    } else {
-                        throw e;
                     }
                 }
             }
+
             connection.commit();
         }
 
