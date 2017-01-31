@@ -192,6 +192,7 @@ public interface Repository extends Service {
     default <E extends Entity> ResultSet<EntityHandle<E>> query(Class<E> klass, Query<EntityHandle<E>> query,
                                                                         QueryOptions queryOptions) {
         IndexedCollection<EntityHandle<E>> collection = getIndexEngine().getIndexedCollection(klass);
+        queryOptions.put(Iterable.class, collection);
         queryOptions.put(IndexedCollection.class, collection);
         return collection.retrieve(query, queryOptions);
     }

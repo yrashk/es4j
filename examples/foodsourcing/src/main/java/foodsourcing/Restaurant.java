@@ -13,9 +13,12 @@ import com.eventsourcing.Repository;
 import com.eventsourcing.cep.protocols.NameProtocol;
 import com.eventsourcing.queries.ModelCollectionQuery;
 import com.eventsourcing.queries.ModelQueries;
-import com.googlecode.cqengine.IndexedCollection;
+import com.eventsourcing.queries.QueryFactory;
+import com.googlecode.cqengine.attribute.Attribute;
+import com.googlecode.cqengine.attribute.SimpleAttribute;
 import com.googlecode.cqengine.query.Query;
-import com.googlecode.cqengine.query.logical.And;
+import com.googlecode.cqengine.query.option.QueryOptions;
+import com.googlecode.cqengine.query.simple.SimpleQuery;
 import com.googlecode.cqengine.resultset.ResultSet;
 import foodsourcing.events.AddressChanged;
 import foodsourcing.events.MenuItemAdded;
@@ -31,8 +34,6 @@ import java.util.stream.Stream;
 
 import static com.eventsourcing.cep.protocols.DeletedProtocol.notDeleted;
 import static com.eventsourcing.queries.QueryFactory.*;
-import static com.eventsourcing.queries.ModelCollectionQuery.LogicalOperators.*;
-import static com.eventsourcing.queries.QueryFactory.isLatestEntity;
 import static com.googlecode.cqengine.stream.StreamFactory.streamOf;
 
 public class Restaurant implements Model, NameProtocol, AddressProtocol {
@@ -68,6 +69,29 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
         }
     }
 
+    public abstract static class SelfReferencingQuery<O, A> extends SimpleQuery<O, A> {
+
+        public SelfReferencingQuery(Attribute<O, A> attribute) {
+            super(attribute);
+        }
+
+        public abstract boolean matches();
+
+        @Override
+        protected boolean matchesSimpleAttribute(SimpleAttribute<O, A> attribute, O object, QueryOptions queryOptions) {
+            return matchesNonSimpleAttribute(attribute, object, queryOptions);
+        }
+
+        @Override
+        protected boolean matchesNonSimpleAttribute(Attribute<O, A> attribute, O object, QueryOptions queryOptions) {
+            return false;
+        }
+
+        @Override protected int calcHashCode() {
+            return attribute.hashCode();
+        }
+    }
+
     private static class Within10Km implements ModelCollectionQuery<Restaurant> {
 
         private final Address address;
@@ -77,7 +101,7 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
         }
 
         @Override public Stream<Restaurant> getCollectionStream(Repository repository) {
-            And<EntityHandle<AddressChanged>> geoRestrictions = and(
+            Query<EntityHandle<AddressChanged>> geoRestrictions = and(
                     lessThanOrEqualTo(AddressChanged.BOUNDING_BOX_10K_LAT_START, address.latitude()),
                     lessThanOrEqualTo(AddressChanged.BOUNDING_BOX_10K_LONG_START, address.longitude()),
                     greaterThanOrEqualTo(AddressChanged.BOUNDING_BOX_10K_LAT_END, address.latitude()),
@@ -143,26 +167,25 @@ public class Restaurant implements Model, NameProtocol, AddressProtocol {
     }
 
     public Map<Integer, List<OpeningHours>> openingHours() {
-        IndexedCollection<EntityHandle<WorkingHoursChanged>> collection =
-                getRepository().getIndexEngine().getIndexedCollection(WorkingHoursChanged.class);
-        Query<EntityHandle<WorkingHoursChanged>> matchingReference = equal(WorkingHoursChanged.REFERENCE_ID, getId());
-        Query<EntityHandle<WorkingHoursChanged>> query =
-                and(matchingReference, isLatestEntity(collection,
-                                                      h -> and(matchingReference,
-                                                               equal(WorkingHoursChanged.DAY_OF_WEEK, h.get().dayOfWeek())),
-                                                      WorkingHoursChanged.TIMESTAMP));
-        try (ResultSet<EntityHandle<WorkingHoursChanged>> resultSet =
-                     getRepository().query(WorkingHoursChanged.class, query)) {
-            return streamOf(resultSet)
-                         .map(EntityHandle::get)
-                         .collect(Collectors.toMap(e -> e.dayOfWeek().getValue(), WorkingHoursChanged::openDuring));
-        }
+        return
+        Arrays.stream(DayOfWeek.values())
+              .map(dow -> {
+                  Query<EntityHandle<WorkingHoursChanged>> scope = QueryFactory.and(equal(WorkingHoursChanged
+                                                                                              .REFERENCE_ID, getId()),
+                                                                                  equal(WorkingHoursChanged.DAY_OF_WEEK, dow));
+                  Query<EntityHandle<WorkingHoursChanged>> query =
+                          scoped(scope, max(WorkingHoursChanged.TIMESTAMP));
+                  try (ResultSet<EntityHandle<WorkingHoursChanged>> resultSet =
+                               getRepository().query(WorkingHoursChanged.class, query)) {
+                      return resultSet.uniqueResult().get();
+                  }
+                  })
+                .collect(Collectors.toMap(e -> e.dayOfWeek().getValue(), WorkingHoursChanged::openDuring));
     }
 
     public Collection<MenuItem> menu() {
-        ModelCollectionQuery<MenuItem> query = and(MenuItem.belongsToRestaurant(this),
-                                                  notDeleted(MenuItemAdded.class, MenuItemAdded.ID,
-                                                             MenuItem::lookup));
+        ModelCollectionQuery<MenuItem> query = ModelCollectionQuery.LogicalOperators.and(
+                MenuItem.belongsToRestaurant(this), notDeleted(MenuItemAdded.class, MenuItemAdded.ID, MenuItem::lookup));
         return MenuItem.query(getRepository(), query);
     }
 }

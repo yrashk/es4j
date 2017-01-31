@@ -16,6 +16,7 @@ import com.eventsourcing.layout.SerializableComparable;
 import com.eventsourcing.layout.TypeHandler;
 import com.eventsourcing.postgresql.PostgreSQLSerialization;
 import com.eventsourcing.postgresql.PostgreSQLStatementIterator;
+import com.eventsourcing.queries.ComparingQuery;
 import com.eventsourcing.queries.Max;
 import com.eventsourcing.queries.Min;
 import com.fasterxml.classmate.ResolvedType;

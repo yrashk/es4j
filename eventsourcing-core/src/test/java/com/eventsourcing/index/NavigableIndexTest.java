@@ -40,11 +40,10 @@ import java.util.function.Function;
 
 import static com.eventsourcing.queries.QueryFactory.max;
 import static com.eventsourcing.queries.QueryFactory.min;
+import static com.eventsourcing.queries.QueryFactory.scoped;
 import static com.googlecode.cqengine.query.QueryFactory.*;
 import static java.util.Arrays.asList;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 // This test was originally copied from CQEngine in order to test
 // indices the same way CQEngine does.
@@ -475,7 +474,7 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
             collection.addIndex(MODEL_INDEX);
 
             QueryOptions queryOptions = queryOptions();
-            queryOptions.put(IndexedCollection.class, collection);
+            queryOptions.put(Iterable.class, collection);
 
             assertTrue(collection.retrieve(max(i), queryOptions).isEmpty());
             assertTrue(collection.retrieve(min(i), queryOptions).isEmpty());
@@ -488,6 +487,16 @@ public abstract class NavigableIndexTest<NavigableIndex extends AttributeIndex &
             HybridTimestamp max1 = collection.retrieve(max(i), queryOptions).uniqueResult().get().timestamp();
             HybridTimestamp min1 = collection.retrieve(min(i), queryOptions).uniqueResult().get().timestamp();
             long t2 = System.nanoTime();
+
+            // make sure query scoping is respected
+            assertNotEquals(collection.retrieve(scoped(equal(Car.MODEL, "Focus"), max(i)), queryOptions).uniqueResult()
+                                      .get().uuid(),
+                            collection.retrieve(max(i), queryOptions).uniqueResult().get().uuid());
+
+
+            assertNotEquals(collection.retrieve(scoped(equal(Car.MODEL, "Focus"), min(i)), queryOptions).uniqueResult()
+                                      .get().uuid(),
+                            collection.retrieve(min(i), queryOptions).uniqueResult().get().uuid());
 
             assertFalse(cars1.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(max1.getSerializableComparable()) > 0));
             assertFalse(cars1.stream().anyMatch(c -> c.get().timestamp().getSerializableComparable().compareTo(min1.getSerializableComparable()) < 0));

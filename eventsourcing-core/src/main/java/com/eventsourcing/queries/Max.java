@@ -9,7 +9,9 @@ package com.eventsourcing.queries;
 
 
 import com.eventsourcing.Entity;
+import com.eventsourcing.EntityHandle;
 import com.eventsourcing.index.EntityIndex;
+import com.googlecode.cqengine.query.Query;
 
 public class Max<O extends Entity, A extends Comparable<A>> extends ComparingQuery<O, A>  {
 

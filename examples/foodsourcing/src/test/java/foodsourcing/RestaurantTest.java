@@ -112,13 +112,15 @@ public class RestaurantTest extends TestWithRepository {
         Address outside = new Address("810 Quayside Dr, New Westminster, BC", "Canada", "New Westminster",
                                       "V3M 6B9", 49.200145, -122.911488);
         Restaurant kyzock = repository.publish(kyzockRegistration()).get();
+        Restaurant sushiZeroOne = repository.publish(sushiZeroOneRegistration()).get();
         repository.publish(new UpdateRestaurantAddress(kyzock, outside)).get();
-        kyzock = Restaurant.lookup(repository, kyzock.getId()).get();
+        repository.publish(new UpdateRestaurantAddress(sushiZeroOne, outside)).get();
         Collection<Restaurant> restaurants = Restaurant.query(repository, within10km(closeBy));
         assertEquals(restaurants.size(), 0);
         restaurants = Restaurant.query(repository, within10km(outside));
-        assertEquals(restaurants.size(), 1);
+        assertEquals(restaurants.size(), 2);
         assertTrue(restaurants.contains(kyzock));
+        assertTrue(restaurants.contains(sushiZeroOne));
     }
 
     @Test
@@ -148,6 +150,12 @@ public class RestaurantTest extends TestWithRepository {
         Address restaurantAddress = new Address("559 W Pender St, Vancouver, BC", "Canada", "Vancouver",
                                                 "V6B 1V5", 49.2837512, -123.1134196);
         return new RegisterRestaurant("Kyzock", restaurantAddress, new OpeningHours(11, 30, 19, 00));
+    }
+
+    private RegisterRestaurant sushiZeroOneRegistration() {
+        Address restaurantAddress = new Address("559 W Pender St, Vancouver, BC", "Canada", "Vancouver",
+                                                "V6B 1V5", 49.2837512, -123.1134196);
+        return new RegisterRestaurant("Sushi Zero One", restaurantAddress, new OpeningHours(11, 30, 19, 00));
     }
 
 
