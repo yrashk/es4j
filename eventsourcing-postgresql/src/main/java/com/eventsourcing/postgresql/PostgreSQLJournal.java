@@ -44,6 +44,7 @@ import static com.eventsourcing.postgresql.PostgreSQLSerialization.*;
 @Component(property = "type=PostgreSQLJournal", service = Journal.class)
 public class PostgreSQLJournal extends AbstractService implements Journal {
 
+    public static final int MAX_FETCH_SIZE = 10_000;
     @Reference
     protected DataSourceProvider dataSourceProvider;
 
@@ -268,6 +269,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
 
         if (!eagerFetching) {
             PreparedStatement s = connection.prepareStatement("SELECT uuid FROM layout_v1_" + hash);
+            s.setFetchSize(MAX_FETCH_SIZE);
             return new EntityIterator<>(this, s, connection);
         } else {
             ReaderFunction reader = readerFunctions.get(hash);
@@ -276,6 +278,7 @@ public class PostgreSQLJournal extends AbstractService implements Journal {
                                                         .map(p -> "\"" + p.getName() + "\"").collect(Collectors.toList()));
             String query = "SELECT " + columns + ", uuid AS ___uuid___ FROM layout_v1_" + hash;
             PreparedStatement s = connection.prepareStatement(query);
+            s.setFetchSize(MAX_FETCH_SIZE);
             return new EagerEntityIterator<>(this, s, connection, reader);
         }
     }

@@ -41,6 +41,12 @@ public abstract class PostgreSQLStatementIterator<T> implements CloseableIterato
             resultSet = statement.executeQuery();
         }
 
+        // if the result set is already closed,
+        // there are no more results to expect
+        if (resultSet.isClosed()) {
+            return false;
+        }
+
         if (nextCalled) {
             nextCalled = false;
             if (resultSet.next()) {
